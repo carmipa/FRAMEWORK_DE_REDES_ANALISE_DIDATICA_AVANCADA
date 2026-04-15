@@ -223,6 +223,9 @@
     </div>
     {% if res.somente_mascara %}
     <div class="classe-destaque cv-outros card-tech shadow mb-3 py-4 px-3 text-center">
+        <div class="d-flex justify-content-center mb-1">
+            <button type="button" class="help-hint-btn" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-placement="top" title="Classe IPv4 didática" data-bs-content="Bloco visual para identificar classe IPv4 pelo primeiro octeto e reforçar a faixa clássica correspondente.">ℹ️</button>
+        </div>
         <div class="classe-destaque-rotulo">Modo só máscara (sem IP)</div>
         <div class="classe-destaque-valor">/{{ res.cidr }}</div>
         <div class="classe-destaque-octeto">Máscara: <span class="text-warning fw-bold">{{ res.mask }}</span></div>
@@ -230,6 +233,9 @@
     </div>
     {% else %}
     <div class="classe-destaque cv-{{ res.classe_variant }} card-tech shadow mb-3 py-4 px-3 text-center">
+        <div class="d-flex justify-content-center mb-1">
+            <button type="button" class="help-hint-btn" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-placement="top" title="Classe IPv4 didática" data-bs-content="Bloco visual para identificar classe IPv4 pelo primeiro octeto e reforçar a faixa clássica correspondente.">ℹ️</button>
+        </div>
         <div class="classe-destaque-rotulo">Classe IPv4 clássica</div>
         <div class="classe-destaque-valor">{{ res.classe }}</div>
         <div class="classe-destaque-octeto">1º octeto do IP informado: <span class="text-warning fw-bold">{{ res.primeiro_octeto }}</span></div>
@@ -239,7 +245,9 @@
 
     <div class="card-tech shadow">
         <div class="p-3 border-bottom border-secondary text-info fw-bold d-flex flex-wrap justify-content-between align-items-center gap-2">
-            <span>📊 DECOMPOSIÇÃO DO ARRAY DE 32 BITS</span>
+            <span class="icon-title">📊 DECOMPOSIÇÃO DO ARRAY DE 32 BITS
+                <button type="button" class="help-hint-btn" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-placement="top" title="Array de 32 bits" data-bs-content="Mostra os 32 bits da máscara por octeto. Bits 1 definem rede e bits 0 definem host, conforme o CIDR.">ℹ️</button>
+            </span>
             <span class="calc-tag calc-tag-dyn">Dinâmico por cálculo</span>
         </div>
         <div class="bit-container">
@@ -525,7 +533,9 @@
     {% if res.tabela_referencia %}
     <div class="card-tech shadow mt-3">
         <div class="p-3 border-bottom border-secondary text-info fw-bold d-flex flex-wrap justify-content-between align-items-center gap-2">
-            <span>📚 TABELA DE REFERÊNCIA DINÂMICA (OCTETO {{ res.octeto_referencia }})</span>
+            <span class="icon-title">📚 TABELA DE REFERÊNCIA DINÂMICA (OCTETO {{ res.octeto_referencia }})
+                <button type="button" class="help-hint-btn" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-placement="top" title="Tabela de referência dinâmica" data-bs-content="Tabela comparativa de pesos binários, variação, IPs por bloco, máscara e barra para o octeto em foco.">ℹ️</button>
+            </span>
             <span class="calc-tag calc-tag-dyn">Dinâmico por cálculo</span>
         </div>
         <div class="p-3 table-responsive">
@@ -570,7 +580,9 @@
     {% if res.tabela_conversao_bits %}
     <div class="card-tech shadow mt-3">
         <div class="p-3 border-bottom border-secondary text-warning fw-bold d-flex flex-wrap justify-content-between align-items-center gap-2">
-            <span>🔄 TABELA DE CONVERSÃO (BITS, BYTES, BINÁRIO E DECIMAL)</span>
+            <span class="icon-title">🔄 TABELA DE CONVERSÃO (BITS, BYTES, BINÁRIO E DECIMAL)
+                <button type="button" class="help-hint-btn" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-placement="top" title="Conversão de unidades" data-bs-content="Conecta potências de 2 com bits/bytes e mostra a aplicação prática no cálculo atual da sub-rede.">ℹ️</button>
+            </span>
             <span class="calc-tag calc-tag-mix">Misto (referência + cálculo atual)</span>
         </div>
         <div class="p-3">
@@ -747,6 +759,8 @@
 <script>
     const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
     [...tooltipTriggerList].forEach((tooltipTriggerEl) => new bootstrap.Tooltip(tooltipTriggerEl));
+    const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
+    [...popoverTriggerList].forEach((popoverTriggerEl) => new bootstrap.Popover(popoverTriggerEl));
 
     const form = document.getElementById('calc-form');
     if (form) {

@@ -1,5 +1,35 @@
 [
   {
+    "id": "b5eb44c2",
+    "timestamp": "2026-04-15T18:29:41.562211+00:00",
+    "modo": "dominio",
+    "ip_entrada": "172.19.1.0",
+    "ipv6_entrada": "",
+    "cidr_entrada": "",
+    "mask_entrada": "255.255.0.0",
+    "wildcard_entrada": "0.0.255.255",
+    "rede": "172.19.0.0",
+    "broadcast": "172.19.255.255",
+    "mask": "255.255.0.0",
+    "cidr": 16,
+    "tema": "Risco elevado"
+  },
+  {
+    "id": "a88ad4f0",
+    "timestamp": "2026-04-15T18:29:19.511417+00:00",
+    "modo": "ipv6",
+    "ip_entrada": "",
+    "ipv6_entrada": "2001:db8:85a3::8a2e:370:7334",
+    "cidr_entrada": "",
+    "mask_entrada": "",
+    "wildcard_entrada": "",
+    "rede": "2001:0db8:85a3:0000",
+    "broadcast": "N/A em IPv6",
+    "mask": "/64 (didático para LAN IPv6)",
+    "cidr": "64",
+    "tema": "IPv6 didático"
+  },
+  {
     "id": "28086eea",
     "timestamp": "2026-04-15T18:26:45.425886+00:00",
     "modo": "dominio",
@@ -815,33 +845,5 @@
     "mask": "/64 (didático para LAN IPv6)",
     "cidr": "64",
     "tema": "IPv6 didático"
-  },
-  {
-    "id": "ea889a07",
-    "timestamp": "2026-04-15T17:03:42.560899+00:00",
-    "modo": "cidr",
-    "ip_entrada": "192.168.1.10",
-    "cidr_entrada": "24",
-    "mask_entrada": "255.255.255.0",
-    "wildcard_entrada": "0.0.0.255",
-    "rede": "192.168.1.0",
-    "broadcast": "192.168.1.255",
-    "mask": "255.255.255.0",
-    "cidr": 24,
-    "tema": "Baixo risco operacional"
-  },
-  {
-    "id": "45b6128e",
-    "timestamp": "2026-04-15T17:03:31.394384+00:00",
-    "modo": "cidr",
-    "ip_entrada": "10.0.0.1",
-    "cidr_entrada": "32",
-    "mask_entrada": "255.255.255.255",
-    "wildcard_entrada": "0.0.0.0",
-    "rede": "10.0.0.1",
-    "broadcast": "10.0.0.1",
-    "mask": "255.255.255.255",
-    "cidr": 32,
-    "tema": "Baixo risco operacional"
   }
 ]

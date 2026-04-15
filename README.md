@@ -8,7 +8,7 @@
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 
 <p align="center">
-  <img src="./icone.png" alt="Ícone do Framework de Redes" width="140" />
+  <img src="./icone.png" alt="Ícone do Framework de Redes" width="220" />
 </p>
 
 Aplicação didática para estudo de redes IPv4 com foco em **subnetting, bitwise AND, wildcard, CIDR, DNS/hostname e contexto de segurança/GRC**.
@@ -16,6 +16,14 @@ Aplicação didática para estudo de redes IPv4 com foco em **subnetting, bitwis
 > Projeto pensado para execução local (máquina do usuário), com interface web no navegador.
 >
 > 🔗 Endereço do projeto: [https://github.com/carmipa/FRAMEWORK_DE_REDES_ANALISE_DIDATICA_AVANCADA](https://github.com/carmipa/FRAMEWORK_DE_REDES_ANALISE_DIDATICA_AVANCADA)
+
+### 👨‍💻 Desenvolvedor
+
+**Desenvolvido por:** Paulo André Carminati | RM570877 | 1-TDCPV | CyberSegurança | FIAP/2026
+
+- 🎓 FIAP 2026
+- 🛡️ Cyber Defense
+- 💻 Python + Flask
 
 ---
 
