@@ -71,6 +71,21 @@ def _utc_now_iso():
     return datetime.now(timezone.utc).isoformat()
 
 
+def _formatar_timestamp_utc(ts):
+    s = (ts or "").strip()
+    if not s:
+        return "—"
+    try:
+        normalized = s.replace("Z", "+00:00")
+        dt = datetime.fromisoformat(normalized)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        dt_utc = dt.astimezone(timezone.utc)
+        return dt_utc.strftime("%Y-%m-%d %H:%M:%S UTC")
+    except Exception:
+        return f"{s} UTC"
+
+
 def _carregar_historico():
     if not HISTORY_FILE.exists():
         return
@@ -1102,6 +1117,8 @@ def home():
         history_start = (history_page_int - 1) * history_limit_int
         history_end = history_start + history_limit_int
         history_page_items = history_list[history_start:history_end]
+        for item in history_page_items:
+            item["timestamp_utc"] = _formatar_timestamp_utc(item.get("timestamp", ""))
     else:
         total_history_pages = 1
         history_page_items = []

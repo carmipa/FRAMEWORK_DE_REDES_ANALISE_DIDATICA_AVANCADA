@@ -20,7 +20,13 @@ body { background-color: #0d1117; color: #c9d1d9; font-family: 'Consolas', monos
             border-color: #f85149 !important;
             box-shadow: 0 0 0 0.14rem rgba(248, 81, 73, 0.25);
         }
-        .header-tech { border-left: 5px solid #238636; padding-left: 15px; color: #2ea043; margin-bottom: 25px; }
+        .header-tech { color: #2ea043; margin-bottom: 25px; }
+        .header-title-strip {
+            display: inline-flex;
+            width: 100%;
+            justify-content: center;
+            text-align: center;
+        }
         .shield-badge {
             display: inline-flex;
             align-items: center;
@@ -45,6 +51,27 @@ body { background-color: #0d1117; color: #c9d1d9; font-family: 'Consolas', monos
             object-fit: contain;
             border-radius: 6px;
             box-shadow: 0 0 0 1px rgba(121, 192, 255, 0.25);
+        }
+        .header-banner-wrap {
+            margin: 0.85rem 0 0.65rem;
+            width: min(100%, 560px);
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .header-banner-img {
+            width: 100%;
+            max-height: 200px;
+            object-fit: contain;
+            border-radius: 28px;
+            border: 1px solid transparent;
+            box-shadow: none;
+            /* Fade suave nas bordas para efeito de desgaste visual */
+            -webkit-mask-image: radial-gradient(ellipse at center, #000 60%, transparent 100%);
+            mask-image: radial-gradient(ellipse at center, #000 60%, transparent 100%);
+            -webkit-mask-repeat: no-repeat;
+            mask-repeat: no-repeat;
+            -webkit-mask-size: 100% 100%;
+            mask-size: 100% 100%;
         }
         .footer-link {
             text-decoration: none;
@@ -449,8 +476,11 @@ body { background-color: #0d1117; color: #c9d1d9; font-family: 'Consolas', monos
         @media (max-width: 576px) {
             .container { padding-left: 0.8rem; padding-right: 0.8rem; }
             .card-tech { margin-bottom: 14px; }
-            .header-tech { padding-left: 10px; margin-bottom: 16px; }
+            .header-tech { margin-bottom: 16px; }
             .header-tech h2 { font-size: 1.08rem; line-height: 1.25; }
+            .header-banner-wrap { margin-top: 0.7rem; margin-bottom: 0.5rem; }
+            .header-banner-wrap { width: min(100%, 440px); }
+            .header-banner-img { max-height: 150px; }
             .classe-destaque-rotulo { font-size: 0.8rem; }
             .classe-destaque-octeto { font-size: 0.95rem; }
             .classe-destaque-faixa { font-size: 0.9rem; }

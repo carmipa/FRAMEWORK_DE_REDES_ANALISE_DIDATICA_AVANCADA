@@ -10,11 +10,13 @@
 <body>
 <div class="container py-5">
     <div class="header-tech">
-        <h2 class="icon-title">
-            <img src="{{ url_for('project_icon') }}" alt="Ícone do projeto" class="brand-icon">
+        <div class="header-banner-wrap">
+            <img src="{{ url_for('project_icon') }}" alt="Banner do projeto" class="header-banner-img">
+        </div>
+        <h2 class="icon-title header-title-strip">
+            <span>🛡️</span>
             <span>FRAMEWORK DE REDES - ANÁLISE DIDÁTICA | AVANÇADA</span>
         </h2>
-        <p class="mb-0 text-secondary">Paulo André Carminati | FIAP Cyber Defense 2026</p>
         <div class="mt-2">
             <span class="shield-badge"><span class="icon">🧠</span>Bitwise AND</span>
             <span class="shield-badge"><span class="icon">🎯</span>RFC1918</span>
@@ -122,11 +124,11 @@
                     {% for item in history_page_items %}
                     <tr>
                         <td>{{ item.id }}</td>
-                        <td>{{ item.timestamp }}</td>
+                        <td>{{ item.timestamp_utc or item.timestamp }}</td>
                         <td>{{ item.modo }}</td>
                         <td>{{ item.ipv6_entrada or item.ip_entrada or '—' }}</td>
                         <td>{{ item.cidr or item.cidr_entrada or '—' }}</td>
-                        <td><a class="btn btn-sm btn-outline-info" href="/?replay={{ item.id }}&history_limit={{ history_limit }}&history_page={{ history_page }}">🔁 Recarregar</a></td>
+                        <td><a class="btn btn-sm btn-outline-info" href="/?replay={{ item.id }}&history_limit={{ history_limit }}&history_page={{ history_page }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Reaplica esta consulta no formulário para análise imediata.">🔁 Recarregar</a></td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -135,12 +137,16 @@
         <div class="d-flex flex-wrap justify-content-center align-items-center gap-3 mt-2 history-pagination">
             <div class="d-flex align-items-center gap-2">
                 {% if has_prev_history %}
-                <a class="btn btn-sm btn-outline-light" href="/?history_limit={{ history_limit }}&history_page={{ history_page - 1 }}">⬅️ Anterior</a>
+                <form method="GET" class="mb-0 d-inline">
+                    <input type="hidden" name="history_limit" value="{{ history_limit }}">
+                    <input type="hidden" name="history_page" value="{{ history_page - 1 }}">
+                    <button type="submit" class="btn btn-sm btn-outline-light" data-bs-toggle="tooltip" data-bs-placement="top" title="Volta para a página anterior do histórico.">⬅️ Anterior</button>
+                </form>
                 {% else %}
                 <button class="btn btn-sm btn-outline-light" disabled>⬅️ Anterior</button>
                 {% endif %}
                 <form method="GET" class="history-inline-form d-flex align-items-center mb-0">
-                    <select id="history_limit_inline" name="history_limit" class="form-select form-select-sm bg-dark text-light border-secondary" onchange="this.form.submit()">
+                    <select id="history_limit_inline" name="history_limit" class="form-select form-select-sm bg-dark text-light border-secondary" onchange="this.form.submit()" data-bs-toggle="tooltip" data-bs-placement="top" title="Quantidade de registros exibidos no histórico (0 oculta o bloco).">
                         <option value="0" {{ 'selected' if history_limit_pre == '0' else '' }}>Ocultar</option>
                         {% for n in range(1, history_limit_max + 1) %}
                         <option value="{{ n }}" {{ 'selected' if history_limit_pre == (n|string) else '' }}>{{ n }}</option>
@@ -149,7 +155,11 @@
                     <input type="hidden" name="history_page" value="1">
                 </form>
                 {% if has_next_history %}
-                <a class="btn btn-sm btn-outline-light" href="/?history_limit={{ history_limit }}&history_page={{ history_page + 1 }}">Próxima ➡️</a>
+                <form method="GET" class="mb-0 d-inline">
+                    <input type="hidden" name="history_limit" value="{{ history_limit }}">
+                    <input type="hidden" name="history_page" value="{{ history_page + 1 }}">
+                    <button type="submit" class="btn btn-sm btn-outline-light" data-bs-toggle="tooltip" data-bs-placement="top" title="Avança para a próxima página do histórico.">Próxima ➡️</button>
+                </form>
                 {% else %}
                 <button class="btn btn-sm btn-outline-light" disabled>Próxima ➡️</button>
                 {% endif %}
