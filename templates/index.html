@@ -10,8 +10,11 @@
 <body>
 <div class="container py-5">
     <div class="header-tech">
-        <h2 class="icon-title"><span>🛡️</span><span>FRAMEWORK DE REDES - ANÁLISE DIDÁTICA | AVANÇADA</span></h2>
-        <p></p>
+        <h2 class="icon-title">
+            <img src="{{ url_for('project_icon') }}" alt="Ícone do projeto" class="brand-icon">
+            <span>FRAMEWORK DE REDES - ANÁLISE DIDÁTICA | AVANÇADA</span>
+        </h2>
+        <p class="mb-0 text-secondary">Paulo André Carminati | FIAP Cyber Defense 2026</p>
         <div class="mt-2">
             <span class="shield-badge"><span class="icon">🧠</span>Bitwise AND</span>
             <span class="shield-badge"><span class="icon">🎯</span>RFC1918</span>
@@ -121,7 +124,7 @@
                         <td>{{ item.id }}</td>
                         <td>{{ item.timestamp }}</td>
                         <td>{{ item.modo }}</td>
-                        <td>{{ item.ip_entrada or '—' }}</td>
+                        <td>{{ item.ipv6_entrada or item.ip_entrada or '—' }}</td>
                         <td>{{ item.cidr or item.cidr_entrada or '—' }}</td>
                         <td><a class="btn btn-sm btn-outline-info" href="/?replay={{ item.id }}&history_limit={{ history_limit }}&history_page={{ history_page }}">🔁 Recarregar</a></td>
                     </tr>
@@ -158,48 +161,66 @@
     {% if ipv6_res %}
     <div class="card-tech p-4 shadow">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 border-bottom border-secondary pb-2 mb-3">
-            <h6 class="text-info mb-0">🌐 MODO IPV6 BÁSICO</h6>
+            <h6 class="text-info mb-0 icon-title">
+                <span>🌐 MODO IPV6 BÁSICO</span>
+                <button type="button" class="help-hint-btn" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-placement="top" title="Como ler esta tabela" data-bs-content="Passe o mouse sobre os cabeçalhos para ver explicações. Esta seção resume escopo, rede /64 e sinais especiais do IPv6.">ℹ️</button>
+            </h6>
             <span class="calc-tag calc-tag-dyn">Dinâmico por cálculo</span>
         </div>
-        <p><strong>IPv6 informado:</strong> {{ ipv6_res.entrada }}</p>
-        <p><strong>Comprimido:</strong> {{ ipv6_res.comprimido }}</p>
-        <p><strong>Expandido:</strong> {{ ipv6_res.expandido }}</p>
-        <p><strong>Zone index:</strong> {{ ipv6_res.zone_index }}</p>
-        <p><strong>Classificação:</strong> {{ ipv6_res.tipo }}</p>
-        <p><strong>Prefixo sugerido:</strong> {{ ipv6_res.prefixo_sugerido }}</p>
-        <p><strong>Primeiros 64 bits:</strong> {{ ipv6_res.primeiros_64 }}</p>
-        <p><strong>Últimos 64 bits:</strong> {{ ipv6_res.ultimos_64 }}</p>
+        <div class="table-responsive">
+            <table class="table table-dark table-bordered table-sm ipv6-table mb-0">
+                <thead>
+                    <tr>
+                        <th data-bs-toggle="tooltip" data-bs-placement="top" title="Item técnico analisado no IPv6">🏷️ Campo</th>
+                        <th data-bs-toggle="tooltip" data-bs-placement="top" title="Valor calculado automaticamente para o endereço informado">📌 Valor dinâmico</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in ipv6_res.itens_exibicao %}
+                    <tr>
+                        <th>{{ item.icone }} {{ item.campo }}</th>
+                        <td>{{ item.valor }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
     {% endif %}
 
     {% if res %}
     <div class="dynamic-theme"
          style="--dyn-bit1: {{ res.cor_bit1 }}; --dyn-and: {{ res.cor_resultado_and }}; --dyn-pulo: {{ res.cor_pulo }}; --dyn-resumo: {{ res.cor_borda_resumo }}; --dyn-accent: {{ res.cor_acento }}; --dyn-table-border: {{ res.cor_borda_tabela }}; --dyn-table-th-bg: {{ res.cor_cabecalho_tabela_bg }}; --dyn-table-th-text: {{ res.cor_cabecalho_tabela_texto }}; --dyn-row-highlight: {{ res.cor_linha_destaque }};">
-    <div class="card-tech p-3 mb-3 dynamic-legend">
-        <div class="d-flex flex-wrap align-items-center gap-2">
-            <span class="dynamic-legend-title">🎨 Severidade visual dinâmica:</span>
-            <span class="dynamic-legend-chip chip-verde">/24+ Verde</span>
-            <span class="dynamic-legend-chip chip-azul">/17-23 Azul</span>
-            <span class="dynamic-legend-chip chip-ambar">/9-16 Âmbar</span>
-            <span class="dynamic-legend-chip chip-vermelho">/0-8 Vermelho</span>
+    <div class="top-overview-grid mb-3">
+        <div class="card-tech p-3 dynamic-legend h-100">
+            <div class="top-card-title">🎨 Tema e severidade</div>
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <span class="dynamic-legend-title">Escala dinâmica:</span>
+                <span class="dynamic-legend-chip chip-verde">/24+ Verde</span>
+                <span class="dynamic-legend-chip chip-azul">/17-23 Azul</span>
+                <span class="dynamic-legend-chip chip-ambar">/9-16 Âmbar</span>
+                <span class="dynamic-legend-chip chip-vermelho">/0-8 Vermelho</span>
+            </div>
+            <div class="small mt-2 mb-0">
+                <strong>Nível atual:</strong> {{ res.nivel_tema }} — {{ res.nivel_tema_descricao }}
+            </div>
         </div>
-        <div class="small mt-2 mb-0">
-            <strong>Nível atual:</strong> {{ res.nivel_tema }} — {{ res.nivel_tema_descricao }}
+        <div class="card-tech p-3 h-100">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                <h6 class="text-info mb-0">📌 Resumo Executivo GRC</h6>
+                <span class="calc-tag calc-tag-dyn">Dinâmico por cálculo</span>
+            </div>
+            {% if res.grc_resumo %}
+            <ul class="mb-0 small grc-list">
+                {% for linha in res.grc_resumo %}
+                <li>{{ linha }}</li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="small text-secondary mb-0">Sem alertas adicionais para o cenário atual.</div>
+            {% endif %}
         </div>
     </div>
-    {% if res.grc_resumo %}
-    <div class="card-tech p-3 mb-3">
-        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
-            <h6 class="text-info mb-0">📌 Resumo Executivo GRC</h6>
-            <span class="calc-tag calc-tag-dyn">Dinâmico por cálculo</span>
-        </div>
-        <ul class="mb-0 small grc-list">
-            {% for linha in res.grc_resumo %}
-            <li>{{ linha }}</li>
-            {% endfor %}
-        </ul>
-    </div>
-    {% endif %}
     {% if res.somente_mascara %}
     <div class="classe-destaque cv-outros card-tech shadow mb-3 py-4 px-3 text-center">
         <div class="classe-destaque-rotulo">Modo só máscara (sem IP)</div>
@@ -245,18 +266,20 @@
     {% if not res.somente_mascara %}
     <div class="card-tech shadow mt-3">
         <div class="p-3 border-bottom border-secondary text-warning fw-bold d-flex flex-wrap justify-content-between align-items-center gap-2">
-            <span>🧠 DECOMPOSIÇÃO BITWISE AND (IP x MÁSCARA)</span>
+            <span class="icon-title">🧠 DECOMPOSIÇÃO BITWISE AND (IP x MÁSCARA)
+                <button type="button" class="help-hint-btn" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-placement="top" title="Bitwise AND" data-bs-content="A operação AND entre IP e máscara determina a rede. A linha Wildcard é a máscara invertida, usada em ACL/OSPF.">ℹ️</button>
+            </span>
             <span class="calc-tag calc-tag-dyn">Dinâmico por cálculo</span>
         </div>
         <div class="p-3 and-table-wrap">
             <table class="table table-dark table-bordered align-middle and-table mb-2">
                 <thead>
                     <tr>
-                        <th>CAMPO</th>
-                        <th>OCTETO 1</th>
-                        <th>OCTETO 2</th>
-                        <th>OCTETO 3</th>
-                        <th>OCTETO 4</th>
+                        <th data-bs-toggle="tooltip" data-bs-placement="top" title="Linha de referência da decomposição">🏷️ CAMPO</th>
+                        <th data-bs-toggle="tooltip" data-bs-placement="top" title="Valores do primeiro octeto (bits 1 a 8)">🔢 OCTETO 1</th>
+                        <th data-bs-toggle="tooltip" data-bs-placement="top" title="Valores do segundo octeto (bits 9 a 16)">🔢 OCTETO 2</th>
+                        <th data-bs-toggle="tooltip" data-bs-placement="top" title="Valores do terceiro octeto (bits 17 a 24)">🔢 OCTETO 3</th>
+                        <th data-bs-toggle="tooltip" data-bs-placement="top" title="Valores do quarto octeto (bits 25 a 32)">🔢 OCTETO 4</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -313,40 +336,42 @@
         <div class="col-md-6">
             <div class="card-tech p-4 h-100 resumo-box">
                 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 border-bottom border-secondary pb-2 mb-3">
-                    <h6 class="text-info mb-0 icon-title"><span>📋</span><span>RESULTADOS DECIMAIS</span></h6>
+                    <h6 class="text-info mb-0 icon-title"><span>📋</span><span>RESULTADOS DECIMAIS</span>
+                        <button type="button" class="help-hint-btn" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-placement="top" title="Resumo decimal" data-bs-content="Aqui ficam rede, broadcast, hosts úteis e pulo. Use como resumo rápido para prova e troubleshooting.">ℹ️</button>
+                    </h6>
                     <span class="calc-tag calc-tag-dyn">Dinâmico por cálculo</span>
                 </div>
                 <div class="table-responsive">
                     <table class="table table-dark table-bordered table-sm resultados-table mb-2">
                         <tbody>
                             <tr>
-                                <th>MÁSCARA</th>
+                                <th>📏 MÁSCARA</th>
                                 <td><span class="text-warning fw-bold">{{ res.mask }}</span> <span class="text-secondary small">/ {{ res.cidr }}</span></td>
                             </tr>
                             {% if res.cidr_origem %}
                             <tr>
-                                <th>CIDR DE ORIGEM</th>
+                                <th>🧭 CIDR DE ORIGEM</th>
                                 <td class="text-info">{{ res.cidr_origem }}</td>
                             </tr>
                             {% endif %}
                             <tr>
-                                <th>WILDCARD</th>
+                                <th>🧩 WILDCARD</th>
                                 <td><span class="fw-bold">{{ res.wildcard }}</span></td>
                             </tr>
                             {% if res.somente_mascara %}
-                            <tr><th>REDE</th><td><span class="text-secondary">—</span> <span class="small text-secondary">(informe um IP)</span></td></tr>
-                            <tr><th>PRIMEIRO IP ÚTIL (1º host)</th><td><span class="text-secondary">—</span></td></tr>
-                            <tr><th>ÚLTIMO IP ÚTIL (último host)</th><td><span class="text-secondary">—</span></td></tr>
-                            <tr><th>BROADCAST</th><td><span class="text-secondary">—</span></td></tr>
+                            <tr><th>🧭 REDE</th><td><span class="text-secondary">—</span> <span class="small text-secondary">(informe um IP)</span></td></tr>
+                            <tr><th>✅ PRIMEIRO IP ÚTIL (1º host)</th><td><span class="text-secondary">—</span></td></tr>
+                            <tr><th>✅ ÚLTIMO IP ÚTIL (último host)</th><td><span class="text-secondary">—</span></td></tr>
+                            <tr><th>📣 BROADCAST</th><td><span class="text-secondary">—</span></td></tr>
                             {% else %}
-                            <tr><th>REDE</th><td>{{ res.rede }}</td></tr>
-                            <tr><th>PRIMEIRO IP ÚTIL (1º host)</th><td><span class="text-success">{{ res.primeiro_host }}</span></td></tr>
-                            <tr><th>ÚLTIMO IP ÚTIL (último host)</th><td><span class="text-success">{{ res.ultimo_host }}</span></td></tr>
-                            <tr><th>BROADCAST</th><td>{{ res.broad }}</td></tr>
-                            <tr><th>IP DE HOST (BIN)</th><td><span class="text-light fw-bold">{{ res.ip_binario_completo }}</span></td></tr>
+                            <tr><th>🧭 REDE</th><td>{{ res.rede }}</td></tr>
+                            <tr><th>✅ PRIMEIRO IP ÚTIL (1º host)</th><td><span class="text-success">{{ res.primeiro_host }}</span></td></tr>
+                            <tr><th>✅ ÚLTIMO IP ÚTIL (último host)</th><td><span class="text-success">{{ res.ultimo_host }}</span></td></tr>
+                            <tr><th>📣 BROADCAST</th><td>{{ res.broad }}</td></tr>
+                            <tr><th>💻 IP DE HOST (BIN)</th><td><span class="text-light fw-bold">{{ res.ip_binario_completo }}</span></td></tr>
                             {% endif %}
                             <tr>
-                                <th>VARIAÇÃO (PULO)</th>
+                                <th>📈 VARIAÇÃO (PULO)</th>
                                 <td><span class="highlight-pulo">{{ res.pulo }}</span></td>
                             </tr>
                         </tbody>
@@ -404,7 +429,9 @@
         <div class="col-md-6">
             <div class="card-tech p-4 h-100 resumo-box" style="border-left-color: #238636;">
                 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 border-bottom border-secondary pb-2 mb-3">
-                    <h6 class="text-info mb-0 icon-title"><span>🧮</span><span>CAPACIDADE E HOSTS</span></h6>
+                    <h6 class="text-info mb-0 icon-title"><span>🧮</span><span>CAPACIDADE E HOSTS</span>
+                        <button type="button" class="help-hint-btn" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-placement="top" title="Capacidade de hosts" data-bs-content="Mostra bits de host, quantidade total e IPs úteis no bloco. Em /31 e /32, a lógica de hosts muda por RFC.">ℹ️</button>
+                    </h6>
                     <span class="calc-tag calc-tag-dyn">Dinâmico por cálculo</span>
                 </div>
                 <p>ZEROS (HOST BITS): <span class="text-light fw-bold">{{ res.zeros }}</span></p>
@@ -427,8 +454,8 @@
                     <table class="table table-dark table-bordered table-sm termos-table mb-0">
                         <thead>
                             <tr>
-                                <th>ITEM</th>
-                                <th>DESCRIÇÃO</th>
+                                <th>🏷️ ITEM</th>
+                                <th>📝 DESCRIÇÃO</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -470,11 +497,11 @@
                     <table class="table table-dark table-bordered table-sm regua-table mb-0">
                         <thead>
                             <tr>
-                                <th>SUBNET</th>
-                                <th>REDE</th>
-                                <th>1º HOST</th>
-                                <th>ÚLTIMO HOST</th>
-                                <th>BROADCAST</th>
+                                <th>🧩 SUBNET</th>
+                                <th>🧭 REDE</th>
+                                <th>✅ 1º HOST</th>
+                                <th>✅ ÚLTIMO HOST</th>
+                                <th>📣 BROADCAST</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -513,11 +540,11 @@
                         <th>4</th>
                         <th>2</th>
                         <th>1</th>
-                        <th>Int</th>
-                        <th>Variação</th>
-                        <th>IPs</th>
-                        <th>Máscara</th>
-                        <th>Barra</th>
+                        <th>🔢 Int</th>
+                        <th>📈 Variação</th>
+                        <th>🌐 IPs</th>
+                        <th>📏 Máscara</th>
+                        <th>🧷 Barra</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -554,11 +581,11 @@
                         <table class="table table-dark table-bordered table-sm conv-table mb-0">
                             <thead>
                                 <tr>
-                                    <th>Referência</th>
-                                    <th>Bits</th>
-                                    <th>Bytes</th>
-                                    <th>Binário</th>
-                                    <th>Decimal</th>
+                                    <th>🏷️ Referência</th>
+                                    <th>🧠 Bits</th>
+                                    <th>📦 Bytes</th>
+                                    <th>🔢 Binário</th>
+                                    <th>🔣 Decimal</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -581,8 +608,8 @@
                         <table class="table table-dark table-bordered table-sm conv-table mb-0">
                             <thead>
                                 <tr>
-                                    <th>Métrica</th>
-                                    <th>Valor</th>
+                                    <th>📏 Métrica</th>
+                                    <th>✅ Valor</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -603,7 +630,9 @@
 
     <div class="card-tech shadow mt-3">
         <div class="p-3 border-bottom border-secondary text-warning fw-bold d-flex flex-wrap justify-content-between align-items-center gap-2">
-            <span>🖥️ DICAS DE TERMINAL (Linux e Windows)</span>
+            <span class="icon-title">🖥️ DICAS DE TERMINAL (Linux e Windows)
+                <button type="button" class="help-hint-btn" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-placement="top" title="Dicas de terminal" data-bs-content="Comandos para validar no sistema operacional os mesmos conceitos exibidos no framework.">ℹ️</button>
+            </span>
             <span class="calc-tag calc-tag-fixed">Referência fixa</span>
         </div>
         <div class="p-3">
@@ -615,8 +644,8 @@
                         <table class="table table-dark table-bordered table-sm cmd-table mb-0">
                             <thead>
                                 <tr>
-                                    <th>Comando</th>
-                                    <th>Para que serve</th>
+                                    <th data-bs-toggle="tooltip" data-bs-placement="top" title="Comando para execução no terminal Linux">Comando</th>
+                                    <th data-bs-toggle="tooltip" data-bs-placement="top" title="Objetivo prático do comando no diagnóstico de rede">Para que serve</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -633,6 +662,14 @@
                                     <td>Exibe a tabela de rotas e gateway padrão.</td>
                                 </tr>
                                 <tr>
+                                    <td><code>ip neigh</code><br><code>arp -n</code></td>
+                                    <td>Mostra tabela ARP/NDP (mapeamento IP ↔ MAC) para validar camada 2 e detectar anomalias.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>traceroute 8.8.8.8</code></td>
+                                    <td>Exibe os saltos até o destino para análise de caminho e latência.</td>
+                                </tr>
+                                <tr>
                                     <td><code>sudo apt install ipcalc</code><br><code>ipcalc 172.19.0.0/20</code></td>
                                     <td>Calcula rede, broadcast, wildcard e capacidade de hosts.</td>
                                 </tr>
@@ -646,8 +683,8 @@
                         <table class="table table-dark table-bordered table-sm cmd-table mb-0">
                             <thead>
                                 <tr>
-                                    <th>Comando</th>
-                                    <th>Para que serve</th>
+                                    <th data-bs-toggle="tooltip" data-bs-placement="top" title="Comando para CMD/PowerShell no Windows">Comando</th>
+                                    <th data-bs-toggle="tooltip" data-bs-placement="top" title="Objetivo prático do comando no diagnóstico de rede">Para que serve</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -664,6 +701,14 @@
                                     <td>Exibe tabela de roteamento IPv4 para auditoria de rotas.</td>
                                 </tr>
                                 <tr>
+                                    <td><code>arp -a</code></td>
+                                    <td>Lista cache ARP (IP ↔ MAC) para troubleshooting de gateway e suspeita de ARP spoofing.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>tracert 8.8.8.8</code></td>
+                                    <td>Mostra rota por saltos até o destino para validar caminho na rede.</td>
+                                </tr>
+                                <tr>
                                     <td><code>Get-NetIPAddress</code></td>
                                     <td>Consulta moderna em PowerShell para filtros e scripts.</td>
                                 </tr>
@@ -672,7 +717,7 @@
                     </div>
                 </div>
             </div>
-            <div class="small text-secondary mt-3 mb-0">Validação rápida de prova: no Windows use <code>ipconfig /all</code>; no Linux use <code>ip a</code> + <code>ip route</code>.</div>
+            <div class="small text-secondary mt-3 mb-0">Validação rápida de prova: no Windows use <code>ipconfig /all</code> + <code>arp -a</code> + <code>tracert 8.8.8.8</code>; no Linux use <code>ip a</code> + <code>ip route</code> + <code>ip neigh</code> + <code>traceroute 8.8.8.8</code>.</div>
         </div>
     </div>
     {% endif %}
@@ -689,7 +734,13 @@
             <span class="shield-badge"><span class="icon">🛡️</span>Cyber Defense</span>
             <span class="shield-badge"><span class="icon">💻</span>Python + Flask</span>
         </div>
-        <div class="mt-2">GitHub: <a href="https://github.com/carmipa" target="_blank" rel="noopener noreferrer" class="text-info footer-link">🐙 github.com/carmipa</a></div>
+        <div class="mt-2">
+            GitHub:
+            <a href="https://github.com/carmipa" target="_blank" rel="noopener noreferrer" class="text-info footer-link">🐙 github.com/carmipa</a>
+            <span class="text-secondary">|</span>
+            Projeto:
+            <a href="https://github.com/carmipa/FRAMEWORK_DE_REDES_ANALISE_DIDATICA_AVANCADA" target="_blank" rel="noopener noreferrer" class="text-info footer-link">📁 github.com/carmipa/FRAMEWORK_DE_REDES_ANALISE_DIDATICA_AVANCADA</a>
+        </div>
     </div>
 </footer>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

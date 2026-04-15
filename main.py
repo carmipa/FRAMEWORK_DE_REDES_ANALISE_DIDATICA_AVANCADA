@@ -12,7 +12,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from collections import deque
 
-from flask import Flask, g, request, render_template, jsonify, send_file, redirect, url_for
+from flask import Flask, g, request, render_template, jsonify, send_file, redirect, url_for, abort
 import socket
 from werkzeug.exceptions import HTTPException
 
@@ -102,6 +102,7 @@ def _registrar_consulta(entrada, res):
         "timestamp": _utc_now_iso(),
         "modo": entrada.get("modo", ""),
         "ip_entrada": entrada.get("ip", ""),
+        "ipv6_entrada": entrada.get("ipv6", ""),
         "cidr_entrada": entrada.get("cidr", ""),
         "mask_entrada": entrada.get("mask_decimal", ""),
         "wildcard_entrada": entrada.get("wildcard_mask", ""),
@@ -144,6 +145,59 @@ def _classificar_ipv6(addr):
     return "Outro/Reservado"
 
 
+def _escopo_ipv6(addr):
+    if addr.is_loopback:
+        return "Host local"
+    if addr.is_link_local:
+        return "Enlace local (não roteável)"
+    if addr.is_private:
+        return "Site local/ULA (rede privada IPv6)"
+    if addr.is_global:
+        return "Global (roteável na Internet)"
+    if addr.is_multicast:
+        return "Multicast (grupo)"
+    if addr.is_unspecified:
+        return "Não especificado"
+    return "Reservado/Especial"
+
+
+def _sinais_ipv6(addr):
+    sinais = []
+    if addr.is_loopback:
+        sinais.append("Loopback")
+    if addr.is_link_local:
+        sinais.append("Link-local")
+    if addr.is_private:
+        sinais.append("ULA")
+    if addr.is_global:
+        sinais.append("Global")
+    if addr.is_multicast:
+        sinais.append("Multicast")
+    if addr.is_reserved:
+        sinais.append("Reservado")
+    if addr.is_unspecified:
+        sinais.append("Não especificado")
+    if addr.ipv4_mapped:
+        sinais.append(f"IPv4-mapped ({addr.ipv4_mapped})")
+    if addr.sixtofour:
+        sinais.append(f"6to4 ({addr.sixtofour})")
+    if addr.teredo:
+        sinais.append(f"Teredo ({addr.teredo[0]} -> {addr.teredo[1]})")
+    return sinais or ["Sem sinais especiais"]
+
+
+def _grc_ipv6(addr):
+    if addr.is_link_local:
+        return "Endereço de enlace local: válido para segmento local e troubleshooting, sem roteamento externo."
+    if addr.is_private:
+        return "ULA: adequado para ambientes internos; manter ACL e segmentação de tráfego leste-oeste."
+    if addr.is_global:
+        return "Global unicast: requer hardening de borda, filtros e monitoramento contínuo de exposição."
+    if addr.is_multicast:
+        return "Multicast: revisar escopo e assinaturas de grupo para evitar tráfego excessivo."
+    return "Revisar contexto operacional para validar uso e escopo deste endereço IPv6."
+
+
 def _processar_ipv6(ipv6_s):
     raw = (ipv6_s or "").strip().strip('"').strip("'")
     if not raw:
@@ -166,16 +220,44 @@ def _processar_ipv6(ipv6_s):
 
     bits = bin(int(addr))[2:].zfill(128)
     blocos_16 = [bits[i:i + 16] for i in range(0, 128, 16)]
+    hextetos = addr.exploded.split(":")
+    primeiros_64 = ":".join(hextetos[:4])
+    ultimos_64 = ":".join(hextetos[4:])
+    rede_64 = str(ipaddress.IPv6Network(f"{addr}/64", strict=False).network_address)
+    sinais = _sinais_ipv6(addr)
     comprimido = addr.compressed + (f"%{zone}" if zone else "")
+    itens_exibicao = [
+        {"icone": "📥", "campo": "IPv6 informado", "valor": raw},
+        {"icone": "🗜️", "campo": "Comprimido", "valor": comprimido},
+        {"icone": "🧱", "campo": "Expandido", "valor": addr.exploded},
+        {"icone": "🏷️", "campo": "Classificação", "valor": _classificar_ipv6(addr)},
+        {"icone": "🧭", "campo": "Escopo", "valor": _escopo_ipv6(addr)},
+        {"icone": "📌", "campo": "Prefixo sugerido", "valor": "/64 (didático para LAN IPv6)"},
+        {"icone": "🌐", "campo": "Rede /64 estimada", "valor": f"{rede_64}/64"},
+        {"icone": "🆔", "campo": "Zone index", "valor": zone or "—"},
+        {"icone": "🧠", "campo": "Primeiros 64 bits", "valor": primeiros_64},
+        {"icone": "🔚", "campo": "Últimos 64 bits", "valor": ultimos_64},
+        {"icone": "🔢", "campo": "Total de bits", "valor": "128"},
+        {"icone": "🧾", "campo": "Reverse DNS (PTR)", "valor": addr.reverse_pointer},
+        {"icone": "🛡️", "campo": "Sinais especiais", "valor": ", ".join(sinais)},
+        {"icone": "✅", "campo": "Resumo GRC", "valor": _grc_ipv6(addr)},
+    ]
     return {
         "entrada": raw,
         "comprimido": comprimido,
         "expandido": addr.exploded,
         "tipo": _classificar_ipv6(addr),
+        "escopo": _escopo_ipv6(addr),
         "prefixo_sugerido": "/64 (didático para LAN IPv6)",
         "blocos_16": blocos_16,
-        "primeiros_64": ":".join(addr.exploded.split(":")[:4]),
-        "ultimos_64": ":".join(addr.exploded.split(":")[4:]),
+        "hextetos": hextetos,
+        "primeiros_64": primeiros_64,
+        "ultimos_64": ultimos_64,
+        "rede_64": rede_64,
+        "reverse_pointer": addr.reverse_pointer,
+        "sinais_especiais": sinais,
+        "grc_ipv6": _grc_ipv6(addr),
+        "itens_exibicao": itens_exibicao,
         "zone_index": zone or "—",
     }
 
@@ -672,15 +754,15 @@ def processar(ip_s, cidr, regua_count=5):
         f"Gateway sugerido: {gateway_sugerido}"
     )
     resumo_prova_itens = [
-        {"campo": "IP informado", "valor": fmt(ip_i)},
-        {"campo": "Máscara/CIDR", "valor": f"{c['mask']} /{cidr}"},
-        {"campo": "Rede", "valor": fmt(r_i)},
-        {"campo": "Broadcast", "valor": fmt(b_i)},
-        {"campo": "Wildcard", "valor": c["wildcard"]},
-        {"campo": "Hosts úteis", "valor": c["uteis"]},
-        {"campo": "Tipo de IP", "valor": ip_tipo_privacidade},
-        {"campo": "Papel do IP", "valor": ip_papel},
-        {"campo": "Gateway sugerido", "valor": gateway_sugerido},
+        {"campo": "🌐 IP informado", "valor": fmt(ip_i)},
+        {"campo": "📏 Máscara/CIDR", "valor": f"{c['mask']} /{cidr}"},
+        {"campo": "🧭 Rede", "valor": fmt(r_i)},
+        {"campo": "📣 Broadcast", "valor": fmt(b_i)},
+        {"campo": "🧩 Wildcard", "valor": c["wildcard"]},
+        {"campo": "✅ Hosts úteis", "valor": c["uteis"]},
+        {"campo": "🔐 Tipo de IP", "valor": ip_tipo_privacidade},
+        {"campo": "📌 Papel do IP", "valor": ip_papel},
+        {"campo": "🚪 Gateway sugerido", "valor": gateway_sugerido},
     ]
 
     seguranca_dicas = []
@@ -764,7 +846,12 @@ def home():
     if request.method == "GET" and replay_id:
         selected = next((item for item in _history if item.get("id") == replay_id), None)
         if selected:
-            ip_p = selected.get("ip_entrada", "")
+            if selected.get("modo") == "ipv6":
+                ipv6_p = selected.get("ipv6_entrada") or selected.get("ip_entrada", "")
+                ip_p = ""
+            else:
+                ip_p = selected.get("ip_entrada", "")
+                ipv6_p = selected.get("ipv6_entrada", "")
             cidr_p = selected.get("cidr_entrada", "")
             mask_dec_p = selected.get("mask_entrada", "")
             wildcard_p = selected.get("wildcard_entrada", "")
@@ -839,7 +926,8 @@ def home():
                     _registrar_consulta(
                         {
                             "modo": modo,
-                            "ip": ipv6_p,
+                            "ip": "",
+                            "ipv6": ipv6_p,
                             "cidr": "",
                             "mask_decimal": "",
                             "wildcard_mask": "",
@@ -1106,7 +1194,7 @@ def export_pdf():
         f"Gerado em: {_utc_now_iso()}",
         f"Consulta ID: {last.get('id', '-')}",
         f"Modo: {last.get('modo', '-')}",
-        f"IP entrada: {last.get('ip_entrada', '-')}",
+        f"Entrada: {last.get('ipv6_entrada') or last.get('ip_entrada', '-')}",
         f"CIDR entrada: {last.get('cidr_entrada', '-')}",
         f"Máscara: {last.get('mask', '-')}",
         f"CIDR final: /{last.get('cidr', '-')}",
@@ -1123,6 +1211,14 @@ def export_pdf():
         as_attachment=True,
         download_name="relatorio_rede_grc.pdf",
     )
+
+
+@app.route("/icone.png", methods=["GET"])
+def project_icon():
+    icon_path = BASE_DIR / "icone.png"
+    if not icon_path.exists():
+        abort(404)
+    return send_file(icon_path, mimetype="image/png")
 
 
 if __name__ == '__main__':

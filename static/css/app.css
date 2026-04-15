@@ -39,6 +39,13 @@ body { background-color: #0d1117; color: #c9d1d9; font-family: 'Consolas', monos
             align-items: center;
             gap: 0.45rem;
         }
+        .brand-icon {
+            width: 30px;
+            height: 30px;
+            object-fit: contain;
+            border-radius: 6px;
+            box-shadow: 0 0 0 1px rgba(121, 192, 255, 0.25);
+        }
         .footer-link {
             text-decoration: none;
             font-weight: 600;
@@ -95,12 +102,12 @@ body { background-color: #0d1117; color: #c9d1d9; font-family: 'Consolas', monos
         }
         .bit-col:last-child { border-right: none; }
 
-        .info-top { font-size: 0.65rem; color: #768390; background: #21262d; padding: 2px 0; }
-        .val-bin { font-size: 1.2rem; padding: 8px 0; font-weight: bold; }
+        .info-top { font-size: 0.72rem; color: #768390; background: #21262d; padding: 2px 0; }
+        .val-bin { font-size: 1.32rem; padding: 8px 0; font-weight: bold; }
         .bit-1 { background-color: var(--dyn-bit1); color: white; }
         .bit-0 { background-color: #161b22; color: #484f58; }
-        .peso-bot { font-size: 0.75rem; color: #58a6ff; padding: 4px 0; background: #0d1117; }
-        .octeto-label { font-size: 0.8rem; color: #f2cc60; margin-top: 8px; font-weight: bold; }
+        .peso-bot { font-size: 0.82rem; color: #58a6ff; padding: 4px 0; background: #0d1117; }
+        .octeto-label { font-size: 0.9rem; color: #f2cc60; margin-top: 8px; font-weight: bold; }
 
         .resumo-box { border-left: 3px solid var(--dyn-resumo); padding-left: 10px; }
         .highlight-pulo { color: var(--dyn-pulo); font-size: 1.3rem; font-weight: bold; }
@@ -124,7 +131,7 @@ body { background-color: #0d1117; color: #c9d1d9; font-family: 'Consolas', monos
         .and-row-mask { color: #3fb950; }
         .and-row-result { color: var(--dyn-and); font-weight: 700; }
         .and-row-wild { background-color: rgba(255, 140, 0, 0.15); color: #ffb347; font-weight: 700; }
-        .regua-table th, .regua-table td { font-size: 0.84rem; white-space: nowrap; }
+        .regua-table th, .regua-table td { font-size: 0.84rem; white-space: nowrap; text-align: center; }
         .termos-table th, .termos-table td {
             font-size: 0.88rem;
             white-space: normal;
@@ -166,6 +173,25 @@ body { background-color: #0d1117; color: #c9d1d9; font-family: 'Consolas', monos
             font-size: 0.9rem;
             padding: 0.52rem 0.62rem;
             vertical-align: top;
+        }
+        .ipv6-table th, .ipv6-table td {
+            font-size: 0.88rem;
+            padding: 0.5rem 0.62rem;
+            vertical-align: top;
+        }
+        .ipv6-table thead th {
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            font-size: 0.78rem;
+        }
+        .ipv6-table tbody th {
+            width: 34%;
+            color: #8b949e;
+            white-space: nowrap;
+        }
+        .ipv6-table tbody td {
+            font-family: "Consolas", "Courier New", monospace;
+            word-break: break-word;
         }
         .resultados-table th {
             width: 42%;
@@ -227,6 +253,7 @@ body { background-color: #0d1117; color: #c9d1d9; font-family: 'Consolas', monos
             max-width: 40rem;
             margin-left: auto;
             margin-right: auto;
+            text-align: center;
             line-height: 1.45;
         }
         .cv-a { border-color: #238636; }
@@ -267,6 +294,19 @@ body { background-color: #0d1117; color: #c9d1d9; font-family: 'Consolas', monos
         }
         .dynamic-legend {
             border-left: 4px solid var(--dyn-accent);
+        }
+        .top-overview-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.85rem;
+        }
+        .top-card-title {
+            font-size: 0.86rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: #8b949e;
+            margin-bottom: 0.45rem;
+            font-weight: 700;
         }
         .dynamic-legend-title {
             color: var(--dyn-accent);
@@ -354,6 +394,7 @@ body { background-color: #0d1117; color: #c9d1d9; font-family: 'Consolas', monos
             .container.py-5 { padding-top: 1.4rem !important; padding-bottom: 1.4rem !important; }
             .header-tech h2 { font-size: 1.35rem; }
             .shield-badge { font-size: 0.7rem; padding: 0.25rem 0.55rem; }
+            .top-overview-grid { grid-template-columns: 1fr; }
             .bit-container { gap: 12px; padding: 12px; justify-content: center; }
             .bit-col { width: 34px; }
             .val-bin { font-size: 1rem; padding: 6px 0; }
@@ -378,6 +419,7 @@ body { background-color: #0d1117; color: #c9d1d9; font-family: 'Consolas', monos
             .termos-table th, .termos-table td,
             .regua-table th, .regua-table td,
             .ref-table th, .ref-table td,
+            .ipv6-table th, .ipv6-table td,
             .resumo-table th, .resumo-table td,
             .cmd-table th, .cmd-table td,
             .resultados-table th, .resultados-table td,
