@@ -7,15 +7,23 @@
 [![Status](https://img.shields.io/badge/Status-Ativo-2ea043)](#)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 
+<p align="center">
+  <img src="./icone.png" alt="Ícone do Framework de Redes" width="140" />
+</p>
+
 Aplicação didática para estudo de redes IPv4 com foco em **subnetting, bitwise AND, wildcard, CIDR, DNS/hostname e contexto de segurança/GRC**.
 
 > Projeto pensado para execução local (máquina do usuário), com interface web no navegador.
+>
+> 🔗 Endereço do projeto: [https://github.com/carmipa/FRAMEWORK_DE_REDES_ANALISE_DIDATICA_AVANCADA](https://github.com/carmipa/FRAMEWORK_DE_REDES_ANALISE_DIDATICA_AVANCADA)
 
 ---
 
 ## 📚 Sumário
 
 - [Visão Geral](#-visão-geral)
+- [Navegação Rápida](#-navegação-rápida)
+- [Guia de Instalação e Execução](#-guia-de-instalação-e-execução)
 - [Principais Funcionalidades](#-principais-funcionalidades)
 - [Arquitetura](#-arquitetura)
 - [Estrutura do Projeto](#-estrutura-do-projeto)
@@ -30,6 +38,86 @@ Aplicação didática para estudo de redes IPv4 com foco em **subnetting, bitwis
 - [Roadmap](#-roadmap)
 - [Contribuição](#-contribuição)
 - [Licença](#-licença)
+
+---
+
+## 🔗 Navegação Rápida
+
+> Acesse direto as áreas mais usadas deste README:
+
+- [▶️ Executar com Docker](#executar-com-docker-recomendado)
+- [💻 Executar com Python local](#executar-com-python-local)
+- [⚙️ Variáveis de Ambiente](#-variáveis-de-ambiente)
+- [🧪 Modos de Cálculo](#-modos-de-cálculo)
+- [📋 Logs, Exceções e GRC](#-logs-exceções-e-grc)
+- [🛣️ Roadmap](#-roadmap)
+
+---
+
+## 🧰 Guia de Instalação e Execução
+
+### Pré-requisitos
+
+- Git instalado
+- Python `3.12+` (se for rodar local sem Docker)
+- Docker + Docker Compose (se for rodar via container)
+
+### 1) Clonar o projeto
+
+```bash
+git clone https://github.com/carmipa/FRAMEWORK_DE_REDES_ANALISE_DIDATICA_AVANCADA.git
+cd FRAMEWORK_DE_REDES_ANALISE_DIDATICA_AVANCADA
+```
+
+### 2) Escolher forma de execução
+
+#### Opção A — Docker (mais simples para usuários finais)
+
+```bash
+docker compose up --build
+```
+
+Abra no navegador: [http://127.0.0.1:5000](http://127.0.0.1:5000)
+
+Para parar:
+
+```bash
+docker compose down
+```
+
+#### Opção B — Python local (ambiente virtual)
+
+##### Windows (PowerShell)
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+python main.py
+```
+
+##### Linux/macOS (bash/zsh)
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python main.py
+```
+
+Abra no navegador: [http://127.0.0.1:5000](http://127.0.0.1:5000)
+
+### 3) Rodar testes automatizados
+
+```bash
+python -m unittest tests/test_app.py
+```
+
+### 4) Solução rápida de problemas
+
+- **Porta 5000 em uso**: encerre processo da porta ou altere `APP_PORT`.
+- **Dependências falhando**: recrie `.venv` e reinstale `requirements.txt`.
+- **Docker não sobe**: valide se Docker Desktop está aberto e saudável.
 
 ---
 
@@ -91,11 +179,14 @@ flowchart TD
 
 ```text
 FRAMEWORK_DE_REDES_ANALISE_DIDATICA_AVANCADA/
+├── icone.png
 ├── main.py
 ├── requirements.txt
 ├── Dockerfile
 ├── docker-compose.yml
 ├── .dockerignore
+├── tests/
+│   └── test_app.py
 ├── templates/
 │   └── index.html
 └── static/

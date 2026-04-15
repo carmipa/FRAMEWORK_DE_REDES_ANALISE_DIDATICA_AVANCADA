@@ -11,6 +11,15 @@ body { background-color: #0d1117; color: #c9d1d9; font-family: 'Consolas', monos
             --dyn-row-highlight: rgba(121, 192, 255, 0.16);
         }
         .card-tech { background-color: #161b22; border: 1px solid #30363d; border-radius: 8px; margin-bottom: 20px; }
+        .form-control:focus-visible, .form-select:focus-visible, .btn:focus-visible, a:focus-visible {
+            outline: 2px solid #79c0ff !important;
+            outline-offset: 2px;
+            box-shadow: 0 0 0 0.2rem rgba(121, 192, 255, 0.25) !important;
+        }
+        .is-invalid {
+            border-color: #f85149 !important;
+            box-shadow: 0 0 0 0.14rem rgba(248, 81, 73, 0.25);
+        }
         .header-tech { border-left: 5px solid #238636; padding-left: 15px; color: #2ea043; margin-bottom: 25px; }
         .shield-badge {
             display: inline-flex;
@@ -36,9 +45,18 @@ body { background-color: #0d1117; color: #c9d1d9; font-family: 'Consolas', monos
         }
         .footer-link:hover { text-decoration: underline; }
         .action-buttons {
-            display: flex;
-            flex-wrap: wrap;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 0.5rem;
+        }
+        .action-buttons .btn {
+            letter-spacing: 0.01em;
+            min-height: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            width: 100%;
         }
         .domain-tab {
             margin-top: 0.9rem;
@@ -264,6 +282,26 @@ body { background-color: #0d1117; color: #c9d1d9; font-family: 'Consolas', monos
             font-size: 0.74rem;
             color: #c9d1d9;
         }
+        .dynamic-legend-chip.chip-verde {
+            background: rgba(35, 134, 54, 0.18);
+            border-color: #238636;
+            color: #8be9a8;
+        }
+        .dynamic-legend-chip.chip-azul {
+            background: rgba(31, 111, 235, 0.18);
+            border-color: #1f6feb;
+            color: #9ecbff;
+        }
+        .dynamic-legend-chip.chip-ambar {
+            background: rgba(210, 153, 34, 0.18);
+            border-color: #d29922;
+            color: #f2d487;
+        }
+        .dynamic-legend-chip.chip-vermelho {
+            background: rgba(248, 81, 73, 0.18);
+            border-color: #f85149;
+            color: #ffb3ad;
+        }
         .calc-tag {
             display: inline-flex;
             align-items: center;
@@ -288,6 +326,28 @@ body { background-color: #0d1117; color: #c9d1d9; font-family: 'Consolas', monos
             color: #d2a8ff;
             border-color: #6e40c9;
             background: rgba(110, 64, 201, 0.18);
+        }
+        .history-box table th, .history-box table td {
+            font-size: 0.78rem;
+            vertical-align: middle;
+        }
+        .history-inline-form .form-select {
+            min-width: 92px;
+        }
+        .history-pagination {
+            width: 100%;
+            text-align: center;
+        }
+        .history-box .btn-outline-info {
+            border-color: #1f6feb;
+            color: #9ecbff;
+        }
+        .history-box .btn-outline-info:hover {
+            background: #1f6feb;
+            color: #fff;
+        }
+        .grc-list li {
+            margin-bottom: 0.25rem;
         }
 
         @media (max-width: 992px) {
@@ -314,8 +374,7 @@ body { background-color: #0d1117; color: #c9d1d9; font-family: 'Consolas', monos
             .bit-col { width: 30px; }
             .val-bin { font-size: 0.9rem; }
             .wildcard-banner { font-size: 0.9rem; padding: 8px 10px; }
-            .action-buttons > * { flex: 1 1 100%; }
-            .action-buttons .btn { width: 100%; }
+            .action-buttons { grid-template-columns: 1fr; }
             .termos-table th, .termos-table td,
             .regua-table th, .regua-table td,
             .ref-table th, .ref-table td,

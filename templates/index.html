@@ -11,7 +11,7 @@
 <div class="container py-5">
     <div class="header-tech">
         <h2 class="icon-title"><span>🛡️</span><span>FRAMEWORK DE REDES - ANÁLISE DIDÁTICA | AVANÇADA</span></h2>
-        <p class="mb-0 text-secondary">Paulo André Carminati | FIAP Cyber Defense 2026</p>
+        <p></p>
         <div class="mt-2">
             <span class="shield-badge"><span class="icon">🧠</span>Bitwise AND</span>
             <span class="shield-badge"><span class="icon">🎯</span>RFC1918</span>
@@ -22,38 +22,45 @@
     </div>
 
     <div class="card-tech p-4 shadow">
-        <form method="POST" class="row g-3">
+        <form method="POST" class="row g-3" id="calc-form">
             <div class="col-md-5">
-                <label class="form-label small text-secondary">Endereço IPv4 (opcional)</label>
-                <input type="text" name="ip" class="form-control bg-dark text-light border-secondary" 
+                <label class="form-label small text-secondary">🌐 Endereço IPv4 (opcional)</label>
+                <input type="text" name="ip" class="form-control bg-dark text-light border-secondary {{ 'is-invalid' if 'ip' in invalid_fields else '' }}" 
                        placeholder="Ex.: 172.16.0.0 — deixe vazio se o exercício for só com máscara" value="{{ ip_pre }}"
                        data-bs-toggle="tooltip" data-bs-placement="top"
                        title="IP de host para calcular rede, broadcast e hosts úteis. Formato: x.x.x.x">
                 <div class="form-text text-secondary small">Sem IP: mostramos máscara, bits, tamanho do bloco e pulo. Rede/broadcast/hosts exigem um endereço no bloco.</div>
             </div>
             <div class="col-md-2">
-                <label class="form-label small text-secondary">CIDR</label>
-                <input type="number" name="cidr" class="form-control bg-dark text-light border-secondary" 
+                <label class="form-label small text-secondary">🧷 CIDR</label>
+                <input type="number" name="cidr" class="form-control bg-dark text-light border-secondary {{ 'is-invalid' if 'cidr' in invalid_fields else '' }}" 
                        placeholder="22" min="0" max="32" value="{{ cidr_pre }}"
                        data-bs-toggle="tooltip" data-bs-placement="top"
                        title="Prefixo de rede (0 a 32). Ex.: /24 = 255.255.255.0">
             </div>
             <div class="col-md-3">
-                <label class="form-label small text-secondary">Ou máscara decimal</label>
-                <input type="text" name="mask_decimal" class="form-control bg-dark text-light border-secondary" 
+                <label class="form-label small text-secondary">📏 Ou máscara decimal</label>
+                <input type="text" name="mask_decimal" class="form-control bg-dark text-light border-secondary {{ 'is-invalid' if 'mask_decimal' in invalid_fields else '' }}" 
                        placeholder="Ex.: 255.255.255.240" value="{{ mask_dec_pre }}"
                        data-bs-toggle="tooltip" data-bs-placement="top"
                        title="Máscara em decimal pontuado. Ex.: 255.255.240.0">
             </div>
             <div class="col-md-2">
-                <label class="form-label small text-secondary">Ou wildcard mask</label>
-                <input type="text" name="wildcard_mask" class="form-control bg-dark text-light border-secondary"
+                <label class="form-label small text-secondary">🧩 Ou wildcard mask</label>
+                <input type="text" name="wildcard_mask" class="form-control bg-dark text-light border-secondary {{ 'is-invalid' if 'wildcard_mask' in invalid_fields else '' }}"
                        placeholder="Ex.: 0.0.15.255" value="{{ wildcard_pre }}"
                        data-bs-toggle="tooltip" data-bs-placement="top"
                        title="Inverso da máscara (ACL/OSPF). Ex.: 0.0.15.255 = /20">
             </div>
+            <div class="col-md-5">
+                <label class="form-label small text-secondary">🛰️ Modo IPv6 básico (opcional)</label>
+                <input type="text" name="ipv6" class="form-control bg-dark text-light border-secondary {{ 'is-invalid' if 'ipv6' in invalid_fields else '' }}"
+                       placeholder="Ex.: 2001:db8::1" value="{{ ipv6_pre }}"
+                       data-bs-toggle="tooltip" data-bs-placement="top"
+                       title="Análise inicial IPv6: classificação, forma expandida e decomposição em blocos de 16 bits.">
+            </div>
             <div class="col-md-2">
-                <label class="form-label small text-secondary">Sub-redes na régua</label>
+                <label class="form-label small text-secondary">📐 Sub-redes na régua</label>
                 <select name="regua_count" class="form-select bg-dark text-light border-secondary"
                         data-bs-toggle="tooltip" data-bs-placement="top"
                         title="Quantidade de linhas exibidas na régua de sub-redes">
@@ -65,17 +72,105 @@
             <div class="col-12">
                 <div class="small text-secondary mb-2">Selecione o modo de cálculo (campos não usados são ignorados):</div>
                 <div class="action-buttons">
-                    <button type="submit" name="modo" value="cidr" class="btn btn-success fw-bold" title="Uso rápido para admins." data-bs-toggle="tooltip" data-bs-placement="top">Pesquisar por CIDR</button>
-                    <button type="submit" name="modo" value="mask" class="btn btn-primary fw-bold" title="Uso didático para exercícios de lousa." data-bs-toggle="tooltip" data-bs-placement="top">Pesquisar por Máscara Decimal</button>
-                    <button type="submit" name="modo" value="wildcard" class="btn btn-warning fw-bold" title="Uso para configuração de ACL/Firewall." data-bs-toggle="tooltip" data-bs-placement="top">Engenharia Reversa (Wildcard)</button>
-                    <button type="submit" name="modo" value="autoip" class="btn btn-info fw-bold text-dark" title="Descobre o CIDR pelo IP (lógica classful de prova)." data-bs-toggle="tooltip" data-bs-placement="top">Descobrir CIDR do IP</button>
-                    <button type="submit" name="modo" value="dominio" class="btn btn-light fw-bold text-dark" title="Resolve domínio/hostname para IPv4 e decompõe todos os dados de rede." data-bs-toggle="tooltip" data-bs-placement="top">Decompor Domínio para IP</button>
-                    <a href="/" class="btn btn-danger fw-bold text-white" title="Limpa todos os campos e resultados" data-bs-toggle="tooltip" data-bs-placement="top">Limpar Tela</a>
+                    <button type="submit" name="modo" value="cidr" class="btn btn-success fw-bold" title="Uso rápido para admins." data-bs-toggle="tooltip" data-bs-placement="top">🧮 Pesquisar por CIDR</button>
+                    <button type="submit" name="modo" value="mask" class="btn btn-primary fw-bold" title="Uso didático para exercícios de lousa." data-bs-toggle="tooltip" data-bs-placement="top">📏 Máscara Decimal</button>
+                    <button type="submit" name="modo" value="wildcard" class="btn btn-warning fw-bold" title="Uso para configuração de ACL/Firewall." data-bs-toggle="tooltip" data-bs-placement="top">🧩 Eng. Reversa</button>
+                    <button type="submit" name="modo" value="autoip" class="btn btn-info fw-bold text-dark" title="Descobre o CIDR pelo IP (lógica classful de prova)." data-bs-toggle="tooltip" data-bs-placement="top">🎯 Descobrir CIDR</button>
+                    <button type="submit" name="modo" value="dominio" class="btn btn-light fw-bold text-dark" title="Resolve domínio/hostname para IPv4 e decompõe todos os dados de rede." data-bs-toggle="tooltip" data-bs-placement="top">🌐 Domínio → IP</button>
+                    <button type="submit" name="modo" value="ipv6" class="btn btn-secondary fw-bold" title="Análise didática básica de IPv6 (classificação e decomposição)." data-bs-toggle="tooltip" data-bs-placement="top">🛰️ Analisar IPv6</button>
+                    <a href="/export/json" class="btn btn-info fw-bold text-dark" title="Exporta histórico e dados em JSON para auditoria." data-bs-toggle="tooltip" data-bs-placement="top">📦 Exportar JSON</a>
+                    <a href="/export/pdf" class="btn btn-primary fw-bold" title="Exporta relatório PDF da última análise processada." data-bs-toggle="tooltip" data-bs-placement="top">🧾 Exportar PDF</a>
+                    <a href="/" class="btn btn-danger fw-bold text-white" title="Limpa todos os campos e resultados" data-bs-toggle="tooltip" data-bs-placement="top">🧹 Limpar Tela</a>
                 </div>
-                <div class="small text-secondary mt-2">CIDR: uso rápido | Máscara Decimal: didático | Wildcard: ACL/Firewall | Descobrir CIDR: inferência automática por classe do IP | Decompor Domínio: resolve host para IPv4 e analisa a rede</div>
+                <div class="small text-secondary mt-2">CIDR: uso rápido | Máscara Decimal: didático | Wildcard: ACL/Firewall | Descobrir CIDR: inferência automática por classe do IP | Decompor Domínio: resolve host para IPv4 e analisa a rede | Analisar IPv6: classificação e decomposição inicial</div>
+                <div class="mt-2">
+                    <span class="shield-badge"><span class="icon">⌨️</span>Alt+1..6 para modos</span>
+                    <span class="shield-badge"><span class="icon">↵</span>Enter executa análise rápida</span>
+                    <span class="shield-badge"><span class="icon">📁</span>Histórico com replay</span>
+                    <span class="shield-badge"><span class="icon">📤</span>Export JSON/PDF</span>
+                </div>
             </div>
         </form>
     </div>
+
+    {% if history and history_limit > 0 %}
+    <div class="card-tech p-3 shadow history-box">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+            <h6 class="text-info mb-0">🕘 Histórico de Consultas (últimas {{ history|length }})</h6>
+            <span class="shield-badge"><span class="icon">📚</span>Navegação por histórico</span>
+        </div>
+        <div class="mb-2">
+            <span class="shield-badge"><span class="icon">♻️</span>Reutilize cenários em 1 clique</span>
+            <span class="shield-badge"><span class="icon">🧠</span>Memória de laboratório local</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-dark table-bordered table-sm mb-0">
+                <thead>
+                    <tr>
+                        <th>🆔 ID</th>
+                        <th>🕒 Timestamp</th>
+                        <th>⚙️ Modo</th>
+                        <th>🌐 Entrada</th>
+                        <th>🧷 CIDR</th>
+                        <th>▶️ Ação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in history_page_items %}
+                    <tr>
+                        <td>{{ item.id }}</td>
+                        <td>{{ item.timestamp }}</td>
+                        <td>{{ item.modo }}</td>
+                        <td>{{ item.ip_entrada or '—' }}</td>
+                        <td>{{ item.cidr or item.cidr_entrada or '—' }}</td>
+                        <td><a class="btn btn-sm btn-outline-info" href="/?replay={{ item.id }}&history_limit={{ history_limit }}&history_page={{ history_page }}">🔁 Recarregar</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="d-flex flex-wrap justify-content-center align-items-center gap-3 mt-2 history-pagination">
+            <div class="d-flex align-items-center gap-2">
+                {% if has_prev_history %}
+                <a class="btn btn-sm btn-outline-light" href="/?history_limit={{ history_limit }}&history_page={{ history_page - 1 }}">⬅️ Anterior</a>
+                {% else %}
+                <button class="btn btn-sm btn-outline-light" disabled>⬅️ Anterior</button>
+                {% endif %}
+                <form method="GET" class="history-inline-form d-flex align-items-center mb-0">
+                    <select id="history_limit_inline" name="history_limit" class="form-select form-select-sm bg-dark text-light border-secondary" onchange="this.form.submit()">
+                        <option value="0" {{ 'selected' if history_limit_pre == '0' else '' }}>Ocultar</option>
+                        {% for n in range(1, history_limit_max + 1) %}
+                        <option value="{{ n }}" {{ 'selected' if history_limit_pre == (n|string) else '' }}>{{ n }}</option>
+                        {% endfor %}
+                    </select>
+                    <input type="hidden" name="history_page" value="1">
+                </form>
+                {% if has_next_history %}
+                <a class="btn btn-sm btn-outline-light" href="/?history_limit={{ history_limit }}&history_page={{ history_page + 1 }}">Próxima ➡️</a>
+                {% else %}
+                <button class="btn btn-sm btn-outline-light" disabled>Próxima ➡️</button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if ipv6_res %}
+    <div class="card-tech p-4 shadow">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 border-bottom border-secondary pb-2 mb-3">
+            <h6 class="text-info mb-0">🌐 MODO IPV6 BÁSICO</h6>
+            <span class="calc-tag calc-tag-dyn">Dinâmico por cálculo</span>
+        </div>
+        <p><strong>IPv6 informado:</strong> {{ ipv6_res.entrada }}</p>
+        <p><strong>Comprimido:</strong> {{ ipv6_res.comprimido }}</p>
+        <p><strong>Expandido:</strong> {{ ipv6_res.expandido }}</p>
+        <p><strong>Zone index:</strong> {{ ipv6_res.zone_index }}</p>
+        <p><strong>Classificação:</strong> {{ ipv6_res.tipo }}</p>
+        <p><strong>Prefixo sugerido:</strong> {{ ipv6_res.prefixo_sugerido }}</p>
+        <p><strong>Primeiros 64 bits:</strong> {{ ipv6_res.primeiros_64 }}</p>
+        <p><strong>Últimos 64 bits:</strong> {{ ipv6_res.ultimos_64 }}</p>
+    </div>
+    {% endif %}
 
     {% if res %}
     <div class="dynamic-theme"
@@ -83,15 +178,28 @@
     <div class="card-tech p-3 mb-3 dynamic-legend">
         <div class="d-flex flex-wrap align-items-center gap-2">
             <span class="dynamic-legend-title">🎨 Severidade visual dinâmica:</span>
-            <span class="dynamic-legend-chip">/24+ Verde</span>
-            <span class="dynamic-legend-chip">/17-23 Azul</span>
-            <span class="dynamic-legend-chip">/9-16 Âmbar</span>
-            <span class="dynamic-legend-chip">/0-8 Vermelho</span>
+            <span class="dynamic-legend-chip chip-verde">/24+ Verde</span>
+            <span class="dynamic-legend-chip chip-azul">/17-23 Azul</span>
+            <span class="dynamic-legend-chip chip-ambar">/9-16 Âmbar</span>
+            <span class="dynamic-legend-chip chip-vermelho">/0-8 Vermelho</span>
         </div>
         <div class="small mt-2 mb-0">
             <strong>Nível atual:</strong> {{ res.nivel_tema }} — {{ res.nivel_tema_descricao }}
         </div>
     </div>
+    {% if res.grc_resumo %}
+    <div class="card-tech p-3 mb-3">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+            <h6 class="text-info mb-0">📌 Resumo Executivo GRC</h6>
+            <span class="calc-tag calc-tag-dyn">Dinâmico por cálculo</span>
+        </div>
+        <ul class="mb-0 small grc-list">
+            {% for linha in res.grc_resumo %}
+            <li>{{ linha }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
     {% if res.somente_mascara %}
     <div class="classe-destaque cv-outros card-tech shadow mb-3 py-4 px-3 text-center">
         <div class="classe-destaque-rotulo">Modo só máscara (sem IP)</div>
@@ -198,7 +306,6 @@
             </table>
             <div class="small text-secondary">Didática SOC: o AND entre IP e máscara produz o endereço de rede, e a wildcard (inversa da máscara) é usada em ACL/OSPF.</div>
         </div>
-    </div>
     </div>
     {% endif %}
 
@@ -430,6 +537,7 @@
             </table>
         </div>
     </div>
+    </div>
     {% endif %}
 
     {% if res.tabela_conversao_bits %}
@@ -588,6 +696,40 @@
 <script>
     const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
     [...tooltipTriggerList].forEach((tooltipTriggerEl) => new bootstrap.Tooltip(tooltipTriggerEl));
+
+    const form = document.getElementById('calc-form');
+    if (form) {
+        form.addEventListener('keydown', (ev) => {
+            if (ev.key === 'Enter' && ev.target && ev.target.tagName !== 'TEXTAREA') {
+                const active = document.activeElement;
+                if (active && active.tagName === 'BUTTON') {
+                    return;
+                }
+                ev.preventDefault();
+                const btn = form.querySelector('button[name="modo"][value="cidr"]');
+                if (btn) btn.click();
+            }
+        });
+    }
+
+    document.addEventListener('keydown', (ev) => {
+        if (!ev.altKey) return;
+        const keyMap = {
+            '1': 'cidr',
+            '2': 'mask',
+            '3': 'wildcard',
+            '4': 'autoip',
+            '5': 'dominio',
+            '6': 'ipv6'
+        };
+        const modo = keyMap[ev.key];
+        if (!modo) return;
+        const btn = document.querySelector(`button[name="modo"][value="${modo}"]`);
+        if (btn) {
+            ev.preventDefault();
+            btn.click();
+        }
+    });
 </script>
 </body>
 </html>

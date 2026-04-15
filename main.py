@@ -7,6 +7,7 @@ import io
 import ipaddress
 import webbrowser
 import threading
+import unicodedata
 from datetime import datetime, timezone
 from pathlib import Path
 from collections import deque
@@ -43,7 +44,11 @@ for handler in logging.getLogger().handlers:
 class RequestLoggerAdapter(logging.LoggerAdapter):
     def process(self, msg, kwargs):
         extra = kwargs.setdefault("extra", {})
-        extra.setdefault("request_id", getattr(g, "request_id", "-"))
+        try:
+            request_id = getattr(g, "request_id", "-")
+        except RuntimeError:
+            request_id = "-"
+        extra.setdefault("request_id", request_id)
         return msg, kwargs
 
 
@@ -140,21 +145,38 @@ def _classificar_ipv6(addr):
 
 
 def _processar_ipv6(ipv6_s):
+    raw = (ipv6_s or "").strip().strip('"').strip("'")
+    if not raw:
+        raise EntradaInvalidaError("IPv6 vazio.")
+
+    # Suporte a zone index de link-local (ex.: fe80::1%eth0 / fe80::1%12)
+    zone = ""
+    base = raw
+    if "%" in raw:
+        base, zone = raw.split("%", 1)
+        base = base.strip()
+        zone = zone.strip()
+        if not zone:
+            raise EntradaInvalidaError("IPv6 com zone index inválido (sufixo após % está vazio).")
+
     try:
-        addr = ipaddress.IPv6Address(ipv6_s.strip())
+        addr = ipaddress.IPv6Address(base)
     except Exception as exc:
         raise EntradaInvalidaError(f"IPv6 inválido: {exc}") from exc
+
     bits = bin(int(addr))[2:].zfill(128)
     blocos_16 = [bits[i:i + 16] for i in range(0, 128, 16)]
+    comprimido = addr.compressed + (f"%{zone}" if zone else "")
     return {
-        "entrada": ipv6_s.strip(),
-        "comprimido": addr.compressed,
+        "entrada": raw,
+        "comprimido": comprimido,
         "expandido": addr.exploded,
         "tipo": _classificar_ipv6(addr),
         "prefixo_sugerido": "/64 (didático para LAN IPv6)",
         "blocos_16": blocos_16,
         "primeiros_64": ":".join(addr.exploded.split(":")[:4]),
         "ultimos_64": ":".join(addr.exploded.split(":")[4:]),
+        "zone_index": zone or "—",
     }
 
 
@@ -184,12 +206,26 @@ def _grc_resumo(res):
 
 def _gerar_pdf_simples(texto):
     """Gera PDF básico (1 página) sem dependências externas."""
-    lines = [ln.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")[:110] for ln in texto.splitlines()]
-    y = 780
-    stream_lines = ["BT", "/F1 11 Tf"]
+    def _pdf_safe_text(s):
+        # Base14 font + stream simples funciona melhor com ASCII limpo.
+        # Assim evitamos problemas de acentuação entre viewers.
+        normalized = unicodedata.normalize("NFKD", s)
+        ascii_only = normalized.encode("ascii", "ignore").decode("ascii")
+        return ascii_only.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
+
+    lines = [
+        _pdf_safe_text(ln)[:110]
+        for ln in texto.splitlines()
+    ]
+    stream_lines = [
+        "BT",
+        "/F1 11 Tf",
+        "14 TL",          # line height
+        "72 800 Td",      # initial text position
+    ]
     for ln in lines[:58]:
-        stream_lines.append(f"72 {y} Td ({ln}) Tj")
-        y -= 13
+        stream_lines.append(f"({ln}) Tj")
+        stream_lines.append("T*")  # move to next line using current leading
     stream_lines.append("ET")
     content = "\n".join(stream_lines).encode("latin-1", errors="replace")
 
@@ -216,6 +252,9 @@ def _gerar_pdf_simples(texto):
     )
     output.seek(0)
     return output
+
+
+_carregar_historico()
 
 
 def _classe_ipv4_didatica(o1):
@@ -707,17 +746,40 @@ def processar(ip_s, cidr, regua_count=5):
 @app.route("/", methods=["GET", "POST"])
 def home():
     res, erro = None, None
-    ip_p, cidr_p, mask_dec_p, wildcard_p = "", "", "", ""
+    ip_p, cidr_p, mask_dec_p, wildcard_p, ipv6_p = "", "", "", "", ""
     regua_count_pre = "5"
+    history_limit_pre = "1"
+    history_page_pre = "1"
     cidr_origem = ""
+    ipv6_res = None
+    invalid_fields = set()
+
+    replay_id = request.args.get("replay", "").strip()
+    history_limit_qs = request.args.get("history_limit", "").strip()
+    history_page_qs = request.args.get("history_page", "").strip()
+    if history_limit_qs.isdigit():
+        history_limit_pre = history_limit_qs
+    if history_page_qs.isdigit():
+        history_page_pre = history_page_qs
+    if request.method == "GET" and replay_id:
+        selected = next((item for item in _history if item.get("id") == replay_id), None)
+        if selected:
+            ip_p = selected.get("ip_entrada", "")
+            cidr_p = selected.get("cidr_entrada", "")
+            mask_dec_p = selected.get("mask_entrada", "")
+            wildcard_p = selected.get("wildcard_entrada", "")
+
     if request.method == "POST":
         logger.info("Iniciando processamento de POST na rota principal")
         ip_p = request.form.get("ip", "").strip()
         ip_entrada_original = ip_p
+        ipv6_p = request.form.get("ipv6", "").strip()
         cidr_raw = request.form.get("cidr", "").strip()
         mask_dec_p = request.form.get("mask_decimal", "").strip()
         wildcard_p = request.form.get("wildcard_mask", "").strip()
         regua_count_pre = request.form.get("regua_count", "5").strip() or "5"
+        history_limit_pre = request.form.get("history_limit", history_limit_pre).strip() or history_limit_pre
+        history_page_pre = request.form.get("history_page", history_page_pre).strip() or history_page_pre
         modo = request.form.get("modo", "").strip().lower()
 
         # Resolução de DNS automática caso não seja um formato IP
@@ -736,19 +798,64 @@ def home():
         if regua_count not in {5, 10, 15}:
             regua_count = 5
         regua_count_pre = str(regua_count)
+        if not history_limit_pre.isdigit():
+            history_limit_pre = "1"
+        history_limit_int = int(history_limit_pre)
+        if history_limit_int < 0:
+            history_limit_int = 0
+        if history_limit_int > MAX_HISTORY:
+            history_limit_int = MAX_HISTORY
+        history_limit_pre = str(history_limit_int)
+        if not history_page_pre.isdigit():
+            history_page_pre = "1"
+        history_page_int = int(history_page_pre)
+        if history_page_int < 1:
+            history_page_int = 1
+        history_page_pre = str(history_page_int)
 
         cidr_val = None
-        if modo not in {"cidr", "mask", "wildcard", "autoip", "dominio"}:
+        if modo not in {"cidr", "mask", "wildcard", "autoip", "dominio", "ipv6"}:
             if cidr_raw:
                 modo = "cidr"
             elif mask_dec_p:
                 modo = "mask"
             elif wildcard_p:
                 modo = "wildcard"
+            elif ipv6_p:
+                modo = "ipv6"
             elif ip_p:
                 modo = "autoip"
             else:
                 erro = "Selecione um modo e preencha o campo correspondente."
+                invalid_fields.add("modo")
+
+        if erro is None and modo == "ipv6":
+            if not ipv6_p:
+                erro = "No modo IPv6, informe um endereço IPv6 válido."
+                invalid_fields.add("ipv6")
+            else:
+                try:
+                    ipv6_res = _processar_ipv6(ipv6_p)
+                    _registrar_consulta(
+                        {
+                            "modo": modo,
+                            "ip": ipv6_p,
+                            "cidr": "",
+                            "mask_decimal": "",
+                            "wildcard_mask": "",
+                        },
+                        {
+                            "rede": ipv6_res.get("primeiros_64", ""),
+                            "broad": "N/A em IPv6",
+                            "mask": ipv6_res.get("prefixo_sugerido", ""),
+                            "cidr": "64",
+                            "nivel_tema": "IPv6 didático",
+                        },
+                    )
+                except EntradaInvalidaError as exc:
+                    logger.warning("IPv6 inválido: %s", exc)
+                    erro = str(exc)
+                    invalid_fields.add("ipv6")
 
         if erro is None and modo == "dominio":
             # Modo dedicado: domínio/hostname -> IP e análise completa.
@@ -756,8 +863,10 @@ def home():
             dominio_digitado = ip_entrada_original
             if not dominio_digitado:
                 erro = "No modo Decompor Domínio para IP, informe um domínio/hostname (ex.: google.com)."
+                invalid_fields.add("ip")
             elif "." not in dominio_digitado and not dominio_digitado.replace("-", "").isalnum():
                 erro = "Domínio/hostname inválido. Use algo como google.com ou servidor.local."
+                invalid_fields.add("ip")
             else:
                 try:
                     logger.info("Modo domínio acionado para hostname informado")
@@ -777,23 +886,28 @@ def home():
                 except ValueError:
                     logger.warning("CIDR inválido informado no modo domínio")
                     erro = "No modo Domínio, o CIDR (se informado) deve ser um número inteiro entre 0 e 32."
+                    invalid_fields.add("cidr")
                 except Exception:
                     logger.exception("Erro ao resolver domínio/hostname no modo domínio")
                     erro = f"Não foi possível resolver o domínio/hostname informado: {dominio_digitado}"
+                    invalid_fields.add("ip")
 
         elif erro is None and modo == "cidr":
             if not cidr_raw:
                 erro = "No modo CIDR, preencha o campo CIDR."
+                invalid_fields.add("cidr")
             else:
                 try:
                     cidr_val = int(cidr_raw)
                 except ValueError:
                     logger.warning("CIDR inválido no modo cidr")
                     erro = "O CIDR deve ser um número inteiro entre 0 e 32."
+                    invalid_fields.add("cidr")
 
         elif erro is None and modo == "mask":
             if not mask_dec_p:
                 erro = "No modo Máscara Decimal, preencha a máscara (ex.: 255.255.255.240)."
+                invalid_fields.add("mask_decimal")
             else:
                 cidr_val = mascara_dotted_para_cidr(mask_dec_p)
                 if cidr_val is None:
@@ -806,10 +920,12 @@ def home():
                     except EntradaInvalidaError as exc:
                         logger.warning("Máscara decimal inválida: %s", exc)
                         erro = str(exc)
+                        invalid_fields.add("mask_decimal")
 
         elif erro is None and modo == "wildcard":
             if not wildcard_p:
                 erro = "No modo Wildcard, preencha a wildcard mask (ex.: 0.0.15.255)."
+                invalid_fields.add("wildcard_mask")
             else:
                 cidr_val = wildcard_dotted_para_cidr(wildcard_p)
                 if cidr_val is None:
@@ -822,19 +938,23 @@ def home():
                     except EntradaInvalidaError as exc:
                         logger.warning("Wildcard inválida: %s", exc)
                         erro = str(exc)
+                        invalid_fields.add("wildcard_mask")
 
         elif erro is None and modo == "autoip":
             if not ip_p:
                 erro = "No modo Descobrir CIDR do IP, informe um endereço IP."
+                invalid_fields.add("ip")
             else:
                 try:
                     cidr_val, cidr_origem = _inferir_cidr_por_ip(ip_p)
                 except EntradaInvalidaError as exc:
                     logger.warning("Falha ao inferir CIDR por IP: %s", exc)
                     erro = str(exc)
+                    invalid_fields.add("ip")
 
         if erro is None and cidr_val is not None and not (0 <= cidr_val <= 32):
             erro = "CIDR deve estar entre 0 e 32."
+            invalid_fields.add("cidr")
 
         if erro is None and cidr_val is not None:
             try:
@@ -854,6 +974,17 @@ def home():
                         res["cidr_origem"] = cidr_origem
                     else:
                         res["cidr_origem"] = ""
+                    res["grc_resumo"] = _grc_resumo(res)
+                    _registrar_consulta(
+                        {
+                            "modo": modo,
+                            "ip": ip_entrada_original,
+                            "cidr": cidr_raw,
+                            "mask_decimal": mask_dec_p,
+                            "wildcard_mask": wildcard_p,
+                        },
+                        res,
+                    )
             except EntradaInvalidaError as exc:
                 logger.warning("Entrada inválida durante processamento: %s", exc)
                 erro = str(exc)
@@ -861,15 +992,54 @@ def home():
                 logger.exception("Erro interno inesperado durante processamento principal")
                 erro = "Erro interno ao processar os dados. Revise os campos e tente novamente."
 
+    if not history_limit_pre.isdigit():
+        history_limit_pre = "1"
+    history_limit_int = int(history_limit_pre)
+    if history_limit_int < 0:
+        history_limit_int = 0
+    if history_limit_int > MAX_HISTORY:
+        history_limit_int = MAX_HISTORY
+    if not history_page_pre.isdigit():
+        history_page_pre = "1"
+    history_page_int = int(history_page_pre)
+    if history_page_int < 1:
+        history_page_int = 1
+
+    history_list = list(_history)
+    total_history = len(history_list)
+    if history_limit_int > 0:
+        total_history_pages = max(1, (total_history + history_limit_int - 1) // history_limit_int)
+        if history_page_int > total_history_pages:
+            history_page_int = total_history_pages
+        history_start = (history_page_int - 1) * history_limit_int
+        history_end = history_start + history_limit_int
+        history_page_items = history_list[history_start:history_end]
+    else:
+        total_history_pages = 1
+        history_page_items = []
+        history_page_int = 1
+
     return render_template(
         "index.html",
         res=res,
+        ipv6_res=ipv6_res,
         erro=erro,
         ip_pre=ip_p,
+        ipv6_pre=ipv6_p,
         cidr_pre=cidr_p,
         mask_dec_pre=mask_dec_p,
         wildcard_pre=wildcard_p,
         regua_count_pre=regua_count_pre,
+        history_limit_pre=str(history_limit_int),
+        history_limit=history_limit_int,
+        history_limit_max=MAX_HISTORY,
+        history_page=history_page_int,
+        total_history_pages=total_history_pages,
+        has_prev_history=history_page_int > 1,
+        has_next_history=history_page_int < total_history_pages,
+        invalid_fields=invalid_fields,
+        history=history_list,
+        history_page_items=history_page_items,
     )
 
 
@@ -911,14 +1081,63 @@ def _handle_unexpected_error(exc):
     )
 
 
+@app.route("/history", methods=["GET"])
+def history_api():
+    return jsonify({"items": list(_history)})
+
+
+@app.route("/export/json", methods=["GET"])
+def export_json():
+    payload = {
+        "generated_at": _utc_now_iso(),
+        "history": list(_history),
+        "last_request_id": getattr(g, "request_id", "-"),
+    }
+    return jsonify(payload)
+
+
+@app.route("/export/pdf", methods=["GET"])
+def export_pdf():
+    if not _history:
+        return redirect(url_for("home"))
+    last = _history[0]
+    lines = [
+        "Relatório Didático de Rede (GRC)",
+        f"Gerado em: {_utc_now_iso()}",
+        f"Consulta ID: {last.get('id', '-')}",
+        f"Modo: {last.get('modo', '-')}",
+        f"IP entrada: {last.get('ip_entrada', '-')}",
+        f"CIDR entrada: {last.get('cidr_entrada', '-')}",
+        f"Máscara: {last.get('mask', '-')}",
+        f"CIDR final: /{last.get('cidr', '-')}",
+        f"Rede: {last.get('rede', '-')}",
+        f"Broadcast: {last.get('broadcast', '-')}",
+        f"Tema/Risco: {last.get('tema', '-')}",
+        "",
+        "Objetivo: evidência de cálculo e contexto GRC para aula/auditoria.",
+    ]
+    pdf_io = _gerar_pdf_simples("\n".join(lines))
+    return send_file(
+        pdf_io,
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name="relatorio_rede_grc.pdf",
+    )
+
+
 if __name__ == '__main__':
+    _carregar_historico()
     app_host = os.getenv("APP_HOST", "127.0.0.1")
     app_port = int(os.getenv("APP_PORT", "5000"))
     app_debug = os.getenv("APP_DEBUG", "true").lower() in {"1", "true", "yes", "on"}
+    app_open_browser = os.getenv("APP_OPEN_BROWSER", "true").lower() in {"1", "true", "yes", "on"}
     logger.info(
-        "Inicializando aplicação local host=%s porta=%s debug=%s",
+        "Inicializando aplicação local host=%s porta=%s debug=%s open_browser=%s",
         app_host,
         app_port,
         app_debug,
+        app_open_browser,
     )
+    if app_open_browser and app_host in {"127.0.0.1", "localhost"}:
+        threading.Timer(1.0, lambda: webbrowser.open(f"http://{app_host}:{app_port}")).start()
     app.run(host=app_host, port=app_port, debug=app_debug)
