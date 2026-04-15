@@ -8,7 +8,7 @@
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 
 <p align="center">
-  <img src="./icone.png" alt="Ícone do Framework de Redes" width="220" />
+  <img src="./icone.png" alt="Ícone do Framework de Redes" width="420" />
 </p>
 
 Aplicação didática para estudo de redes IPv4 com foco em **subnetting, bitwise AND, wildcard, CIDR, DNS/hostname e contexto de segurança/GRC**.
