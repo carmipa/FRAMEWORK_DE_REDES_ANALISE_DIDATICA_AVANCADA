@@ -1,5 +1,20 @@
 [
   {
+    "id": "c837b95a",
+    "timestamp": "2026-04-15T18:53:19.546453+00:00",
+    "modo": "dominio",
+    "ip_entrada": "176.16.0.0",
+    "ipv6_entrada": "",
+    "cidr_entrada": "",
+    "mask_entrada": "255.255.0.0",
+    "wildcard_entrada": "0.0.255.255",
+    "rede": "176.16.0.0",
+    "broadcast": "176.16.255.255",
+    "mask": "255.255.0.0",
+    "cidr": 16,
+    "tema": "Risco elevado"
+  },
+  {
     "id": "75a7c62a",
     "timestamp": "2026-04-15T18:47:51.391438+00:00",
     "modo": "dominio",
@@ -12,7 +27,8 @@
     "broadcast": "172.19.255.255",
     "mask": "255.255.0.0",
     "cidr": 16,
-    "tema": "Risco elevado"
+    "tema": "Risco elevado",
+    "timestamp_utc": "2026-04-15 18:47:51 UTC"
   },
   {
     "id": "0623c79e",
@@ -27,7 +43,8 @@
     "broadcast": "172.19.255.255",
     "mask": "255.255.0.0",
     "cidr": 16,
-    "tema": "Risco elevado"
+    "tema": "Risco elevado",
+    "timestamp_utc": "2026-04-15 18:46:33 UTC"
   },
   {
     "id": "c84c56ab",
@@ -42,7 +59,8 @@
     "broadcast": "172.19.255.255",
     "mask": "255.255.0.0",
     "cidr": 16,
-    "tema": "Risco elevado"
+    "tema": "Risco elevado",
+    "timestamp_utc": "2026-04-15 18:45:59 UTC"
   },
   {
     "id": "5e451935",
@@ -57,7 +75,8 @@
     "broadcast": "172.19.255.255",
     "mask": "255.255.0.0",
     "cidr": 16,
-    "tema": "Risco elevado"
+    "tema": "Risco elevado",
+    "timestamp_utc": "2026-04-15 18:45:32 UTC"
   },
   {
     "id": "01bac609",
@@ -72,7 +91,8 @@
     "broadcast": "172.19.255.255",
     "mask": "255.255.0.0",
     "cidr": 16,
-    "tema": "Risco elevado"
+    "tema": "Risco elevado",
+    "timestamp_utc": "2026-04-15 18:45:28 UTC"
   },
   {
     "id": "28bc4f00",
@@ -87,7 +107,8 @@
     "broadcast": "172.19.255.255",
     "mask": "255.255.0.0",
     "cidr": 16,
-    "tema": "Risco elevado"
+    "tema": "Risco elevado",
+    "timestamp_utc": "2026-04-15 18:45:10 UTC"
   },
   {
     "id": "a8a497a7",
@@ -840,20 +861,6 @@
     "wildcard_entrada": "0.0.0.255",
     "rede": "198.0.0.0",
     "broadcast": "198.0.0.255",
-    "mask": "255.255.255.0",
-    "cidr": 24,
-    "tema": "Baixo risco operacional"
-  },
-  {
-    "id": "c6d6fad6",
-    "timestamp": "2026-04-15T17:14:15.237730+00:00",
-    "modo": "cidr",
-    "ip_entrada": "192.168.1.255",
-    "cidr_entrada": "24",
-    "mask_entrada": "255.255.255.0",
-    "wildcard_entrada": "0.0.0.255",
-    "rede": "192.168.1.0",
-    "broadcast": "192.168.1.255",
     "mask": "255.255.255.0",
     "cidr": 24,
     "tema": "Baixo risco operacional"
