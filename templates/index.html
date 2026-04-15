@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberNet Framework | FIAP - Paulo André</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+</head>
+<body>
+<div class="container py-5">
+    <div class="header-tech">
+        <h2 class="icon-title"><span>🛡️</span><span>FRAMEWORK DE REDES - ANÁLISE DIDÁTICA | AVANÇADA</span></h2>
+        <p class="mb-0 text-secondary">Paulo André Carminati | FIAP Cyber Defense 2026</p>
+        <div class="mt-2">
+            <span class="shield-badge"><span class="icon">🧠</span>Bitwise AND</span>
+            <span class="shield-badge"><span class="icon">🎯</span>RFC1918</span>
+            <span class="shield-badge"><span class="icon">🧩</span>Wildcard</span>
+            <span class="shield-badge"><span class="icon">📏</span>Régua Sub-redes</span>
+            <span class="shield-badge"><span class="icon">🛠️</span>Cisco CLI</span>
+        </div>
+    </div>
+
+    <div class="card-tech p-4 shadow">
+        <form method="POST" class="row g-3">
+            <div class="col-md-5">
+                <label class="form-label small text-secondary">Endereço IPv4 (opcional)</label>
+                <input type="text" name="ip" class="form-control bg-dark text-light border-secondary" 
+                       placeholder="Ex.: 172.16.0.0 — deixe vazio se o exercício for só com máscara" value="{{ ip_pre }}"
+                       data-bs-toggle="tooltip" data-bs-placement="top"
+                       title="IP de host para calcular rede, broadcast e hosts úteis. Formato: x.x.x.x">
+                <div class="form-text text-secondary small">Sem IP: mostramos máscara, bits, tamanho do bloco e pulo. Rede/broadcast/hosts exigem um endereço no bloco.</div>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small text-secondary">CIDR</label>
+                <input type="number" name="cidr" class="form-control bg-dark text-light border-secondary" 
+                       placeholder="22" min="0" max="32" value="{{ cidr_pre }}"
+                       data-bs-toggle="tooltip" data-bs-placement="top"
+                       title="Prefixo de rede (0 a 32). Ex.: /24 = 255.255.255.0">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small text-secondary">Ou máscara decimal</label>
+                <input type="text" name="mask_decimal" class="form-control bg-dark text-light border-secondary" 
+                       placeholder="Ex.: 255.255.255.240" value="{{ mask_dec_pre }}"
+                       data-bs-toggle="tooltip" data-bs-placement="top"
+                       title="Máscara em decimal pontuado. Ex.: 255.255.240.0">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small text-secondary">Ou wildcard mask</label>
+                <input type="text" name="wildcard_mask" class="form-control bg-dark text-light border-secondary"
+                       placeholder="Ex.: 0.0.15.255" value="{{ wildcard_pre }}"
+                       data-bs-toggle="tooltip" data-bs-placement="top"
+                       title="Inverso da máscara (ACL/OSPF). Ex.: 0.0.15.255 = /20">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small text-secondary">Sub-redes na régua</label>
+                <select name="regua_count" class="form-select bg-dark text-light border-secondary"
+                        data-bs-toggle="tooltip" data-bs-placement="top"
+                        title="Quantidade de linhas exibidas na régua de sub-redes">
+                    <option value="5" {{ 'selected' if regua_count_pre == '5' else '' }}>5</option>
+                    <option value="10" {{ 'selected' if regua_count_pre == '10' else '' }}>10</option>
+                    <option value="15" {{ 'selected' if regua_count_pre == '15' else '' }}>15</option>
+                </select>
+            </div>
+            <div class="col-12">
+                <div class="small text-secondary mb-2">Selecione o modo de cálculo (campos não usados são ignorados):</div>
+                <div class="action-buttons">
+                    <button type="submit" name="modo" value="cidr" class="btn btn-success fw-bold" title="Uso rápido para admins." data-bs-toggle="tooltip" data-bs-placement="top">Pesquisar por CIDR</button>
+                    <button type="submit" name="modo" value="mask" class="btn btn-primary fw-bold" title="Uso didático para exercícios de lousa." data-bs-toggle="tooltip" data-bs-placement="top">Pesquisar por Máscara Decimal</button>
+                    <button type="submit" name="modo" value="wildcard" class="btn btn-warning fw-bold" title="Uso para configuração de ACL/Firewall." data-bs-toggle="tooltip" data-bs-placement="top">Engenharia Reversa (Wildcard)</button>
+                    <button type="submit" name="modo" value="autoip" class="btn btn-info fw-bold text-dark" title="Descobre o CIDR pelo IP (lógica classful de prova)." data-bs-toggle="tooltip" data-bs-placement="top">Descobrir CIDR do IP</button>
+                    <button type="submit" name="modo" value="dominio" class="btn btn-light fw-bold text-dark" title="Resolve domínio/hostname para IPv4 e decompõe todos os dados de rede." data-bs-toggle="tooltip" data-bs-placement="top">Decompor Domínio para IP</button>
+                    <a href="/" class="btn btn-danger fw-bold text-white" title="Limpa todos os campos e resultados" data-bs-toggle="tooltip" data-bs-placement="top">Limpar Tela</a>
+                </div>
+                <div class="small text-secondary mt-2">CIDR: uso rápido | Máscara Decimal: didático | Wildcard: ACL/Firewall | Descobrir CIDR: inferência automática por classe do IP | Decompor Domínio: resolve host para IPv4 e analisa a rede</div>
+            </div>
+        </form>
+    </div>
+
+    {% if res %}
+    <div class="dynamic-theme"
+         style="--dyn-bit1: {{ res.cor_bit1 }}; --dyn-and: {{ res.cor_resultado_and }}; --dyn-pulo: {{ res.cor_pulo }}; --dyn-resumo: {{ res.cor_borda_resumo }}; --dyn-accent: {{ res.cor_acento }}; --dyn-table-border: {{ res.cor_borda_tabela }}; --dyn-table-th-bg: {{ res.cor_cabecalho_tabela_bg }}; --dyn-table-th-text: {{ res.cor_cabecalho_tabela_texto }}; --dyn-row-highlight: {{ res.cor_linha_destaque }};">
+    <div class="card-tech p-3 mb-3 dynamic-legend">
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <span class="dynamic-legend-title">🎨 Severidade visual dinâmica:</span>
+            <span class="dynamic-legend-chip">/24+ Verde</span>
+            <span class="dynamic-legend-chip">/17-23 Azul</span>
+            <span class="dynamic-legend-chip">/9-16 Âmbar</span>
+            <span class="dynamic-legend-chip">/0-8 Vermelho</span>
+        </div>
+        <div class="small mt-2 mb-0">
+            <strong>Nível atual:</strong> {{ res.nivel_tema }} — {{ res.nivel_tema_descricao }}
+        </div>
+    </div>
+    {% if res.somente_mascara %}
+    <div class="classe-destaque cv-outros card-tech shadow mb-3 py-4 px-3 text-center">
+        <div class="classe-destaque-rotulo">Modo só máscara (sem IP)</div>
+        <div class="classe-destaque-valor">/{{ res.cidr }}</div>
+        <div class="classe-destaque-octeto">Máscara: <span class="text-warning fw-bold">{{ res.mask }}</span></div>
+        <div class="classe-destaque-faixa">Classe A/B/C depende do 1º octeto de um IP. Rede, broadcast e hosts só aparecem quando você informar um endereço dentro do bloco.</div>
+    </div>
+    {% else %}
+    <div class="classe-destaque cv-{{ res.classe_variant }} card-tech shadow mb-3 py-4 px-3 text-center">
+        <div class="classe-destaque-rotulo">Classe IPv4 clássica</div>
+        <div class="classe-destaque-valor">{{ res.classe }}</div>
+        <div class="classe-destaque-octeto">1º octeto do IP informado: <span class="text-warning fw-bold">{{ res.primeiro_octeto }}</span></div>
+        <div class="classe-destaque-faixa">{{ res.classe_faixa }}</div>
+    </div>
+    {% endif %}
+
+    <div class="card-tech shadow">
+        <div class="p-3 border-bottom border-secondary text-info fw-bold d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <span>📊 DECOMPOSIÇÃO DO ARRAY DE 32 BITS</span>
+            <span class="calc-tag calc-tag-dyn">Dinâmico por cálculo</span>
+        </div>
+        <div class="bit-container">
+            {% for oct_idx in range(4) %}
+            <div class="octeto-group">
+                <div class="bit-row shadow-sm">
+                    {% for bit_idx in range(8) %}
+                        {% set total_idx = (oct_idx * 8) + bit_idx %}
+                        {% set bit_val = res.bin_raw[total_idx] %}
+                        <div class="bit-col">
+                            <div class="info-top">#{{ total_idx + 1 }}</div>
+                            <div class="info-top text-danger" style="font-size: 0.6rem;">2^{{ 31 - total_idx }}</div>
+                            <div class="val-bin {{ 'bit-1' if bit_val == '1' else 'bit-0' }}">{{ bit_val }}</div>
+                            <div class="peso-bot">{{ 2**(7 - bit_idx) }}</div>
+                        </div>
+                    {% endfor %}
+                </div>
+                <div class="octeto-label">OCTETO {{ oct_idx + 1 }}: {{ res.mask.split('.')[oct_idx] }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    {% if not res.somente_mascara %}
+    <div class="card-tech shadow mt-3">
+        <div class="p-3 border-bottom border-secondary text-warning fw-bold d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <span>🧠 DECOMPOSIÇÃO BITWISE AND (IP x MÁSCARA)</span>
+            <span class="calc-tag calc-tag-dyn">Dinâmico por cálculo</span>
+        </div>
+        <div class="p-3 and-table-wrap">
+            <table class="table table-dark table-bordered align-middle and-table mb-2">
+                <thead>
+                    <tr>
+                        <th>CAMPO</th>
+                        <th>OCTETO 1</th>
+                        <th>OCTETO 2</th>
+                        <th>OCTETO 3</th>
+                        <th>OCTETO 4</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="and-row-ip">
+                        <td>IP (DEC)</td>
+                        {% for col in res.and_table %}
+                        <td>{{ col.ip_oct }}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr class="and-row-mask">
+                        <td>MÁSCARA (DEC)</td>
+                        {% for col in res.and_table %}
+                        <td>{{ col.mask_oct }}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td>IP (BIN)</td>
+                        {% for col in res.and_table %}
+                        <td>{{ col.ip_bin }}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td>MÁSCARA (BIN)</td>
+                        {% for col in res.and_table %}
+                        <td>{{ col.mask_bin }}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr class="and-row-result">
+                        <td>AND (BIN)</td>
+                        {% for col in res.and_table %}
+                        <td>{{ col.and_bin }}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr class="and-row-result">
+                        <td>AND (DEC) = REDE</td>
+                        {% for col in res.and_table %}
+                        <td>{{ col.and_oct }}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr class="and-row-wild">
+                        <td>WILDCARD (255-M)</td>
+                        {% for col in res.and_table %}
+                        <td>{{ col.wild_oct }}</td>
+                        {% endfor %}
+                    </tr>
+                </tbody>
+            </table>
+            <div class="small text-secondary">Didática SOC: o AND entre IP e máscara produz o endereço de rede, e a wildcard (inversa da máscara) é usada em ACL/OSPF.</div>
+        </div>
+    </div>
+    </div>
+    {% endif %}
+
+    <div class="row g-3">
+        <div class="col-md-6">
+            <div class="card-tech p-4 h-100 resumo-box">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 border-bottom border-secondary pb-2 mb-3">
+                    <h6 class="text-info mb-0 icon-title"><span>📋</span><span>RESULTADOS DECIMAIS</span></h6>
+                    <span class="calc-tag calc-tag-dyn">Dinâmico por cálculo</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-dark table-bordered table-sm resultados-table mb-2">
+                        <tbody>
+                            <tr>
+                                <th>MÁSCARA</th>
+                                <td><span class="text-warning fw-bold">{{ res.mask }}</span> <span class="text-secondary small">/ {{ res.cidr }}</span></td>
+                            </tr>
+                            {% if res.cidr_origem %}
+                            <tr>
+                                <th>CIDR DE ORIGEM</th>
+                                <td class="text-info">{{ res.cidr_origem }}</td>
+                            </tr>
+                            {% endif %}
+                            <tr>
+                                <th>WILDCARD</th>
+                                <td><span class="fw-bold">{{ res.wildcard }}</span></td>
+                            </tr>
+                            {% if res.somente_mascara %}
+                            <tr><th>REDE</th><td><span class="text-secondary">—</span> <span class="small text-secondary">(informe um IP)</span></td></tr>
+                            <tr><th>PRIMEIRO IP ÚTIL (1º host)</th><td><span class="text-secondary">—</span></td></tr>
+                            <tr><th>ÚLTIMO IP ÚTIL (último host)</th><td><span class="text-secondary">—</span></td></tr>
+                            <tr><th>BROADCAST</th><td><span class="text-secondary">—</span></td></tr>
+                            {% else %}
+                            <tr><th>REDE</th><td>{{ res.rede }}</td></tr>
+                            <tr><th>PRIMEIRO IP ÚTIL (1º host)</th><td><span class="text-success">{{ res.primeiro_host }}</span></td></tr>
+                            <tr><th>ÚLTIMO IP ÚTIL (último host)</th><td><span class="text-success">{{ res.ultimo_host }}</span></td></tr>
+                            <tr><th>BROADCAST</th><td>{{ res.broad }}</td></tr>
+                            <tr><th>IP DE HOST (BIN)</th><td><span class="text-light fw-bold">{{ res.ip_binario_completo }}</span></td></tr>
+                            {% endif %}
+                            <tr>
+                                <th>VARIAÇÃO (PULO)</th>
+                                <td><span class="highlight-pulo">{{ res.pulo }}</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                {% if not res.somente_mascara %}
+                <p>TIPO DE IP: <span class="{{ 'text-warning' if 'Privado' in res.ip_tipo_privacidade else 'text-info' }} fw-bold">{{ res.ip_tipo_privacidade }}</span>
+                    <span class="shield-badge ms-1"><span class="icon">🌐</span>{{ res.ip_tipo_privacidade }}</span>
+                </p>
+                <p class="small text-secondary">{{ res.ip_faixa_privacidade }}</p>
+                <div class="alert {{ 'alert-warning' if res.ip_papel_alerta else 'alert-secondary' }} bg-dark border-secondary text-light small py-2">
+                    <strong>Papel do IP no bloco:</strong> {{ res.ip_papel }}
+                    {% if res.ip_papel_alerta %}
+                    <div class="mt-1 text-warning">{{ res.ip_papel_alerta }}</div>
+                    {% endif %}
+                </div>
+                <p>GATEWAY SUGERIDO (1º host): <span class="text-success fw-bold">{{ res.gateway_sugerido }}</span></p>
+                <p>GATEWAY ALTERNATIVO (último host): <span class="text-success fw-bold">{{ res.gateway_alternativo }}</span></p>
+                {% if res.hosts_recomendados %}
+                <p class="small text-secondary mb-0">Gateway comum em laboratório: costuma ser o 1º host ({{ res.primeiro_host }}). DNS não vem do IP/máscara; é configurado (ex.: 8.8.8.8 ou o do provedor).</p>
+                {% else %}
+                <p class="small text-warning mb-0">Faixa não orientada a host/gateway convencional (multicast ou reservada).</p>
+                {% endif %}
+                
+                {% if res.seguranca_dicas %}
+                <hr class="border-secondary">
+                <h6 class="text-danger mb-2 icon-title"><span>🛡️</span><span>CONTEXTO DE SEGURANÇA (Cyber)</span></h6>
+                {% for dica in res.seguranca_dicas %}
+                <div class="alert alert-{{ dica.tipo }} bg-dark border-{{ dica.tipo }} text-light small py-2 d-flex align-items-baseline gap-2 mb-2">
+                    <span style="font-size: 1.1rem;">{{ dica.icon }}</span>
+                    <span>{{ dica.texto }}</span>
+                </div>
+                {% endfor %}
+                {% endif %}
+
+                <hr class="border-secondary">
+                <h6 class="text-warning mb-2">📝 RESUMO RÁPIDO (MODO PROVA)</h6>
+                <div class="table-responsive">
+                    <table class="table table-dark table-bordered table-sm resumo-table mb-0">
+                        <tbody>
+                            {% for item in res.resumo_prova_itens %}
+                            <tr>
+                                <th>{{ item.campo }}</th>
+                                <td>{{ item.valor }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="small text-secondary mb-0">Com só a máscara você calcula prefixo, bits de host, tamanho do bloco e incremento entre sub-redes; o professor costuma pedir isso antes de fixar um IP de rede.</p>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card-tech p-4 h-100 resumo-box" style="border-left-color: #238636;">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 border-bottom border-secondary pb-2 mb-3">
+                    <h6 class="text-info mb-0 icon-title"><span>🧮</span><span>CAPACIDADE E HOSTS</span></h6>
+                    <span class="calc-tag calc-tag-dyn">Dinâmico por cálculo</span>
+                </div>
+                <p>ZEROS (HOST BITS): <span class="text-light fw-bold">{{ res.zeros }}</span></p>
+                <p>IPs NO BLOCO (rede → broadcast): 2^{{ res.zeros }} = <span class="text-warning fw-bold">{{ res.total }}</span></p>
+                <p>IPs ÚTEIS (RFC comum, exclui rede e broadcast): <span class="text-success fw-bold" style="font-size: 1.2rem;">{{ res.uteis }}</span></p>
+                <div class="mb-2">
+                    <span class="shield-badge"><span class="icon">📦</span>Total: {{ res.total }}</span>
+                    <span class="shield-badge"><span class="icon">✅</span>Úteis: {{ res.uteis }}</span>
+                    <span class="shield-badge"><span class="icon">🧷</span>CIDR /{{ res.cidr }}</span>
+                </div>
+                {% if res.cidr == 31 %}
+                <p class="small text-secondary mb-0">/31 (RFC 3021): os 2 endereços podem ser hosts em enlace ponto a ponto; sem rede/broadcast clássicos.</p>
+                {% elif res.cidr == 32 %}
+                <p class="small text-secondary mb-0">/32: um único endereço (host ou rota); sem sub-rede de múltiplos hosts.</p>
+                {% endif %}
+                {% if not res.somente_mascara %}
+                <hr class="border-secondary">
+                <h6 class="text-info mb-2">📚 TERMOS DA REDE (referência rápida)</h6>
+                <div class="table-responsive">
+                    <table class="table table-dark table-bordered table-sm termos-table mb-0">
+                        <thead>
+                            <tr>
+                                <th>ITEM</th>
+                                <th>DESCRIÇÃO</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>DNS</td>
+                                <td>{{ res.dns_info }}</td>
+                            </tr>
+                            <tr>
+                                <td>DHCP</td>
+                                <td>{{ res.dhcp_info }}</td>
+                            </tr>
+                            <tr>
+                                <td>Broadcast</td>
+                                <td>{{ res.broad }}</td>
+                            </tr>
+                            <tr>
+                                <td>VLAN</td>
+                                <td>{{ res.vlan_info }}</td>
+                            </tr>
+                            <tr>
+                                <td>WAN</td>
+                                <td>{{ res.wan_info }}</td>
+                            </tr>
+                            <tr>
+                                <td>Quantidade de IPs</td>
+                                <td>{{ res.total }} total, {{ res.uteis }} úteis</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <hr class="border-secondary">
+                <h6 class="text-info mb-2">💻 Dica Cisco CLI</h6>
+                <pre class="small bg-dark border border-secondary rounded p-2 mb-0 text-light">{{ res.cisco_cli }}</pre>
+                {% endif %}
+                {% if not res.somente_mascara and res.proximas_subredes %}
+                <hr class="border-secondary">
+                <h6 class="text-warning mb-2">📏 RÉGUA DE SUB-REDES (próximas {{ res.regua_count }})</h6>
+                <div class="table-responsive">
+                    <table class="table table-dark table-bordered table-sm regua-table mb-0">
+                        <thead>
+                            <tr>
+                                <th>SUBNET</th>
+                                <th>REDE</th>
+                                <th>1º HOST</th>
+                                <th>ÚLTIMO HOST</th>
+                                <th>BROADCAST</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for s in res.proximas_subredes %}
+                            <tr>
+                                <td>{{ s.nome }}</td>
+                                <td>{{ s.rede }}</td>
+                                <td>{{ s.primeiro_host }}</td>
+                                <td>{{ s.ultimo_host }}</td>
+                                <td>{{ s.broadcast }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {% if res.tabela_referencia %}
+    <div class="card-tech shadow mt-3">
+        <div class="p-3 border-bottom border-secondary text-info fw-bold d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <span>📚 TABELA DE REFERÊNCIA DINÂMICA (OCTETO {{ res.octeto_referencia }})</span>
+            <span class="calc-tag calc-tag-dyn">Dinâmico por cálculo</span>
+        </div>
+        <div class="p-3 table-responsive">
+            <table class="table table-dark table-bordered table-sm ref-table mb-0">
+                <thead>
+                    <tr>
+                        <th>128</th>
+                        <th>64</th>
+                        <th>32</th>
+                        <th>16</th>
+                        <th>8</th>
+                        <th>4</th>
+                        <th>2</th>
+                        <th>1</th>
+                        <th>Int</th>
+                        <th>Variação</th>
+                        <th>IPs</th>
+                        <th>Máscara</th>
+                        <th>Barra</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in res.tabela_referencia %}
+                    <tr class="{{ 'is-current' if row.is_current else '' }}">
+                        {% for b in row.bits %}
+                        <td class="{{ 'ref-bit-zero' if b == 0 else '' }}">{{ b }}</td>
+                        {% endfor %}
+                        <td>{{ row.intervalos }}</td>
+                        <td>{{ row.variacao }}</td>
+                        <td>{{ row.ips }}</td>
+                        <td>{{ row.mascara_octeto }}</td>
+                        <td>/{{ row.barra }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if res.tabela_conversao_bits %}
+    <div class="card-tech shadow mt-3">
+        <div class="p-3 border-bottom border-secondary text-warning fw-bold d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <span>🔄 TABELA DE CONVERSÃO (BITS, BYTES, BINÁRIO E DECIMAL)</span>
+            <span class="calc-tag calc-tag-mix">Misto (referência + cálculo atual)</span>
+        </div>
+        <div class="p-3">
+            <div class="row g-3">
+                <div class="col-md-7">
+                    <h6 class="text-info mb-2">🧮 Conversão detalhada por potência de 2</h6>
+                    <div class="table-responsive">
+                        <table class="table table-dark table-bordered table-sm conv-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Referência</th>
+                                    <th>Bits</th>
+                                    <th>Bytes</th>
+                                    <th>Binário</th>
+                                    <th>Decimal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in res.tabela_conversao_bits %}
+                                <tr>
+                                    <td>{{ row.referencia }}</td>
+                                    <td>{{ row.bits }}</td>
+                                    <td>{{ row.bytes }}</td>
+                                    <td>{{ row.binario }}</td>
+                                    <td>{{ row.decimal }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="col-md-5">
+                    <h6 class="text-info mb-2">📌 Aplicado ao cálculo atual</h6>
+                    <div class="table-responsive">
+                        <table class="table table-dark table-bordered table-sm conv-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Métrica</th>
+                                    <th>Valor</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in res.conversao_atual %}
+                                <tr>
+                                    <td>{{ item.chave }}</td>
+                                    <td>{{ item.valor }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="card-tech shadow mt-3">
+        <div class="p-3 border-bottom border-secondary text-warning fw-bold d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <span>🖥️ DICAS DE TERMINAL (Linux e Windows)</span>
+            <span class="calc-tag calc-tag-fixed">Referência fixa</span>
+        </div>
+        <div class="p-3">
+            <p class="small text-secondary mb-3">Use estes comandos para conferir no sistema operacional as mesmas informações exibidas no framework (IP, máscara, DNS, gateway, rotas e sub-redes).</p>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <h6 class="text-info mb-2">🐧 Linux (Bash)</h6>
+                    <div class="table-responsive">
+                        <table class="table table-dark table-bordered table-sm cmd-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Comando</th>
+                                    <th>Para que serve</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>ip a</code></td>
+                                    <td>Mostra IPs e máscaras CIDR das interfaces.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>nmcli device show</code></td>
+                                    <td>Detalha DNS, gateway e parâmetros de rede.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>ip route</code></td>
+                                    <td>Exibe a tabela de rotas e gateway padrão.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>sudo apt install ipcalc</code><br><code>ipcalc 172.19.0.0/20</code></td>
+                                    <td>Calcula rede, broadcast, wildcard e capacidade de hosts.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="text-info mb-2">🪟 Windows (CMD/PowerShell)</h6>
+                    <div class="table-responsive">
+                        <table class="table table-dark table-bordered table-sm cmd-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Comando</th>
+                                    <th>Para que serve</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>ipconfig</code></td>
+                                    <td>Mostra IP e máscara decimal das interfaces.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>ipconfig /all</code></td>
+                                    <td>Mostra DNS, gateway, DHCP e MAC address.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>route print -4</code></td>
+                                    <td>Exibe tabela de roteamento IPv4 para auditoria de rotas.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>Get-NetIPAddress</code></td>
+                                    <td>Consulta moderna em PowerShell para filtros e scripts.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="small text-secondary mt-3 mb-0">Validação rápida de prova: no Windows use <code>ipconfig /all</code>; no Linux use <code>ip a</code> + <code>ip route</code>.</div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if erro %}
+    <div class="alert alert-danger bg-dark text-danger border-danger shadow">{{ erro }}</div>
+    {% endif %}
+</div>
+<footer class="container pb-4">
+    <div class="card-tech p-3 text-center small text-secondary">
+        <div>Desenvolvido por:  Paulo André Carminati | RM570877 | 1-TDCPV | CyberSegurança | FIAP/2026</div>
+        <div class="mt-2">
+            <span class="shield-badge"><span class="icon">🎓</span>FIAP 2026</span>
+            <span class="shield-badge"><span class="icon">🛡️</span>Cyber Defense</span>
+            <span class="shield-badge"><span class="icon">💻</span>Python + Flask</span>
+        </div>
+        <div class="mt-2">GitHub: <a href="https://github.com/carmipa" target="_blank" rel="noopener noreferrer" class="text-info footer-link">🐙 github.com/carmipa</a></div>
+    </div>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    [...tooltipTriggerList].forEach((tooltipTriggerEl) => new bootstrap.Tooltip(tooltipTriggerEl));
+</script>
+</body>
+</html>
