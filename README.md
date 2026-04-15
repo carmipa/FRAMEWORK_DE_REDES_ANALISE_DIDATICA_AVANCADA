@@ -153,6 +153,7 @@ Também suporta entrada por **domínio/hostname** (ex.: `google.com`), resolvend
 - ✅ Engenharia reversa por `Wildcard`
 - ✅ Descoberta de CIDR por IP (lógica classful didática)
 - ✅ Decomposição de domínio/hostname para IPv4
+- ✅ Modo IPv6 básico com classificação e contexto GRC
 - ✅ Tabelas e blocos com comportamento dinâmico por cenário
 - ✅ Tema visual dinâmico por severidade de rede
 - ✅ Tooltips explicativos em campos e botões
@@ -189,6 +190,17 @@ flowchart TD
 FRAMEWORK_DE_REDES_ANALISE_DIDATICA_AVANCADA/
 ├── icone.png
 ├── main.py
+├── backend/
+│   ├── __init__.py
+│   ├── common.py
+│   └── services/
+│       ├── __init__.py
+│       ├── dns_service.py
+│       ├── grc_service.py
+│       ├── history_service.py
+│       ├── ipv4_service.py
+│       ├── ipv6_service.py
+│       └── pdf_service.py
 ├── requirements.txt
 ├── Dockerfile
 ├── docker-compose.yml
@@ -320,10 +332,10 @@ APP_HOST=0.0.0.0 APP_PORT=5000 APP_DEBUG=false APP_LOG_LEVEL=INFO python main.py
 
 ## 🛣️ Roadmap
 
-- [ ] suíte de testes automatizados para cenários críticos
-- [ ] exportação de relatório (PDF/JSON)
-- [ ] modularização completa do backend (`services/`, `routes/`)
-- [ ] cache local para consultas DNS frequentes
+- [x] suíte de testes automatizados para cenários críticos
+- [x] exportação de relatório (PDF/JSON)
+- [x] modularização funcional do backend (`backend/services/`)
+- [x] cache local para consultas DNS frequentes
 - [ ] refinamento de acessibilidade e navegação por teclado
 
 ---
