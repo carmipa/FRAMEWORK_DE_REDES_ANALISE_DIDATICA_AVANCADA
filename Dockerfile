@@ -8,9 +8,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY main.py .
-COPY templates ./templates
-COPY static ./static
+COPY . .
 
 ENV APP_HOST=0.0.0.0 \
     APP_PORT=5000 \
