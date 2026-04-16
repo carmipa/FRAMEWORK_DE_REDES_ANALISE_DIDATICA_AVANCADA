@@ -458,6 +458,54 @@ body { background-color: #0d1117; color: #c9d1d9; font-family: 'Consolas', monos
         .grc-list li {
             margin-bottom: 0.25rem;
         }
+        .didatico-list li {
+            margin-bottom: 0.25rem;
+        }
+        .wizard-table th, .wizard-table td {
+            font-size: 0.84rem;
+            vertical-align: top;
+            padding: 0.45rem 0.55rem;
+        }
+        .comparator-btn {
+            min-height: 38px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .wizard-table th:nth-child(1), .wizard-table td:nth-child(1) {
+            width: 24%;
+            white-space: nowrap;
+            font-weight: 700;
+        }
+        .timeline-bloco {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 0.6rem;
+        }
+        .timeline-step {
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            background: #0d1117;
+            padding: 0.55rem;
+            text-align: center;
+        }
+        .timeline-step.is-active {
+            border-color: #1f6feb;
+            box-shadow: inset 0 0 0 1px rgba(31, 111, 235, 0.35);
+            background: rgba(31, 111, 235, 0.12);
+        }
+        .timeline-title {
+            font-size: 0.76rem;
+            color: #8b949e;
+            margin-bottom: 0.2rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+        .timeline-ip {
+            font-size: 0.84rem;
+            color: #c9d1d9;
+            word-break: break-word;
+        }
 
         @media (max-width: 992px) {
             .container.py-5 { padding-top: 1.4rem !important; padding-bottom: 1.4rem !important; }
@@ -488,6 +536,7 @@ body { background-color: #0d1117; color: #c9d1d9; font-family: 'Consolas', monos
             .val-bin { font-size: 0.9rem; }
             .wildcard-banner { font-size: 0.9rem; padding: 8px 10px; }
             .action-buttons { grid-template-columns: 1fr; }
+            .timeline-bloco { grid-template-columns: 1fr; }
             .termos-table th, .termos-table td,
             .regua-table th, .regua-table td,
             .ref-table th, .ref-table td,

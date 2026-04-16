@@ -130,12 +130,14 @@ def core_mascara(cidr):
     if not isinstance(cidr, int) or not (0 <= cidr <= 32):
         return None
     m_i = (0xFFFFFFFF << (32 - cidr)) & 0xFFFFFFFF
-    if cidr >= 24:
+    if cidr > 24:
         pulo = 2 ** (32 - cidr)
-    elif cidr >= 16:
+    elif cidr > 16:
         pulo = 2 ** (24 - cidr)
-    else:
+    elif cidr > 8:
         pulo = 2 ** (16 - cidr)
+    else:
+        pulo = 2 ** (8 - cidr)
 
     tamanho = 2 ** (32 - cidr)
     if cidr == 32:
@@ -343,6 +345,29 @@ def papel_ip_no_bloco(ip_i, rede_i, broad_i, cidr):
     return "Host válido", ""
 
 
+def resumo_abertura_intervalos(cidr, pulo, total, uteis, rede, broad, octeto_referencia, proximas_subredes):
+    intervalos_no_octeto = max(1, 256 // pulo) if pulo > 0 else 1
+    exemplos = [
+        {"nome": s["nome"], "faixa": f"{s['rede']} até {s['broadcast']}"}
+        for s in proximas_subredes[:4]
+    ]
+    return {
+        "intervalos_no_octeto": intervalos_no_octeto,
+        "pulo": pulo,
+        "ips_por_bloco": total,
+        "uteis_por_bloco": uteis,
+        "rede_atual": rede,
+        "broadcast_atual": broad,
+        "octeto_referencia": octeto_referencia,
+        "titulo": (
+            f"{intervalos_no_octeto} intervalos variam de {pulo} em {pulo} "
+            f"no octeto {octeto_referencia}"
+        ),
+        "faixa_atual": f"{rede} até {broad}/{cidr}",
+        "exemplos": exemplos,
+    }
+
+
 def processar(ip_s, cidr, regua_count=5):
     c = core_mascara(cidr)
     if c is None:
@@ -398,6 +423,16 @@ def processar(ip_s, cidr, regua_count=5):
     ip_papel, ip_papel_alerta = papel_ip_no_bloco(ip_i, r_i, b_i, cidr)
     octeto_ref, tabela_ref = tabela_referencia_subredes(cidr)
     tabela_conv, conv_atual = tabela_conversao_bits(cidr)
+    abertura_intervalos = resumo_abertura_intervalos(
+        cidr=cidr,
+        pulo=c["pulo"],
+        total=c["total"],
+        uteis=c["uteis"],
+        rede=fmt_ip(r_i),
+        broad=fmt_ip(b_i),
+        octeto_referencia=octeto_ref,
+        proximas_subredes=proximas_subredes,
+    )
     tema = tema_dinamico(cidr, c["total"])
     out = {k: v for k, v in c.items() if k != "_m_i"}
     gateway_sugerido = primeiro_host if hosts_recomendados else "N/A para este tipo de IP"
@@ -521,6 +556,7 @@ def processar(ip_s, cidr, regua_count=5):
             "resumo_prova": resumo_prova,
             "resumo_prova_itens": resumo_prova_itens,
             "octeto_referencia": octeto_ref,
+            "abertura_intervalos": abertura_intervalos,
             "tabela_referencia": tabela_ref,
             "tabela_conversao_bits": tabela_conv,
             "conversao_atual": conv_atual,

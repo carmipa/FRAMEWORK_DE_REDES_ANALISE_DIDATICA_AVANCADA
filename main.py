@@ -30,6 +30,9 @@ from backend.services.ipv6_service import processar_ipv6
 from backend.services.pdf_service import gerar_pdf_simples
 
 app = Flask(__name__)
+REGUA_COUNT_OPCOES = {5, 10, 15, 25, 50, 100}
+COMPARADOR_CIDR_PADRAO_A = "20"
+COMPARADOR_CIDR_PADRAO_B = "24"
 
 
 def normalizar_hostname_entrada(entrada: str) -> str:
@@ -46,6 +49,102 @@ def normalizar_hostname_entrada(entrada: str) -> str:
     return bruto.strip(".")
 
 
+def montar_wizard_calculo(res):
+    if not res or res.get("somente_mascara"):
+        return []
+    return [
+        {
+            "icone": "🧭",
+            "etapa": "Classe/faixa",
+            "acao": f"Identificar o 1º octeto ({res.get('primeiro_octeto')})",
+            "resultado": f"Classe {res.get('classe')} ({res.get('classe_faixa')}).",
+        },
+        {
+            "icone": "📏",
+            "etapa": "Máscara",
+            "acao": f"Converter /{res.get('cidr')} para máscara",
+            "resultado": f"{res.get('mask')} (wildcard {res.get('wildcard')}).",
+        },
+        {
+            "icone": "🧠",
+            "etapa": "Rede (AND)",
+            "acao": "Aplicar IP & máscara",
+            "resultado": f"Rede calculada: {res.get('rede')}.",
+        },
+        {
+            "icone": "📣",
+            "etapa": "Hosts/Broadcast",
+            "acao": "Calcular intervalo de hosts",
+            "resultado": (
+                f"1º útil {res.get('primeiro_host')} | "
+                f"último útil {res.get('ultimo_host')} | "
+                f"broadcast {res.get('broad')}."
+            ),
+        },
+    ]
+
+
+def montar_timeline_bloco(res):
+    if not res or res.get("somente_mascara"):
+        return None
+    papel = (res.get("ip_papel") or "").lower()
+    if "rede" in papel:
+        posicao = "rede"
+    elif "broadcast" in papel:
+        posicao = "broadcast"
+    else:
+        posicao = "hosts"
+    return {
+        "rede": res.get("rede"),
+        "primeiro_host": res.get("primeiro_host"),
+        "ultimo_host": res.get("ultimo_host"),
+        "broadcast": res.get("broad"),
+        "ip": res.get("resumo_prova_itens", [{}])[0].get("valor", ""),
+        "posicao": posicao,
+    }
+
+
+def explicar_erro_didatico(erro):
+    txt = (erro or "").strip()
+    if not txt:
+        return None
+    rules = [
+        (
+            "IP inválido",
+            "O campo IP deve estar em IPv4 com 4 octetos numéricos.",
+            "Use formato x.x.x.x (ex.: 172.19.0.10).",
+        ),
+        (
+            "CIDR",
+            "O prefixo precisa ser inteiro entre 0 e 32.",
+            "Exemplos válidos: 8, 16, 20, 24, 30.",
+        ),
+        (
+            "Máscara decimal inválida",
+            "A máscara precisa ter bits contíguos de rede.",
+            "Use máscara contínua, como 255.255.255.0.",
+        ),
+        (
+            "Wildcard inválida",
+            "A wildcard deve ser o inverso de uma máscara contígua.",
+            "Ex.: 0.0.15.255 corresponde a /20.",
+        ),
+        (
+            "domínio",
+            "O domínio/hostname não pôde ser resolvido no DNS.",
+            "Teste com google.com e confira conectividade DNS.",
+        ),
+    ]
+    lower = txt.lower()
+    for marker, causa, como in rules:
+        if marker.lower() in lower:
+            return {"causa": causa, "como_corrigir": como}
+    return {
+        "causa": "A entrada não passou nas validações do modo selecionado.",
+        "como_corrigir": "Revise os campos obrigatórios do modo e tente novamente.",
+    }
+
+
 @app.route("/", methods=["GET", "POST"])
 def home():
     res, erro = None, None
@@ -56,6 +155,14 @@ def home():
     cidr_origem = ""
     ipv6_res = None
     invalid_fields = set()
+    wizard_calculo = []
+    timeline_bloco = None
+    erro_didatico = None
+    comparador_cidr_a_pre = COMPARADOR_CIDR_PADRAO_A
+    comparador_cidr_b_pre = COMPARADOR_CIDR_PADRAO_B
+    comparador_cards = []
+    comparador_only = False
+    comparador_ip = ""
 
     replay_id = request.args.get("replay", "").strip()
     history_limit_qs = request.args.get("history_limit", "").strip()
@@ -86,28 +193,26 @@ def home():
         mask_dec_p = request.form.get("mask_decimal", "").strip()
         wildcard_p = request.form.get("wildcard_mask", "").strip()
         regua_count_pre = request.form.get("regua_count", "5").strip() or "5"
+        comparador_cidr_a_pre = (
+            request.form.get("comparador_cidr_a", COMPARADOR_CIDR_PADRAO_A).strip() or COMPARADOR_CIDR_PADRAO_A
+        )
+        comparador_cidr_b_pre = (
+            request.form.get("comparador_cidr_b", COMPARADOR_CIDR_PADRAO_B).strip() or COMPARADOR_CIDR_PADRAO_B
+        )
         history_limit_pre = request.form.get("history_limit", history_limit_pre).strip() or history_limit_pre
         history_page_pre = request.form.get("history_page", history_page_pre).strip() or history_page_pre
         modo = request.form.get("modo", "").strip().lower()
-
-        if modo != "dominio" and ip_p and not all(c.isdigit() or c == "." for c in ip_p):
-            try:
-                logger.info("Tentando resolver DNS automaticamente para entrada não numérica")
-                ip_p = resolver_dns_com_cache(ip_p)
-            except Exception:
-                logger.exception("Falha na resolução DNS automática")
-                erro = f"Não foi possível resolver o domínio informado: {ip_p}"
 
         try:
             regua_count = int(regua_count_pre)
         except ValueError:
             regua_count = 5
-        if regua_count not in {5, 10, 15}:
+        if regua_count not in REGUA_COUNT_OPCOES:
             regua_count = 5
         regua_count_pre = str(regua_count)
 
         cidr_val = None
-        if modo not in {"cidr", "mask", "wildcard", "autoip", "dominio", "ipv6"}:
+        if modo not in {"cidr", "mask", "wildcard", "autoip", "dominio", "ipv6", "comparador"}:
             if cidr_raw:
                 modo = "cidr"
             elif mask_dec_p:
@@ -121,6 +226,20 @@ def home():
             else:
                 erro = "Selecione um modo e preencha o campo correspondente."
                 invalid_fields.add("modo")
+
+        # Resolve DNS automático apenas quando o modo depende de IP de host.
+        if (
+            erro is None
+            and modo in {"cidr", "autoip", "comparador"}
+            and ip_p
+            and not all(c.isdigit() or c == "." for c in ip_p)
+        ):
+            try:
+                logger.info("Tentando resolver DNS automaticamente para entrada não numérica")
+                ip_p = resolver_dns_com_cache(ip_p)
+            except Exception:
+                logger.exception("Falha na resolução DNS automática")
+                erro = f"Não foi possível resolver o domínio informado: {ip_p}"
 
         if erro is None and modo == "ipv6":
             if not ipv6_p:
@@ -243,6 +362,41 @@ def home():
                     logger.warning("Falha ao inferir CIDR por IP: %s", exc)
                     erro = str(exc)
                     invalid_fields.add("ip")
+        elif erro is None and modo == "comparador":
+            comparador_only = True
+            if not ip_p:
+                erro = "No modo Comparador CIDR, informe um endereço IP."
+                invalid_fields.add("ip")
+            else:
+                cidrs_txt = [comparador_cidr_a_pre, comparador_cidr_b_pre]
+                for idx, cidr_txt in enumerate(cidrs_txt, start=1):
+                    if not cidr_txt.isdigit():
+                        erro = f"CIDR {idx} do comparador deve ser número inteiro entre 0 e 32."
+                        break
+                    cidr_cmp = int(cidr_txt)
+                    if not (0 <= cidr_cmp <= 32):
+                        erro = f"CIDR {idx} do comparador deve estar entre 0 e 32."
+                        break
+                if erro is None:
+                    try:
+                        comparador_ip = ip_p
+                        for cidr_txt in cidrs_txt:
+                            cidr_cmp = int(cidr_txt)
+                            cmp_res = processar(ip_p, cidr_cmp, regua_count=5)
+                            comparador_cards.append(
+                                {
+                                    "cidr": cidr_cmp,
+                                    "mask": cmp_res["mask"],
+                                    "pulo": cmp_res["pulo"],
+                                    "uteis": cmp_res["uteis"],
+                                    "rede": cmp_res["rede"],
+                                    "broadcast": cmp_res["broad"],
+                                    "nivel_tema": cmp_res["nivel_tema"],
+                                }
+                            )
+                    except EntradaInvalidaError as exc:
+                        erro = str(exc)
+                        invalid_fields.add("ip")
 
         if erro is None and cidr_val is not None and not (0 <= cidr_val <= 32):
             erro = "CIDR deve estar entre 0 e 32."
@@ -281,6 +435,13 @@ def home():
                 logger.exception("Erro interno inesperado durante processamento principal")
                 erro = "Erro interno ao processar os dados. Revise os campos e tente novamente."
 
+        if res and not res.get("somente_mascara"):
+            wizard_calculo = montar_wizard_calculo(res)
+            timeline_bloco = montar_timeline_bloco(res)
+
+        if erro:
+            erro_didatico = explicar_erro_didatico(erro)
+
     pag = paginate_history(history_limit_pre, history_page_pre)
     return render_template(
         "index.html",
@@ -293,6 +454,14 @@ def home():
         mask_dec_pre=mask_dec_p,
         wildcard_pre=wildcard_p,
         regua_count_pre=regua_count_pre,
+        comparador_cidr_a_pre=comparador_cidr_a_pre,
+        comparador_cidr_b_pre=comparador_cidr_b_pre,
+        comparador_cards=comparador_cards,
+        comparador_only=comparador_only,
+        comparador_ip=comparador_ip,
+        wizard_calculo=wizard_calculo,
+        timeline_bloco=timeline_bloco,
+        erro_didatico=erro_didatico,
         history_limit_pre=pag["history_limit_pre"],
         history_limit=pag["history_limit"],
         history_limit_max=pag["history_limit_max"],

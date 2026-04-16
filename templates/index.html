@@ -28,7 +28,7 @@
 
     <div class="card-tech p-4 shadow">
         <form method="POST" class="row g-3" id="calc-form">
-            <div class="col-md-5">
+            <div class="col-lg-4">
                 <label class="form-label small text-secondary">🌐 Endereço IPv4 (opcional)</label>
                 <input type="text" name="ip" class="form-control bg-dark text-light border-secondary {{ 'is-invalid' if 'ip' in invalid_fields else '' }}" 
                        placeholder="Ex.: 172.16.0.0 — deixe vazio se o exercício for só com máscara" value="{{ ip_pre }}"
@@ -36,42 +36,45 @@
                        title="IP de host para calcular rede, broadcast e hosts úteis. Formato: x.x.x.x">
                 <div class="form-text text-secondary small">Sem IP: mostramos máscara, bits, tamanho do bloco e pulo. Rede/broadcast/hosts exigem um endereço no bloco.</div>
             </div>
-            <div class="col-md-2">
+            <div class="col-lg-2">
                 <label class="form-label small text-secondary">🧷 CIDR</label>
                 <input type="number" name="cidr" class="form-control bg-dark text-light border-secondary {{ 'is-invalid' if 'cidr' in invalid_fields else '' }}" 
                        placeholder="22" min="0" max="32" value="{{ cidr_pre }}"
                        data-bs-toggle="tooltip" data-bs-placement="top"
                        title="Prefixo de rede (0 a 32). Ex.: /24 = 255.255.255.0">
             </div>
-            <div class="col-md-3">
+            <div class="col-lg-3">
                 <label class="form-label small text-secondary">📏 Ou máscara decimal</label>
                 <input type="text" name="mask_decimal" class="form-control bg-dark text-light border-secondary {{ 'is-invalid' if 'mask_decimal' in invalid_fields else '' }}" 
                        placeholder="Ex.: 255.255.255.240" value="{{ mask_dec_pre }}"
                        data-bs-toggle="tooltip" data-bs-placement="top"
                        title="Máscara em decimal pontuado. Ex.: 255.255.240.0">
             </div>
-            <div class="col-md-2">
-                <label class="form-label small text-secondary">🧩 Ou wildcard mask</label>
+            <div class="col-lg-3">
+                <label class="form-label small text-secondary text-nowrap">🧩 Ou wildcard mask</label>
                 <input type="text" name="wildcard_mask" class="form-control bg-dark text-light border-secondary {{ 'is-invalid' if 'wildcard_mask' in invalid_fields else '' }}"
                        placeholder="Ex.: 0.0.15.255" value="{{ wildcard_pre }}"
                        data-bs-toggle="tooltip" data-bs-placement="top"
                        title="Inverso da máscara (ACL/OSPF). Ex.: 0.0.15.255 = /20">
             </div>
-            <div class="col-md-5">
+            <div class="col-lg-4">
                 <label class="form-label small text-secondary">🛰️ Modo IPv6 básico (opcional)</label>
                 <input type="text" name="ipv6" class="form-control bg-dark text-light border-secondary {{ 'is-invalid' if 'ipv6' in invalid_fields else '' }}"
                        placeholder="Ex.: 2001:db8::1" value="{{ ipv6_pre }}"
                        data-bs-toggle="tooltip" data-bs-placement="top"
                        title="Análise inicial IPv6: classificação, forma expandida e decomposição em blocos de 16 bits.">
             </div>
-            <div class="col-md-2">
-                <label class="form-label small text-secondary">📐 Sub-redes na régua</label>
+            <div class="col-lg-3">
+                <label class="form-label small text-secondary text-nowrap">📐 Sub-redes na régua</label>
                 <select name="regua_count" class="form-select bg-dark text-light border-secondary"
                         data-bs-toggle="tooltip" data-bs-placement="top"
                         title="Quantidade de linhas exibidas na régua de sub-redes">
                     <option value="5" {{ 'selected' if regua_count_pre == '5' else '' }}>5</option>
                     <option value="10" {{ 'selected' if regua_count_pre == '10' else '' }}>10</option>
                     <option value="15" {{ 'selected' if regua_count_pre == '15' else '' }}>15</option>
+                    <option value="25" {{ 'selected' if regua_count_pre == '25' else '' }}>25</option>
+                    <option value="50" {{ 'selected' if regua_count_pre == '50' else '' }}>50</option>
+                    <option value="100" {{ 'selected' if regua_count_pre == '100' else '' }}>100</option>
                 </select>
             </div>
             <div class="col-12">
@@ -94,9 +97,54 @@
                     <span class="shield-badge"><span class="icon">📁</span>Histórico com replay</span>
                     <span class="shield-badge"><span class="icon">📤</span>Export JSON/PDF</span>
                 </div>
+                <div class="row g-2 mt-1 align-items-end">
+                    <div class="col-lg-4">
+                        <label class="form-label small text-secondary mb-1">🆚 Comparador CIDR A</label>
+                        <input type="number" name="comparador_cidr_a" min="0" max="32" class="form-control bg-dark text-light border-secondary" value="{{ comparador_cidr_a_pre }}"
+                               data-bs-toggle="tooltip" data-bs-placement="top"
+                               title="Primeiro CIDR para comparação com o mesmo IP (0 a 32). Ex.: 20">
+                    </div>
+                    <div class="col-lg-4">
+                        <label class="form-label small text-secondary mb-1">🆚 Comparador CIDR B</label>
+                        <input type="number" name="comparador_cidr_b" min="0" max="32" class="form-control bg-dark text-light border-secondary" value="{{ comparador_cidr_b_pre }}"
+                               data-bs-toggle="tooltip" data-bs-placement="top"
+                               title="Segundo CIDR para comparação com o mesmo IP (0 a 32). Ex.: 24">
+                    </div>
+                    <div class="col-lg-4">
+                        <button type="submit" name="modo" value="comparador" class="btn btn-warning fw-bold text-dark w-100 comparator-btn"
+                                title="Compara dois CIDRs usando o mesmo IP informado e exibe tabela dedicada."
+                                data-bs-toggle="tooltip" data-bs-placement="top">🆚 Comparar CIDRs</button>
+                    </div>
+                </div>
             </div>
         </form>
     </div>
+
+    {% if comparador_cards and comparador_cards|length == 2 %}
+    <div class="card-tech p-3 mb-3">
+        <h6 class="text-warning mb-2">🆚 ÁREA DO COMPARADOR CIDR (mesmo IP)</h6>
+        <div class="small text-secondary mb-2">IP base usado na comparação: <span class="text-info">{{ comparador_ip or ip_pre }}</span></div>
+        <div class="table-responsive">
+            <table class="table table-dark table-bordered table-sm mb-0">
+                <thead>
+                    <tr>
+                        <th data-bs-toggle="tooltip" data-bs-placement="top" title="Critério técnico comparado entre os dois prefixos.">🏷️ Métrica</th>
+                        <th data-bs-toggle="tooltip" data-bs-placement="top" title="Resultados para o primeiro CIDR selecionado.">🅰️ /{{ comparador_cards[0].cidr }}</th>
+                        <th data-bs-toggle="tooltip" data-bs-placement="top" title="Resultados para o segundo CIDR selecionado.">🅱️ /{{ comparador_cards[1].cidr }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>📏 Máscara</td><td>{{ comparador_cards[0].mask }}</td><td>{{ comparador_cards[1].mask }}</td></tr>
+                    <tr><td>📈 Pulo</td><td>{{ comparador_cards[0].pulo }}</td><td>{{ comparador_cards[1].pulo }}</td></tr>
+                    <tr><td>✅ Hosts úteis</td><td>{{ comparador_cards[0].uteis }}</td><td>{{ comparador_cards[1].uteis }}</td></tr>
+                    <tr><td>🧭 Rede</td><td>{{ comparador_cards[0].rede }}</td><td>{{ comparador_cards[1].rede }}</td></tr>
+                    <tr><td>📣 Broadcast</td><td>{{ comparador_cards[0].broadcast }}</td><td>{{ comparador_cards[1].broadcast }}</td></tr>
+                    <tr><td>🛡️ Risco/tema</td><td>{{ comparador_cards[0].nivel_tema }}</td><td>{{ comparador_cards[1].nivel_tema }}</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
 
     {% if history and history_limit > 0 %}
     <div class="card-tech p-3 shadow history-box">
@@ -202,36 +250,6 @@
     {% if res %}
     <div class="dynamic-theme"
          style="--dyn-bit1: {{ res.cor_bit1 }}; --dyn-and: {{ res.cor_resultado_and }}; --dyn-pulo: {{ res.cor_pulo }}; --dyn-resumo: {{ res.cor_borda_resumo }}; --dyn-accent: {{ res.cor_acento }}; --dyn-table-border: {{ res.cor_borda_tabela }}; --dyn-table-th-bg: {{ res.cor_cabecalho_tabela_bg }}; --dyn-table-th-text: {{ res.cor_cabecalho_tabela_texto }}; --dyn-row-highlight: {{ res.cor_linha_destaque }};">
-    <div class="top-overview-grid mb-3">
-        <div class="card-tech p-3 dynamic-legend h-100">
-            <div class="top-card-title">🎨 Tema e severidade</div>
-            <div class="d-flex flex-wrap align-items-center gap-2">
-                <span class="dynamic-legend-title">Escala dinâmica:</span>
-                <span class="dynamic-legend-chip chip-verde">/24+ Verde</span>
-                <span class="dynamic-legend-chip chip-azul">/17-23 Azul</span>
-                <span class="dynamic-legend-chip chip-ambar">/9-16 Âmbar</span>
-                <span class="dynamic-legend-chip chip-vermelho">/0-8 Vermelho</span>
-            </div>
-            <div class="small mt-2 mb-0">
-                <strong>Nível atual:</strong> {{ res.nivel_tema }} — {{ res.nivel_tema_descricao }}
-            </div>
-        </div>
-        <div class="card-tech p-3 h-100">
-            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
-                <h6 class="text-info mb-0">📌 Resumo Executivo GRC</h6>
-                <span class="calc-tag calc-tag-dyn">Dinâmico por cálculo</span>
-            </div>
-            {% if res.grc_resumo %}
-            <ul class="mb-0 small grc-list">
-                {% for linha in res.grc_resumo %}
-                <li>{{ linha }}</li>
-                {% endfor %}
-            </ul>
-            {% else %}
-            <div class="small text-secondary mb-0">Sem alertas adicionais para o cenário atual.</div>
-            {% endif %}
-        </div>
-    </div>
     {% if res.somente_mascara %}
     <div class="classe-destaque cv-outros card-tech shadow mb-3 py-4 px-3 text-center">
         <div class="d-flex justify-content-center mb-1">
@@ -351,6 +369,66 @@
     </div>
     {% endif %}
 
+    <div class="card-tech p-3 mb-3 dynamic-legend">
+        <div class="top-card-title">🎨 Tema e severidade</div>
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <span class="dynamic-legend-title">Escala dinâmica:</span>
+            <span class="dynamic-legend-chip chip-verde">/24+ Verde</span>
+            <span class="dynamic-legend-chip chip-azul">/17-23 Azul</span>
+            <span class="dynamic-legend-chip chip-ambar">/9-16 Âmbar</span>
+            <span class="dynamic-legend-chip chip-vermelho">/0-8 Vermelho</span>
+        </div>
+        <div class="small mt-2 mb-0">
+            <strong>Nível atual:</strong> {{ res.nivel_tema }} — {{ res.nivel_tema_descricao }}
+        </div>
+    </div>
+
+    {% if wizard_calculo %}
+    <div class="card-tech p-3 mb-3">
+        <h6 class="text-warning mb-2">🧭 PASSO A PASSO DO CÁLCULO</h6>
+        <div class="table-responsive">
+            <table class="table table-dark table-bordered table-sm wizard-table mb-0">
+                <thead>
+                    <tr>
+                        <th>Etapa</th>
+                        <th>Ação</th>
+                        <th>Resultado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for passo in wizard_calculo %}
+                    <tr>
+                        <td>{{ passo.icone }} {{ passo.etapa }}</td>
+                        <td>{{ passo.acao }}</td>
+                        <td>{{ passo.resultado }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+    {% if timeline_bloco %}
+    <div class="card-tech p-3 mb-3">
+        <h6 class="text-warning mb-2">🛤️ LINHA DO TEMPO DO BLOCO</h6>
+        <div class="timeline-bloco">
+            <div class="timeline-step {{ 'is-active' if timeline_bloco.posicao == 'rede' else '' }}">
+                <div class="timeline-title">Rede</div>
+                <div class="timeline-ip">{{ timeline_bloco.rede }}</div>
+            </div>
+            <div class="timeline-step {{ 'is-active' if timeline_bloco.posicao == 'hosts' else '' }}">
+                <div class="timeline-title">Hosts úteis</div>
+                <div class="timeline-ip">{{ timeline_bloco.primeiro_host }} → {{ timeline_bloco.ultimo_host }}</div>
+            </div>
+            <div class="timeline-step {{ 'is-active' if timeline_bloco.posicao == 'broadcast' else '' }}">
+                <div class="timeline-title">Broadcast</div>
+                <div class="timeline-ip">{{ timeline_bloco.broadcast }}</div>
+            </div>
+        </div>
+        <div class="small text-secondary mt-2">IP digitado: {{ timeline_bloco.ip }} (posição destacada na barra).</div>
+    </div>
+    {% endif %}
+
     <div class="row g-3">
         <div class="col-md-6">
             <div class="card-tech p-4 h-100 resumo-box">
@@ -415,17 +493,6 @@
                 <p class="small text-warning mb-0">Faixa não orientada a host/gateway convencional (multicast ou reservada).</p>
                 {% endif %}
                 
-                {% if res.seguranca_dicas %}
-                <hr class="border-secondary">
-                <h6 class="text-danger mb-2 icon-title"><span>🛡️</span><span>CONTEXTO DE SEGURANÇA (Cyber)</span></h6>
-                {% for dica in res.seguranca_dicas %}
-                <div class="alert alert-{{ dica.tipo }} bg-dark border-{{ dica.tipo }} text-light small py-2 d-flex align-items-baseline gap-2 mb-2">
-                    <span style="font-size: 1.1rem;">{{ dica.icon }}</span>
-                    <span>{{ dica.texto }}</span>
-                </div>
-                {% endfor %}
-                {% endif %}
-
                 <hr class="border-secondary">
                 <h6 class="text-warning mb-2">📝 RESUMO RÁPIDO (MODO PROVA)</h6>
                 <div class="table-responsive">
@@ -508,6 +575,19 @@
                 <hr class="border-secondary">
                 <h6 class="text-info mb-2">💻 Dica Cisco CLI</h6>
                 <pre class="small bg-dark border border-secondary rounded p-2 mb-0 text-light">{{ res.cisco_cli }}</pre>
+                {% endif %}
+                {% if not res.somente_mascara and res.abertura_intervalos %}
+                <hr class="border-secondary">
+                <h6 class="text-warning mb-2">📐 ABERTURA DOS INTERVALOS</h6>
+                <div class="small text-secondary mb-1">{{ res.abertura_intervalos.titulo }} ➜ {{ res.abertura_intervalos.ips_por_bloco }} IPs por bloco ({{ res.abertura_intervalos.uteis_por_bloco }} úteis)</div>
+                <div class="small mb-2">Faixa atual calculada: <span class="text-info">{{ res.abertura_intervalos.faixa_atual }}</span></div>
+                {% if res.abertura_intervalos.exemplos %}
+                <ul class="small mb-0">
+                    {% for item in res.abertura_intervalos.exemplos %}
+                    <li><span class="text-secondary">{{ item.nome }}:</span> {{ item.faixa }}/{{ res.cidr }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
                 {% endif %}
                 {% if not res.somente_mascara and res.proximas_subredes %}
                 <hr class="border-secondary">
@@ -651,6 +731,32 @@
     </div>
     {% endif %}
 
+    {% if res.grc_resumo or res.seguranca_dicas %}
+    <div class="card-tech p-4 shadow mt-3">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 border-bottom border-secondary pb-2 mb-3">
+            <h6 class="text-danger mb-0 icon-title"><span>🛡️</span><span>CYBER SEGURANÇA (GRC + CONTEXTO)</span></h6>
+            <span class="calc-tag calc-tag-dyn">Dinâmico por cálculo</span>
+        </div>
+        {% if res.grc_resumo %}
+        <h6 class="text-info mb-2">📌 Resumo Executivo GRC</h6>
+        <ul class="mb-3 small grc-list">
+            {% for linha in res.grc_resumo %}
+            <li>{{ linha }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        {% if res.seguranca_dicas %}
+        <h6 class="text-warning mb-2">🚨 Alertas e recomendações de segurança</h6>
+        {% for dica in res.seguranca_dicas %}
+        <div class="alert alert-{{ dica.tipo }} bg-dark border-{{ dica.tipo }} text-light small py-2 d-flex align-items-baseline gap-2 mb-2">
+            <span style="font-size: 1.1rem;">{{ dica.icon }}</span>
+            <span>{{ dica.texto }}</span>
+        </div>
+        {% endfor %}
+        {% endif %}
+    </div>
+    {% endif %}
+
     <div class="card-tech shadow mt-3">
         <div class="p-3 border-bottom border-secondary text-warning fw-bold d-flex flex-wrap justify-content-between align-items-center gap-2">
             <span class="icon-title">🖥️ DICAS DE TERMINAL (Linux e Windows)
@@ -747,6 +853,12 @@
 
     {% if erro %}
     <div class="alert alert-danger bg-dark text-danger border-danger shadow">{{ erro }}</div>
+    {% if erro_didatico %}
+    <div class="alert alert-info bg-dark border-info text-light shadow small">
+        <div><strong>Por que aconteceu:</strong> {{ erro_didatico.causa }}</div>
+        <div><strong>Como corrigir:</strong> {{ erro_didatico.como_corrigir }}</div>
+    </div>
+    {% endif %}
     {% endif %}
 </div>
 <footer class="container pb-4">
