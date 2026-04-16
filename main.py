@@ -3,6 +3,7 @@ import threading
 import time
 import uuid
 import webbrowser
+from urllib.parse import urlparse
 
 from flask import Flask, abort, g, jsonify, redirect, render_template, request, send_file, url_for
 from werkzeug.exceptions import HTTPException
@@ -29,6 +30,20 @@ from backend.services.ipv6_service import processar_ipv6
 from backend.services.pdf_service import gerar_pdf_simples
 
 app = Flask(__name__)
+
+
+def normalizar_hostname_entrada(entrada: str) -> str:
+    bruto = (entrada or "").strip()
+    if not bruto:
+        return ""
+    parece_url = "://" in bruto or bruto.startswith("//") or any(sep in bruto for sep in ["/", "?", "#", ":"])
+    if not parece_url:
+        return bruto.strip(".")
+    alvo_parse = bruto if "://" in bruto else f"//{bruto}"
+    parsed = urlparse(alvo_parse, scheme="http")
+    if parsed.hostname:
+        return parsed.hostname.strip().strip(".")
+    return bruto.strip(".")
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -137,7 +152,7 @@ def home():
                     invalid_fields.add("ipv6")
 
         if erro is None and modo == "dominio":
-            dominio_digitado = ip_entrada_original
+            dominio_digitado = normalizar_hostname_entrada(ip_entrada_original)
             if not dominio_digitado:
                 erro = "No modo Decompor Domínio para IP, informe um domínio/hostname (ex.: google.com)."
                 invalid_fields.add("ip")

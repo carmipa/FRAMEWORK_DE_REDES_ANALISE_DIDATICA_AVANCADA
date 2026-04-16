@@ -1,7 +1,38 @@
 [
   {
-    "id": "c133f8f3",
-    "timestamp": "2026-04-15T19:15:26.448967+00:00",
+    "id": "2cc30a7d",
+    "timestamp": "2026-04-16T14:20:49.833181+00:00",
+    "modo": "dominio",
+    "ip_entrada": "https://frameworknet.carminati.dev.br/",
+    "ipv6_entrada": "",
+    "cidr_entrada": "",
+    "mask_entrada": "255.255.0.0",
+    "wildcard_entrada": "0.0.255.255",
+    "rede": "172.67.0.0",
+    "broadcast": "172.67.255.255",
+    "mask": "255.255.0.0",
+    "cidr": 16,
+    "tema": "Risco elevado"
+  },
+  {
+    "id": "69f890f7",
+    "timestamp": "2026-04-16T14:20:05.664413+00:00",
+    "modo": "dominio",
+    "ip_entrada": "https://example.com/path?a=1",
+    "ipv6_entrada": "",
+    "cidr_entrada": "24",
+    "mask_entrada": "255.255.255.0",
+    "wildcard_entrada": "0.0.0.255",
+    "rede": "93.184.216.0",
+    "broadcast": "93.184.216.255",
+    "mask": "255.255.255.0",
+    "cidr": 24,
+    "tema": "Baixo risco operacional",
+    "timestamp_utc": "2026-04-16 14:20:05 UTC"
+  },
+  {
+    "id": "788cce4f",
+    "timestamp": "2026-04-16T14:20:05.660394+00:00",
     "modo": "cidr",
     "ip_entrada": "10.0.0.1",
     "ipv6_entrada": "",
@@ -12,11 +43,12 @@
     "broadcast": "10.0.0.1",
     "mask": "255.255.255.255",
     "cidr": 32,
-    "tema": "Baixo risco operacional"
+    "tema": "Baixo risco operacional",
+    "timestamp_utc": "2026-04-16 14:20:05 UTC"
   },
   {
-    "id": "26f56660",
-    "timestamp": "2026-04-15T19:15:26.446977+00:00",
+    "id": "19f72262",
+    "timestamp": "2026-04-16T14:20:05.658001+00:00",
     "modo": "cidr",
     "ip_entrada": "10.0.0.0",
     "ipv6_entrada": "",
@@ -28,11 +60,11 @@
     "mask": "255.255.255.254",
     "cidr": 31,
     "tema": "Baixo risco operacional",
-    "timestamp_utc": "2026-04-15 19:15:26 UTC"
+    "timestamp_utc": "2026-04-16 14:20:05 UTC"
   },
   {
-    "id": "bb640606",
-    "timestamp": "2026-04-15T19:15:26.410362+00:00",
+    "id": "012c4e17",
+    "timestamp": "2026-04-16T14:20:05.624832+00:00",
     "modo": "cidr",
     "ip_entrada": "192.168.1.255",
     "ipv6_entrada": "",
@@ -44,6 +76,6 @@
     "mask": "255.255.255.0",
     "cidr": 24,
     "tema": "Baixo risco operacional",
-    "timestamp_utc": "2026-04-15 19:15:26 UTC"
+    "timestamp_utc": "2026-04-16 14:20:05 UTC"
   }
 ]
