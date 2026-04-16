@@ -1,5 +1,8 @@
 .git
 .gitignore
+.github
+.idea
+.vscode
 .venv
 __pycache__
 *.pyc
@@ -11,3 +14,7 @@ assets
 terminals
 dist
 build
+consulta_history.json
+Dockerfile
+docker-compose.yml
+.env
