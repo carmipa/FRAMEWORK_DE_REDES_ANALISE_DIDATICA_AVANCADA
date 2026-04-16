@@ -263,7 +263,8 @@ Acesse: [http://127.0.0.1:5000](http://127.0.0.1:5000)
    Entrada: IP + máscara decimal (ex.: `255.255.255.240`)
 
 3. **Engenharia Reversa (Wildcard)**  
-   Entrada: IP + wildcard (ex.: `0.0.15.255`)
+   Entrada: **IP + wildcard obrigatórios** (ex.: `172.16.8.8` + `0.0.15.255`)  
+   Saída focada: wildcard, máscara equivalente, CIDR, rede/hosts/broadcast, validação por octeto e base ACL.
 
 4. **Descobrir CIDR do IP**  
    Entrada: IP, com inferência classful didática
@@ -295,9 +296,12 @@ Além disso, a aplicação identifica visualmente blocos:
 Implementações atuais:
 
 - logs estruturados com timestamp, nível e `request_id`;
+- padrão de evento para filtros (`evento=... status=... modo=...`), incluindo erros com stack trace quando necessário;
 - ciclo completo de request (`before_request` / `after_request`);
-- logging de eventos críticos de validação e DNS;
+- logging de eventos críticos de validação e DNS (cache hit/miss, latência e timeout);
 - `handler` global para exceções inesperadas;
+- exceções tipadas para infraestrutura (`DnsResolucaoError`, `DnsResolucaoTimeoutError`, `HistoricoPersistenciaError`);
+- persistência de histórico com logs explícitos de sucesso/falha;
 - mensagens seguras ao usuário final sem exposição de stack trace.
 
 Isso melhora rastreabilidade, auditoria e governança operacional.
@@ -312,11 +316,13 @@ Isso melhora rastreabilidade, auditoria e governança operacional.
 | `APP_PORT` | `5000` | Porta HTTP |
 | `APP_DEBUG` | `true` | Ativa/desativa modo debug |
 | `APP_LOG_LEVEL` | `INFO` | Nível de log (`DEBUG`, `INFO`, `WARNING`, `ERROR`) |
+| `DNS_CACHE_TTL_SECONDS` | `180` | TTL do cache DNS local em segundos |
+| `DNS_RESOLVE_TIMEOUT_SECONDS` | `3.0` | Timeout de resolução DNS por consulta |
 
 Exemplo:
 
 ```bash
-APP_HOST=0.0.0.0 APP_PORT=5000 APP_DEBUG=false APP_LOG_LEVEL=INFO python main.py
+APP_HOST=0.0.0.0 APP_PORT=5000 APP_DEBUG=false APP_LOG_LEVEL=INFO DNS_CACHE_TTL_SECONDS=180 DNS_RESOLVE_TIMEOUT_SECONDS=3.0 python main.py
 ```
 
 ---

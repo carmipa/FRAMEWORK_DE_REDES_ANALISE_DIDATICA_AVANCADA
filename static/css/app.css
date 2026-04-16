@@ -92,6 +92,45 @@ body { background-color: #0d1117; color: #c9d1d9; font-family: 'Consolas', monos
             text-align: center;
             width: 100%;
         }
+        .tab-nav .tab-trigger.active {
+            background: #1f6feb;
+            color: #fff;
+            border-color: #388bfd;
+        }
+        .tab-nav {
+            padding-bottom: 0.65rem;
+            margin-bottom: 0.95rem !important;
+            border-bottom: 1px solid #30363d;
+        }
+        .tab-nav .tab-trigger {
+            min-height: 36px;
+            padding: 0.35rem 0.75rem;
+        }
+        .tab-panel form .form-label {
+            margin-bottom: 0.35rem;
+        }
+        .tab-actions .btn {
+            min-height: calc(1.5em + 0.75rem + 2px);
+            height: calc(1.5em + 0.75rem + 2px);
+            line-height: 1.2;
+            padding-top: 0.375rem;
+            padding-bottom: 0.375rem;
+        }
+        .tab-actions.d-grid {
+            display: flex !important;
+            align-items: flex-end;
+        }
+        .tab-actions .btn-outline-secondary {
+            border-color: #6e7681;
+            color: #c9d1d9;
+        }
+        .tab-actions .btn-outline-secondary:hover {
+            background: #30363d;
+            border-color: #8b949e;
+            color: #fff;
+        }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
         .domain-tab {
             margin-top: 0.9rem;
             border: 1px solid #30363d;
@@ -159,6 +198,80 @@ body { background-color: #0d1117; color: #c9d1d9; font-family: 'Consolas', monos
         .and-row-result { color: var(--dyn-and); font-weight: 700; }
         .and-row-wild { background-color: rgba(255, 140, 0, 0.15); color: #ffb347; font-weight: 700; }
         .regua-table th, .regua-table td { font-size: 0.84rem; white-space: nowrap; text-align: center; }
+        .interval-table th, .interval-table td {
+            font-size: 0.84rem;
+            white-space: normal;
+            vertical-align: middle;
+            word-break: break-word;
+            text-align: center;
+        }
+        .interval-table td:first-child,
+        .interval-table th:first-child {
+            width: 14%;
+        }
+        .interval-table td:nth-child(2),
+        .interval-table th:nth-child(2) {
+            width: 16%;
+        }
+        .table-block {
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            background: #0f1724;
+            padding: 0.55rem;
+        }
+        .table-block-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.45rem 0.7rem;
+            align-items: baseline;
+            margin-bottom: 0.42rem;
+            padding-bottom: 0.35rem;
+            border-bottom: 1px dashed #30363d;
+        }
+        .table-block-title {
+            font-size: 0.83rem;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+        }
+        .table-block-caption {
+            font-size: 0.76rem;
+            color: #8b949e;
+        }
+        .table-block-conceito .table-block-title { color: #79c0ff; }
+        .table-block-exemplos .table-block-title { color: #ffb86b; }
+        .table-block-operacional .table-block-title { color: #7ee787; }
+        .interval-tag {
+            display: inline-block;
+            border-radius: 999px;
+            padding: 0.08rem 0.45rem;
+            font-size: 0.73rem;
+            font-weight: 700;
+            margin-right: 0.38rem;
+            border: 1px solid transparent;
+        }
+        .interval-tag-conceito {
+            background: rgba(56, 139, 253, 0.16);
+            color: #79c0ff;
+            border-color: rgba(121, 192, 255, 0.45);
+        }
+        .interval-tag-faixa {
+            background: rgba(46, 160, 67, 0.16);
+            color: #7ee787;
+            border-color: rgba(126, 231, 135, 0.45);
+        }
+        .interval-tag-exemplo {
+            background: rgba(240, 136, 62, 0.16);
+            color: #ffb86b;
+            border-color: rgba(255, 184, 107, 0.45);
+        }
+        .interval-table tr.is-faixa-atual {
+            background: rgba(46, 160, 67, 0.12);
+            box-shadow: inset 0 0 0 1px rgba(126, 231, 135, 0.3);
+        }
+        .regua-table tr.regua-current {
+            background: rgba(56, 139, 253, 0.14);
+            box-shadow: inset 0 0 0 1px rgba(121, 192, 255, 0.35);
+        }
         .termos-table th, .termos-table td {
             font-size: 0.88rem;
             white-space: normal;
@@ -244,6 +357,7 @@ body { background-color: #0d1117; color: #c9d1d9; font-family: 'Consolas', monos
         .resultados-table tbody tr,
         .resumo-table tbody tr,
         .termos-table tbody tr,
+        .interval-table tbody tr,
         .regua-table tbody tr,
         .ref-table tbody tr,
         .conv-table tbody tr,
@@ -255,6 +369,7 @@ body { background-color: #0d1117; color: #c9d1d9; font-family: 'Consolas', monos
         .resultados-table tbody tr:hover,
         .resumo-table tbody tr:hover,
         .termos-table tbody tr:hover,
+        .interval-table tbody tr:hover,
         .regua-table tbody tr:hover,
         .ref-table tbody tr:hover,
         .conv-table tbody tr:hover,
@@ -505,6 +620,16 @@ body { background-color: #0d1117; color: #c9d1d9; font-family: 'Consolas', monos
             font-size: 0.84rem;
             color: #c9d1d9;
             word-break: break-word;
+        }
+
+        @media (min-width: 1200px) {
+            .container {
+                max-width: min(96vw, 1520px);
+            }
+            .container.py-5 {
+                padding-left: 0.55rem !important;
+                padding-right: 0.55rem !important;
+            }
         }
 
         @media (max-width: 992px) {

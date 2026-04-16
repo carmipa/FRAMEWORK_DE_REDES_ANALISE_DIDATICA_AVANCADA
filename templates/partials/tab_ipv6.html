@@ -1,0 +1,13 @@
+<form method="POST" class="row g-3 calc-form" data-tab-form="ipv6">
+    <input type="hidden" name="tab" value="ipv6">
+    <div class="col-lg-10">
+        <label class="form-label small text-secondary">🛰️ Endereço IPv6</label>
+        <input type="text" name="ipv6" class="form-control bg-dark text-light border-secondary {{ 'is-invalid' if 'ipv6' in invalid_fields else '' }}"
+               placeholder="Ex.: 2001:db8::1" value="{{ ipv6_pre }}"
+               data-bs-toggle="tooltip" data-bs-placement="top"
+               title="Classificação, escopo, forma expandida e análise didática em 128 bits.">
+    </div>
+    <div class="col-lg-2 tab-actions d-grid gap-2">
+        <button type="submit" name="modo" value="ipv6" class="btn btn-secondary fw-bold btn-sm w-100" data-bs-toggle="tooltip" data-bs-placement="top" title="Executa a análise didática do endereço IPv6.">🛰️ Executar</button>
+    </div>
+</form>

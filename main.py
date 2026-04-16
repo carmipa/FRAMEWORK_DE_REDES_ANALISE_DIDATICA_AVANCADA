@@ -8,7 +8,15 @@ from urllib.parse import urlparse
 from flask import Flask, abort, g, jsonify, redirect, render_template, request, send_file, url_for
 from werkzeug.exceptions import HTTPException
 
-from backend.common import BASE_DIR, EntradaInvalidaError, MAX_HISTORY, logger
+from backend.common import (
+    BASE_DIR,
+    DnsResolucaoError,
+    EntradaInvalidaError,
+    HistoricoPersistenciaError,
+    MAX_HISTORY,
+    log_event,
+    logger,
+)
 from backend.services.dns_service import resolver_dns_com_cache
 from backend.services.grc_service import grc_resumo
 from backend.services.history_service import (
@@ -163,6 +171,7 @@ def home():
     comparador_cards = []
     comparador_only = False
     comparador_ip = ""
+    active_tab_pre = request.args.get("tab", "cidr").strip().lower() or "cidr"
 
     replay_id = request.args.get("replay", "").strip()
     history_limit_qs = request.args.get("history_limit", "").strip()
@@ -174,6 +183,9 @@ def home():
     if request.method == "GET" and replay_id:
         selected = next((item for item in list_history() if item.get("id") == replay_id), None)
         if selected:
+            modo_replay = (selected.get("modo") or "").strip().lower()
+            if modo_replay in {"cidr", "mask", "wildcard", "autoip", "dominio", "ipv6", "comparador"}:
+                active_tab_pre = modo_replay
             if selected.get("modo") == "ipv6":
                 ipv6_p = selected.get("ipv6_entrada") or selected.get("ip_entrada", "")
                 ip_p = ""
@@ -185,7 +197,7 @@ def home():
             wildcard_p = selected.get("wildcard_entrada", "")
 
     if request.method == "POST":
-        logger.info("Iniciando processamento de POST na rota principal")
+        log_event("info", "calc_request", status="start")
         ip_p = request.form.get("ip", "").strip()
         ip_entrada_original = ip_p
         ipv6_p = request.form.get("ipv6", "").strip()
@@ -202,6 +214,7 @@ def home():
         history_limit_pre = request.form.get("history_limit", history_limit_pre).strip() or history_limit_pre
         history_page_pre = request.form.get("history_page", history_page_pre).strip() or history_page_pre
         modo = request.form.get("modo", "").strip().lower()
+        active_tab_pre = modo or active_tab_pre
 
         try:
             regua_count = int(regua_count_pre)
@@ -235,10 +248,10 @@ def home():
             and not all(c.isdigit() or c == "." for c in ip_p)
         ):
             try:
-                logger.info("Tentando resolver DNS automaticamente para entrada não numérica")
+                log_event("info", "dns_autoresolve", status="start", modo=modo)
                 ip_p = resolver_dns_com_cache(ip_p)
-            except Exception:
-                logger.exception("Falha na resolução DNS automática")
+            except DnsResolucaoError as exc:
+                logger.warning("evento=dns_autoresolve status=error modo=%s erro=%s", modo, exc)
                 erro = f"Não foi possível resolver o domínio informado: {ip_p}"
 
         if erro is None and modo == "ipv6":
@@ -266,7 +279,7 @@ def home():
                         },
                     )
                 except EntradaInvalidaError as exc:
-                    logger.warning("IPv6 inválido: %s", exc)
+                    logger.warning("evento=calc status=invalid_input modo=ipv6 erro=%s", exc)
                     erro = str(exc)
                     invalid_fields.add("ipv6")
 
@@ -280,7 +293,7 @@ def home():
                 invalid_fields.add("ip")
             else:
                 try:
-                    logger.info("Modo domínio acionado para hostname informado")
+                    log_event("info", "calc", status="start", modo="dominio")
                     ip_p = resolver_dns_com_cache(dominio_digitado)
                     if cidr_raw:
                         cidr_val = int(cidr_raw)
@@ -295,12 +308,12 @@ def home():
                             f"{origem_inferida}."
                         )
                 except ValueError:
-                    logger.warning("CIDR inválido informado no modo domínio")
+                    logger.warning("evento=calc status=invalid_input modo=dominio campo=cidr")
                     erro = "No modo Domínio, o CIDR (se informado) deve ser um número inteiro entre 0 e 32."
                     invalid_fields.add("cidr")
-                except Exception:
-                    logger.exception("Erro ao resolver domínio/hostname no modo domínio")
-                    erro = f"Não foi possível resolver o domínio/hostname informado: {dominio_digitado}"
+                except DnsResolucaoError as exc:
+                    logger.warning("evento=calc status=dns_error modo=dominio erro=%s", exc)
+                    erro = str(exc)
                     invalid_fields.add("ip")
 
         elif erro is None and modo == "cidr":
@@ -311,15 +324,16 @@ def home():
                 try:
                     cidr_val = int(cidr_raw)
                 except ValueError:
-                    logger.warning("CIDR inválido no modo cidr")
+                    logger.warning("evento=calc status=invalid_input modo=cidr campo=cidr")
                     erro = "O CIDR deve ser um número inteiro entre 0 e 32."
                     invalid_fields.add("cidr")
 
         elif erro is None and modo == "mask":
-            if not mask_dec_p:
-                erro = "No modo Máscara Decimal, preencha a máscara (ex.: 255.255.255.240)."
+            if not mask_dec_p and not ip_p:
+                erro = "No modo Máscara Decimal, informe ao menos a máscara (ex.: 255.255.255.240) ou um IP."
                 invalid_fields.add("mask_decimal")
-            else:
+                invalid_fields.add("ip")
+            elif mask_dec_p:
                 cidr_val = mascara_dotted_para_cidr(mask_dec_p)
                 if cidr_val is None:
                     try:
@@ -329,13 +343,30 @@ def home():
                             "(ex.: 255.255.255.0), não valores como 255.0.255.0."
                         )
                     except EntradaInvalidaError as exc:
-                        logger.warning("Máscara decimal inválida: %s", exc)
+                        logger.warning("evento=calc status=invalid_input modo=mask campo=mask_decimal erro=%s", exc)
                         erro = str(exc)
                         invalid_fields.add("mask_decimal")
+                elif ip_p:
+                    cidr_origem = f"Máscara {mask_dec_p} convertida para /{cidr_val}."
+            else:
+                try:
+                    cidr_val, origem_inferida = inferir_cidr_por_ip(ip_p)
+                    cidr_origem = f"CIDR inferido automaticamente pelo IP informado. {origem_inferida}."
+                except EntradaInvalidaError as exc:
+                    logger.warning("evento=calc status=invalid_input modo=mask campo=ip erro=%s", exc)
+                    erro = str(exc)
+                    invalid_fields.add("ip")
 
         elif erro is None and modo == "wildcard":
-            if not wildcard_p:
-                erro = "No modo Wildcard, preencha a wildcard mask (ex.: 0.0.15.255)."
+            if not ip_p and not wildcard_p:
+                erro = "No modo Wildcard, informe os dois campos: IP e wildcard mask."
+                invalid_fields.add("ip")
+                invalid_fields.add("wildcard_mask")
+            elif not ip_p:
+                erro = "No modo Wildcard, informe também o endereço IP."
+                invalid_fields.add("ip")
+            elif not wildcard_p:
+                erro = "No modo Wildcard, preencha também a wildcard mask (ex.: 0.0.15.255)."
                 invalid_fields.add("wildcard_mask")
             else:
                 cidr_val = wildcard_dotted_para_cidr(wildcard_p)
@@ -347,7 +378,7 @@ def home():
                             "(ex.: 0.0.15.255)."
                         )
                     except EntradaInvalidaError as exc:
-                        logger.warning("Wildcard inválida: %s", exc)
+                        logger.warning("evento=calc status=invalid_input modo=wildcard campo=wildcard_mask erro=%s", exc)
                         erro = str(exc)
                         invalid_fields.add("wildcard_mask")
 
@@ -359,7 +390,7 @@ def home():
                 try:
                     cidr_val, cidr_origem = inferir_cidr_por_ip(ip_p)
                 except EntradaInvalidaError as exc:
-                    logger.warning("Falha ao inferir CIDR por IP: %s", exc)
+                    logger.warning("evento=calc status=invalid_input modo=autoip campo=ip erro=%s", exc)
                     erro = str(exc)
                     invalid_fields.add("ip")
         elif erro is None and modo == "comparador":
@@ -418,21 +449,24 @@ def home():
                         wildcard_p = res["wildcard"]
                     res["cidr_origem"] = cidr_origem or ""
                     res["grc_resumo"] = grc_resumo(res)
-                    registrar_consulta(
-                        {
-                            "modo": modo,
-                            "ip": ip_entrada_original,
-                            "cidr": cidr_raw,
-                            "mask_decimal": mask_dec_p,
-                            "wildcard_mask": wildcard_p,
-                        },
-                        res,
-                    )
+                    try:
+                        registrar_consulta(
+                            {
+                                "modo": modo,
+                                "ip": ip_entrada_original,
+                                "cidr": cidr_raw,
+                                "mask_decimal": mask_dec_p,
+                                "wildcard_mask": wildcard_p,
+                            },
+                            res,
+                        )
+                    except HistoricoPersistenciaError as exc:
+                        logger.warning("evento=history_persist status=warn modo=%s erro=%s", modo, exc)
             except EntradaInvalidaError as exc:
-                logger.warning("Entrada inválida durante processamento: %s", exc)
+                logger.warning("evento=calc status=invalid_input modo=%s erro=%s", modo, exc)
                 erro = str(exc)
             except Exception:
-                logger.exception("Erro interno inesperado durante processamento principal")
+                logger.exception("evento=calc status=error modo=%s", modo)
                 erro = "Erro interno ao processar os dados. Revise os campos e tente novamente."
 
         if res and not res.get("somente_mascara"):
@@ -459,6 +493,7 @@ def home():
         comparador_cards=comparador_cards,
         comparador_only=comparador_only,
         comparador_ip=comparador_ip,
+        active_tab_pre=active_tab_pre,
         wizard_calculo=wizard_calculo,
         timeline_bloco=timeline_bloco,
         erro_didatico=erro_didatico,
@@ -479,13 +514,13 @@ def home():
 def _before_request_log_context():
     g.request_id = str(uuid.uuid4())[:8]
     g.started_at = time.time()
-    logger.info("Request iniciada: %s %s", request.method, request.path)
+    log_event("info", "request", status="start", method=request.method, path=request.path)
 
 
 @app.after_request
 def _after_request_log(response):
     elapsed_ms = int((time.time() - getattr(g, "started_at", time.time())) * 1000)
-    logger.info("Request finalizada: status=%s tempo_ms=%s", response.status_code, elapsed_ms)
+    log_event("info", "request", status="end", code=response.status_code, elapsed_ms=elapsed_ms, path=request.path)
     return response
 
 
@@ -493,7 +528,7 @@ def _after_request_log(response):
 def _handle_unexpected_error(exc):
     if isinstance(exc, HTTPException):
         return exc
-    logger.exception("Exceção não tratada capturada pelo handler global")
+    logger.exception("evento=global_exception status=error tipo=%s", exc.__class__.__name__)
     return (
         render_template(
             "index.html",
@@ -563,17 +598,27 @@ def project_icon():
 
 
 if __name__ == "__main__":
-    carregar_historico()
+    try:
+        carregar_historico()
+    except HistoricoPersistenciaError as exc:
+        logger.warning("evento=app_boot status=history_unavailable erro=%s", exc)
     app_host = os.getenv("APP_HOST", "127.0.0.1")
-    app_port = int(os.getenv("APP_PORT", "5000"))
+    app_port_raw = os.getenv("APP_PORT", "5000")
+    try:
+        app_port = int(app_port_raw)
+    except ValueError:
+        logger.warning("evento=app_boot status=invalid_port app_port_raw=%s fallback=5000", app_port_raw)
+        app_port = 5000
     app_debug = os.getenv("APP_DEBUG", "true").lower() in {"1", "true", "yes", "on"}
     app_open_browser = os.getenv("APP_OPEN_BROWSER", "true").lower() in {"1", "true", "yes", "on"}
-    logger.info(
-        "Inicializando aplicação local host=%s porta=%s debug=%s open_browser=%s",
-        app_host,
-        app_port,
-        app_debug,
-        app_open_browser,
+    log_event(
+        "info",
+        "app_boot",
+        status="start",
+        host=app_host,
+        port=app_port,
+        debug=app_debug,
+        open_browser=app_open_browser,
     )
     if app_open_browser and app_host in {"127.0.0.1", "localhost"}:
         threading.Timer(1.0, lambda: webbrowser.open(f"http://{app_host}:{app_port}")).start()

@@ -1,0 +1,27 @@
+<form method="POST" class="row g-3 calc-form" data-tab-form="wildcard">
+    <input type="hidden" name="tab" value="wildcard">
+    <div class="col-lg-5">
+        <label class="form-label small text-secondary">🌐 Endereço IPv4 (obrigatório)</label>
+        <input type="text" name="ip" class="form-control bg-dark text-light border-secondary {{ 'is-invalid' if 'ip' in invalid_fields else '' }}"
+               placeholder="Ex.: 172.16.8.8" value="{{ ip_pre }}">
+    </div>
+    <div class="col-lg-3">
+        <label class="form-label small text-secondary">🧩 Wildcard mask</label>
+        <input type="text" name="wildcard_mask" class="form-control bg-dark text-light border-secondary {{ 'is-invalid' if 'wildcard_mask' in invalid_fields else '' }}"
+               placeholder="Ex.: 0.0.15.255" value="{{ wildcard_pre }}">
+    </div>
+    <div class="col-lg-2">
+        <label class="form-label small text-secondary">📐 Régua</label>
+        <select name="regua_count" class="form-select bg-dark text-light border-secondary">
+            <option value="5" {{ 'selected' if regua_count_pre == '5' else '' }}>5</option>
+            <option value="10" {{ 'selected' if regua_count_pre == '10' else '' }}>10</option>
+            <option value="15" {{ 'selected' if regua_count_pre == '15' else '' }}>15</option>
+            <option value="25" {{ 'selected' if regua_count_pre == '25' else '' }}>25</option>
+            <option value="50" {{ 'selected' if regua_count_pre == '50' else '' }}>50</option>
+            <option value="100" {{ 'selected' if regua_count_pre == '100' else '' }}>100</option>
+        </select>
+    </div>
+    <div class="col-lg-2 tab-actions d-grid gap-2">
+        <button type="submit" name="modo" value="wildcard" class="btn btn-warning fw-bold btn-sm w-100" data-bs-toggle="tooltip" data-bs-placement="top" title="Executa análise de wildcard com IP e máscara inversa.">🧩 Executar</button>
+    </div>
+</form>

@@ -1,0 +1,25 @@
+<form method="POST" class="row g-3 calc-form" data-tab-form="comparador">
+    <input type="hidden" name="tab" value="comparador">
+    <div class="col-lg-4">
+        <label class="form-label small text-secondary">🌐 Endereço IPv4</label>
+        <input type="text" name="ip" class="form-control bg-dark text-light border-secondary {{ 'is-invalid' if 'ip' in invalid_fields else '' }}"
+               placeholder="Ex.: 172.19.0.10" value="{{ ip_pre }}"
+               data-bs-toggle="tooltip" data-bs-placement="top"
+               title="IP base usado para comparar os dois CIDRs lado a lado.">
+    </div>
+    <div class="col-lg-3">
+        <label class="form-label small text-secondary">🆚 Comparador CIDR A</label>
+        <input type="number" name="comparador_cidr_a" min="0" max="32" class="form-control bg-dark text-light border-secondary"
+               value="{{ comparador_cidr_a_pre }}">
+    </div>
+    <div class="col-lg-3">
+        <label class="form-label small text-secondary">🆚 Comparador CIDR B</label>
+        <input type="number" name="comparador_cidr_b" min="0" max="32" class="form-control bg-dark text-light border-secondary"
+               value="{{ comparador_cidr_b_pre }}">
+    </div>
+    <div class="col-lg-2 tab-actions d-grid gap-2">
+        <button type="submit" name="modo" value="comparador" class="btn btn-warning fw-bold text-dark btn-sm w-100"
+                data-bs-toggle="tooltip" data-bs-placement="top"
+                title="Executa a comparação lado a lado entre os dois CIDRs.">🆚 Executar</button>
+    </div>
+</form>

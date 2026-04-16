@@ -3,7 +3,7 @@ import uuid
 from collections import deque
 from datetime import datetime, timezone
 
-from backend.common import HISTORY_FILE, MAX_HISTORY, logger
+from backend.common import HISTORY_FILE, HistoricoPersistenciaError, MAX_HISTORY, log_event
 
 history_store = deque(maxlen=MAX_HISTORY)
 
@@ -29,15 +29,18 @@ def formatar_timestamp_utc(ts):
 
 def carregar_historico():
     if not HISTORY_FILE.exists():
-        return
+        return True
     try:
         raw = json.loads(HISTORY_FILE.read_text(encoding="utf-8"))
         if isinstance(raw, list):
             for item in raw[-MAX_HISTORY:]:
                 if isinstance(item, dict):
                     history_store.append(item)
-    except Exception:
-        logger.exception("Falha ao carregar histórico local de consultas")
+        log_event("info", "history_load", status="ok", total=len(history_store))
+        return True
+    except Exception as exc:
+        log_event("error", "history_load", status="error", erro=exc.__class__.__name__, exc_info=True)
+        raise HistoricoPersistenciaError("Falha ao carregar histórico local.") from exc
 
 
 def persistir_historico():
@@ -46,8 +49,11 @@ def persistir_historico():
             json.dumps(list(history_store), ensure_ascii=False, indent=2),
             encoding="utf-8",
         )
-    except Exception:
-        logger.exception("Falha ao persistir histórico local de consultas")
+        log_event("info", "history_persist", status="ok", total=len(history_store))
+        return True
+    except Exception as exc:
+        log_event("error", "history_persist", status="error", erro=exc.__class__.__name__, exc_info=True)
+        raise HistoricoPersistenciaError("Falha ao persistir histórico local.") from exc
 
 
 def registrar_consulta(entrada, res):
@@ -69,6 +75,7 @@ def registrar_consulta(entrada, res):
         "tema": res.get("nivel_tema", ""),
     }
     history_store.appendleft(registro)
+    log_event("info", "history_append", status="ok", modo=registro.get("modo"), id=registro.get("id"))
     persistir_historico()
 
 

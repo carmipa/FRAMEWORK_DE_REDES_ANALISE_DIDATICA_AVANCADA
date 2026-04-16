@@ -1,0 +1,31 @@
+<form method="POST" class="row g-3 calc-form" data-tab-form="mask">
+    <input type="hidden" name="tab" value="mask">
+    <div class="col-lg-5">
+        <label class="form-label small text-secondary">🌐 Endereço IPv4 (opcional)</label>
+        <input type="text" name="ip" class="form-control bg-dark text-light border-secondary {{ 'is-invalid' if 'ip' in invalid_fields else '' }}"
+               placeholder="Ex.: 172.16.0.10" value="{{ ip_pre }}"
+               data-bs-toggle="tooltip" data-bs-placement="top"
+               title="Opcional: se informado, calcula rede/hosts/broadcast com a máscara.">
+    </div>
+    <div class="col-lg-3">
+        <label class="form-label small text-secondary">📏 Máscara decimal</label>
+        <input type="text" name="mask_decimal" class="form-control bg-dark text-light border-secondary {{ 'is-invalid' if 'mask_decimal' in invalid_fields else '' }}"
+               placeholder="Ex.: 255.255.255.0" value="{{ mask_dec_pre }}"
+               data-bs-toggle="tooltip" data-bs-placement="top"
+               title="Máscara em decimal pontuado. Ex.: 255.255.255.0">
+    </div>
+    <div class="col-lg-2">
+        <label class="form-label small text-secondary">📐 Régua</label>
+        <select name="regua_count" class="form-select bg-dark text-light border-secondary">
+            <option value="5" {{ 'selected' if regua_count_pre == '5' else '' }}>5</option>
+            <option value="10" {{ 'selected' if regua_count_pre == '10' else '' }}>10</option>
+            <option value="15" {{ 'selected' if regua_count_pre == '15' else '' }}>15</option>
+            <option value="25" {{ 'selected' if regua_count_pre == '25' else '' }}>25</option>
+            <option value="50" {{ 'selected' if regua_count_pre == '50' else '' }}>50</option>
+            <option value="100" {{ 'selected' if regua_count_pre == '100' else '' }}>100</option>
+        </select>
+    </div>
+    <div class="col-lg-2 tab-actions d-grid gap-2">
+        <button type="submit" name="modo" value="mask" class="btn btn-primary fw-bold btn-sm w-100" data-bs-toggle="tooltip" data-bs-placement="top" title="Executa cálculo por máscara decimal e/ou IP.">📏 Executar</button>
+    </div>
+</form>

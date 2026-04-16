@@ -1,0 +1,24 @@
+<form method="POST" class="row g-3 calc-form" data-tab-form="autoip">
+    <input type="hidden" name="tab" value="autoip">
+    <div class="col-lg-8">
+        <label class="form-label small text-secondary">🎯 Endereço IPv4</label>
+        <input type="text" name="ip" class="form-control bg-dark text-light border-secondary {{ 'is-invalid' if 'ip' in invalid_fields else '' }}"
+               placeholder="Ex.: 172.19.44.116" value="{{ ip_pre }}"
+               data-bs-toggle="tooltip" data-bs-placement="top"
+               title="Informe o IP e o framework infere o CIDR clássico.">
+    </div>
+    <div class="col-lg-2">
+        <label class="form-label small text-secondary">📐 Régua</label>
+        <select name="regua_count" class="form-select bg-dark text-light border-secondary">
+            <option value="5" {{ 'selected' if regua_count_pre == '5' else '' }}>5</option>
+            <option value="10" {{ 'selected' if regua_count_pre == '10' else '' }}>10</option>
+            <option value="15" {{ 'selected' if regua_count_pre == '15' else '' }}>15</option>
+            <option value="25" {{ 'selected' if regua_count_pre == '25' else '' }}>25</option>
+            <option value="50" {{ 'selected' if regua_count_pre == '50' else '' }}>50</option>
+            <option value="100" {{ 'selected' if regua_count_pre == '100' else '' }}>100</option>
+        </select>
+    </div>
+    <div class="col-lg-2 tab-actions d-grid gap-2">
+        <button type="submit" name="modo" value="autoip" class="btn btn-info fw-bold text-dark btn-sm w-100" data-bs-toggle="tooltip" data-bs-placement="top" title="Infere automaticamente o CIDR a partir do IP.">🎯 Executar</button>
+    </div>
+</form>

@@ -1,0 +1,18 @@
+<form method="POST" class="row g-3 calc-form" data-tab-form="dominio">
+    <input type="hidden" name="tab" value="dominio">
+    <div class="col-lg-7">
+        <label class="form-label small text-secondary">🌐 Domínio/hostname</label>
+        <input type="text" name="ip" class="form-control bg-dark text-light border-secondary {{ 'is-invalid' if 'ip' in invalid_fields else '' }}"
+               placeholder="Ex.: google.com ou https://exemplo.com/path" value="{{ ip_pre }}"
+               data-bs-toggle="tooltip" data-bs-placement="top"
+               title="Aceita domínio puro ou URL completa; o host é extraído automaticamente.">
+    </div>
+    <div class="col-lg-3">
+        <label class="form-label small text-secondary">🧷 CIDR (opcional)</label>
+        <input type="number" name="cidr" class="form-control bg-dark text-light border-secondary {{ 'is-invalid' if 'cidr' in invalid_fields else '' }}"
+               min="0" max="32" value="{{ cidr_pre }}">
+    </div>
+    <div class="col-lg-2 tab-actions d-grid gap-2">
+        <button type="submit" name="modo" value="dominio" class="btn btn-light fw-bold text-dark btn-sm w-100" data-bs-toggle="tooltip" data-bs-placement="top" title="Resolve domínio para IPv4 e executa a análise.">🌐 Executar</button>
+    </div>
+</form>

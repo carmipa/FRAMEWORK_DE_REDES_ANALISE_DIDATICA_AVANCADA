@@ -27,97 +27,29 @@
     </div>
 
     <div class="card-tech p-4 shadow">
-        <form method="POST" class="row g-3" id="calc-form">
-            <div class="col-lg-4">
-                <label class="form-label small text-secondary">🌐 Endereço IPv4 (opcional)</label>
-                <input type="text" name="ip" class="form-control bg-dark text-light border-secondary {{ 'is-invalid' if 'ip' in invalid_fields else '' }}" 
-                       placeholder="Ex.: 172.16.0.0 — deixe vazio se o exercício for só com máscara" value="{{ ip_pre }}"
-                       data-bs-toggle="tooltip" data-bs-placement="top"
-                       title="IP de host para calcular rede, broadcast e hosts úteis. Formato: x.x.x.x">
-                <div class="form-text text-secondary small">Sem IP: mostramos máscara, bits, tamanho do bloco e pulo. Rede/broadcast/hosts exigem um endereço no bloco.</div>
-            </div>
-            <div class="col-lg-2">
-                <label class="form-label small text-secondary">🧷 CIDR</label>
-                <input type="number" name="cidr" class="form-control bg-dark text-light border-secondary {{ 'is-invalid' if 'cidr' in invalid_fields else '' }}" 
-                       placeholder="22" min="0" max="32" value="{{ cidr_pre }}"
-                       data-bs-toggle="tooltip" data-bs-placement="top"
-                       title="Prefixo de rede (0 a 32). Ex.: /24 = 255.255.255.0">
-            </div>
-            <div class="col-lg-3">
-                <label class="form-label small text-secondary">📏 Ou máscara decimal</label>
-                <input type="text" name="mask_decimal" class="form-control bg-dark text-light border-secondary {{ 'is-invalid' if 'mask_decimal' in invalid_fields else '' }}" 
-                       placeholder="Ex.: 255.255.255.240" value="{{ mask_dec_pre }}"
-                       data-bs-toggle="tooltip" data-bs-placement="top"
-                       title="Máscara em decimal pontuado. Ex.: 255.255.240.0">
-            </div>
-            <div class="col-lg-3">
-                <label class="form-label small text-secondary text-nowrap">🧩 Ou wildcard mask</label>
-                <input type="text" name="wildcard_mask" class="form-control bg-dark text-light border-secondary {{ 'is-invalid' if 'wildcard_mask' in invalid_fields else '' }}"
-                       placeholder="Ex.: 0.0.15.255" value="{{ wildcard_pre }}"
-                       data-bs-toggle="tooltip" data-bs-placement="top"
-                       title="Inverso da máscara (ACL/OSPF). Ex.: 0.0.15.255 = /20">
-            </div>
-            <div class="col-lg-4">
-                <label class="form-label small text-secondary">🛰️ Modo IPv6 básico (opcional)</label>
-                <input type="text" name="ipv6" class="form-control bg-dark text-light border-secondary {{ 'is-invalid' if 'ipv6' in invalid_fields else '' }}"
-                       placeholder="Ex.: 2001:db8::1" value="{{ ipv6_pre }}"
-                       data-bs-toggle="tooltip" data-bs-placement="top"
-                       title="Análise inicial IPv6: classificação, forma expandida e decomposição em blocos de 16 bits.">
-            </div>
-            <div class="col-lg-3">
-                <label class="form-label small text-secondary text-nowrap">📐 Sub-redes na régua</label>
-                <select name="regua_count" class="form-select bg-dark text-light border-secondary"
-                        data-bs-toggle="tooltip" data-bs-placement="top"
-                        title="Quantidade de linhas exibidas na régua de sub-redes">
-                    <option value="5" {{ 'selected' if regua_count_pre == '5' else '' }}>5</option>
-                    <option value="10" {{ 'selected' if regua_count_pre == '10' else '' }}>10</option>
-                    <option value="15" {{ 'selected' if regua_count_pre == '15' else '' }}>15</option>
-                    <option value="25" {{ 'selected' if regua_count_pre == '25' else '' }}>25</option>
-                    <option value="50" {{ 'selected' if regua_count_pre == '50' else '' }}>50</option>
-                    <option value="100" {{ 'selected' if regua_count_pre == '100' else '' }}>100</option>
-                </select>
-            </div>
-            <div class="col-12">
-                <div class="small text-secondary mb-2">Selecione o modo de cálculo (campos não usados são ignorados):</div>
-                <div class="action-buttons">
-                    <button type="submit" name="modo" value="cidr" class="btn btn-success fw-bold" title="Uso rápido para admins." data-bs-toggle="tooltip" data-bs-placement="top">🧮 Pesquisar por CIDR</button>
-                    <button type="submit" name="modo" value="mask" class="btn btn-primary fw-bold" title="Uso didático para exercícios de lousa." data-bs-toggle="tooltip" data-bs-placement="top">📏 Máscara Decimal</button>
-                    <button type="submit" name="modo" value="wildcard" class="btn btn-warning fw-bold" title="Uso para configuração de ACL/Firewall." data-bs-toggle="tooltip" data-bs-placement="top">🧩 Eng. Reversa</button>
-                    <button type="submit" name="modo" value="autoip" class="btn btn-info fw-bold text-dark" title="Descobre o CIDR pelo IP (lógica classful de prova)." data-bs-toggle="tooltip" data-bs-placement="top">🎯 Descobrir CIDR</button>
-                    <button type="submit" name="modo" value="dominio" class="btn btn-light fw-bold text-dark" title="Resolve domínio/hostname para IPv4 e decompõe todos os dados de rede." data-bs-toggle="tooltip" data-bs-placement="top">🌐 Domínio → IP</button>
-                    <button type="submit" name="modo" value="ipv6" class="btn btn-secondary fw-bold" title="Análise didática básica de IPv6 (classificação e decomposição)." data-bs-toggle="tooltip" data-bs-placement="top">🛰️ Analisar IPv6</button>
-                    <a href="/export/json" class="btn btn-info fw-bold text-dark" title="Exporta histórico e dados em JSON para auditoria." data-bs-toggle="tooltip" data-bs-placement="top">📦 Exportar JSON</a>
-                    <a href="/export/pdf" class="btn btn-primary fw-bold" title="Exporta relatório PDF da última análise processada." data-bs-toggle="tooltip" data-bs-placement="top">🧾 Exportar PDF</a>
-                    <a href="/" class="btn btn-danger fw-bold text-white" title="Limpa todos os campos e resultados" data-bs-toggle="tooltip" data-bs-placement="top">🧹 Limpar Tela</a>
-                </div>
-                <div class="small text-secondary mt-2">CIDR: uso rápido | Máscara Decimal: didático | Wildcard: ACL/Firewall | Descobrir CIDR: inferência automática por classe do IP | Decompor Domínio: resolve host para IPv4 e analisa a rede | Analisar IPv6: classificação e decomposição inicial</div>
-                <div class="mt-2">
-                    <span class="shield-badge"><span class="icon">⌨️</span>Alt+1..6 para modos</span>
-                    <span class="shield-badge"><span class="icon">↵</span>Enter executa análise rápida</span>
-                    <span class="shield-badge"><span class="icon">📁</span>Histórico com replay</span>
-                    <span class="shield-badge"><span class="icon">📤</span>Export JSON/PDF</span>
-                </div>
-                <div class="row g-2 mt-1 align-items-end">
-                    <div class="col-lg-4">
-                        <label class="form-label small text-secondary mb-1">🆚 Comparador CIDR A</label>
-                        <input type="number" name="comparador_cidr_a" min="0" max="32" class="form-control bg-dark text-light border-secondary" value="{{ comparador_cidr_a_pre }}"
-                               data-bs-toggle="tooltip" data-bs-placement="top"
-                               title="Primeiro CIDR para comparação com o mesmo IP (0 a 32). Ex.: 20">
-                    </div>
-                    <div class="col-lg-4">
-                        <label class="form-label small text-secondary mb-1">🆚 Comparador CIDR B</label>
-                        <input type="number" name="comparador_cidr_b" min="0" max="32" class="form-control bg-dark text-light border-secondary" value="{{ comparador_cidr_b_pre }}"
-                               data-bs-toggle="tooltip" data-bs-placement="top"
-                               title="Segundo CIDR para comparação com o mesmo IP (0 a 32). Ex.: 24">
-                    </div>
-                    <div class="col-lg-4">
-                        <button type="submit" name="modo" value="comparador" class="btn btn-warning fw-bold text-dark w-100 comparator-btn"
-                                title="Compara dois CIDRs usando o mesmo IP informado e exibe tabela dedicada."
-                                data-bs-toggle="tooltip" data-bs-placement="top">🆚 Comparar CIDRs</button>
-                    </div>
-                </div>
-            </div>
-        </form>
+        <div class="tab-nav d-flex flex-wrap gap-2 mb-3">
+            <button type="button" class="btn btn-outline-info tab-trigger" data-tab="cidr" data-bs-toggle="tooltip" data-bs-placement="top" title="Calcula rede e hosts a partir de CIDR.">🧮 CIDR</button>
+            <button type="button" class="btn btn-outline-info tab-trigger" data-tab="mask" data-bs-toggle="tooltip" data-bs-placement="top" title="Converte máscara decimal para análise completa.">📏 Máscara</button>
+            <button type="button" class="btn btn-outline-info tab-trigger" data-tab="wildcard" data-bs-toggle="tooltip" data-bs-placement="top" title="Análise focada em wildcard com IP + máscara inversa.">🧩 Wildcard</button>
+            <button type="button" class="btn btn-outline-info tab-trigger" data-tab="autoip" data-bs-toggle="tooltip" data-bs-placement="top" title="Descobre CIDR automaticamente com base no IP.">🎯 Auto CIDR</button>
+            <button type="button" class="btn btn-outline-info tab-trigger" data-tab="dominio" data-bs-toggle="tooltip" data-bs-placement="top" title="Resolve domínio para IPv4 e decompõe rede.">🌐 Domínio</button>
+            <button type="button" class="btn btn-outline-info tab-trigger" data-tab="ipv6" data-bs-toggle="tooltip" data-bs-placement="top" title="Analisa endereço IPv6 em formato didático.">🛰️ IPv6</button>
+            <button type="button" class="btn btn-outline-info tab-trigger" data-tab="comparador" data-bs-toggle="tooltip" data-bs-placement="top" title="Compara dois CIDRs para o mesmo IP.">🆚 Comparador</button>
+        </div>
+
+        <div class="tab-panel" data-tab-panel="cidr">{% include "partials/tab_cidr.html" %}</div>
+        <div class="tab-panel" data-tab-panel="mask">{% include "partials/tab_mask.html" %}</div>
+        <div class="tab-panel" data-tab-panel="wildcard">{% include "partials/tab_wildcard.html" %}</div>
+        <div class="tab-panel" data-tab-panel="autoip">{% include "partials/tab_autoip.html" %}</div>
+        <div class="tab-panel" data-tab-panel="dominio">{% include "partials/tab_dominio.html" %}</div>
+        <div class="tab-panel" data-tab-panel="ipv6">{% include "partials/tab_ipv6.html" %}</div>
+        <div class="tab-panel" data-tab-panel="comparador">{% include "partials/tab_comparador.html" %}</div>
+        <div class="action-buttons mt-3">
+            <a href="/export/json" class="btn btn-info fw-bold text-dark" data-bs-toggle="tooltip" data-bs-placement="top" title="Exporta histórico e dados em JSON para auditoria.">📦 Exportar JSON</a>
+            <a href="/export/pdf" class="btn btn-primary fw-bold" data-bs-toggle="tooltip" data-bs-placement="top" title="Exporta relatório PDF da última análise processada.">🧾 Exportar PDF</a>
+            <a href="/?tab={{ active_tab_pre or 'cidr' }}" class="btn btn-danger fw-bold text-white" data-bs-toggle="tooltip" data-bs-placement="top" title="Limpa os dados e mantém a aba atual selecionada.">🧹 Limpar Tela</a>
+        </div>
+        <div class="small text-secondary mt-2">Atalhos: Alt+1..7 troca abas | Enter executa a aba ativa.</div>
     </div>
 
     {% if comparador_cards and comparador_cards|length == 2 %}
@@ -163,6 +95,7 @@
                         <th>🆔 ID</th>
                         <th>🕒 Timestamp</th>
                         <th>⚙️ Modo</th>
+                        <th>🏷️ Tipo</th>
                         <th>🌐 Entrada</th>
                         <th>🧷 CIDR</th>
                         <th>▶️ Ação</th>
@@ -174,9 +107,28 @@
                         <td>{{ item.id }}</td>
                         <td>{{ item.timestamp_utc or item.timestamp }}</td>
                         <td>{{ item.modo }}</td>
+                        <td>
+                            {% if item.modo == 'cidr' %}
+                                IPv4 • CIDR
+                            {% elif item.modo == 'mask' %}
+                                IPv4 • Máscara
+                            {% elif item.modo == 'wildcard' %}
+                                IPv4 • Wildcard
+                            {% elif item.modo == 'autoip' %}
+                                IPv4 • Auto CIDR
+                            {% elif item.modo == 'dominio' %}
+                                IPv4 • Domínio
+                            {% elif item.modo == 'comparador' %}
+                                IPv4 • Comparador
+                            {% elif item.modo == 'ipv6' %}
+                                IPv6 • Análise
+                            {% else %}
+                                Geral • {{ item.modo or 'N/A' }}
+                            {% endif %}
+                        </td>
                         <td>{{ item.ipv6_entrada or item.ip_entrada or '—' }}</td>
                         <td>{{ item.cidr or item.cidr_entrada or '—' }}</td>
-                        <td><a class="btn btn-sm btn-outline-info" href="/?replay={{ item.id }}&history_limit={{ history_limit }}&history_page={{ history_page }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Reaplica esta consulta no formulário para análise imediata.">🔁 Recarregar</a></td>
+                        <td><a class="btn btn-sm btn-outline-info" href="/?replay={{ item.id }}&tab={{ item.modo }}&history_limit={{ history_limit }}&history_page={{ history_page }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Reaplica esta consulta no formulário para análise imediata.">🔁 Recarregar</a></td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -186,6 +138,7 @@
             <div class="d-flex align-items-center gap-2">
                 {% if has_prev_history %}
                 <form method="GET" action="/" class="mb-0 d-inline">
+                    <input type="hidden" name="tab" value="{{ active_tab_pre }}">
                     <input type="hidden" name="history_limit" value="{{ history_limit }}">
                     <input type="hidden" name="history_page" value="{{ history_page - 1 }}">
                     <button type="submit" class="btn btn-sm btn-outline-light" data-bs-toggle="tooltip" data-bs-placement="top" title="Volta para a página anterior do histórico.">⬅️ Anterior</button>
@@ -200,10 +153,12 @@
                         <option value="{{ n }}" {{ 'selected' if history_limit_pre == (n|string) else '' }}>{{ n }}</option>
                         {% endfor %}
                     </select>
+                    <input type="hidden" name="tab" value="{{ active_tab_pre }}">
                     <input type="hidden" name="history_page" value="1">
                 </form>
                 {% if has_next_history %}
                 <form method="GET" action="/" class="mb-0 d-inline">
+                    <input type="hidden" name="tab" value="{{ active_tab_pre }}">
                     <input type="hidden" name="history_limit" value="{{ history_limit }}">
                     <input type="hidden" name="history_page" value="{{ history_page + 1 }}">
                     <button type="submit" class="btn btn-sm btn-outline-light" data-bs-toggle="tooltip" data-bs-placement="top" title="Avança para a próxima página do histórico.">Próxima ➡️</button>
@@ -248,6 +203,89 @@
     {% endif %}
 
     {% if res %}
+    {% if active_tab_pre == 'wildcard' %}
+    <div class="card-tech p-4 shadow mb-3">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 border-bottom border-secondary pb-2 mb-3">
+            <h6 class="text-warning mb-0 icon-title"><span>🧩</span><span>MODO WILDCARD — RESUMO LIMPO</span></h6>
+            <span class="calc-tag calc-tag-dyn">Somente dados de wildcard</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-dark table-bordered table-sm resultados-table mb-0">
+                <tbody>
+                    <tr><th>🧩 WILDCARD INFORMADA</th><td><span class="fw-bold">{{ wildcard_pre or res.wildcard }}</span></td></tr>
+                    <tr><th>📏 MÁSCARA EQUIVALENTE</th><td>{{ res.mask }}</td></tr>
+                    <tr><th>🧷 CIDR EQUIVALENTE</th><td>/{{ res.cidr }}</td></tr>
+                    {% if res.cidr_origem %}
+                    <tr><th>🧭 ORIGEM DA CONVERSÃO</th><td class="text-info">{{ res.cidr_origem }}</td></tr>
+                    {% endif %}
+                    <tr><th>🧭 REDE</th><td>{{ res.rede if not res.somente_mascara else '— (informe IP)' }}</td></tr>
+                    <tr><th>✅ PRIMEIRO HOST</th><td>{{ res.primeiro_host if not res.somente_mascara else '—' }}</td></tr>
+                    <tr><th>✅ ÚLTIMO HOST</th><td>{{ res.ultimo_host if not res.somente_mascara else '—' }}</td></tr>
+                    <tr><th>📣 BROADCAST</th><td>{{ res.broad if not res.somente_mascara else '—' }}</td></tr>
+                    <tr><th>📈 PULO</th><td><span class="highlight-pulo">{{ res.pulo }}</span></td></tr>
+                    <tr><th>📦 CAPACIDADE</th><td>{{ res.total }} IPs totais ({{ res.uteis }} úteis)</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% if res.and_table %}
+    <div class="card-tech p-4 shadow mb-3">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 border-bottom border-secondary pb-2 mb-3">
+            <h6 class="text-info mb-0 icon-title"><span>🔢</span><span>OCTETOS E CÁLCULO ESPECÍFICO DO WILDCARD</span></h6>
+            <span class="calc-tag calc-tag-dyn">Detalhe por octeto</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-dark table-bordered table-sm regua-table mb-2">
+                <thead>
+                    <tr>
+                        <th>🏷️ Campo</th>
+                        <th>1º Octeto</th>
+                        <th>2º Octeto</th>
+                        <th>3º Octeto</th>
+                        <th>4º Octeto</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="and-row-wild">
+                        <td>🧩 Wildcard (DEC)</td>
+                        {% for col in res.and_table %}
+                        <td>{{ col.wild_oct }}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr class="and-row-mask">
+                        <td>📏 Máscara Equivalente (DEC)</td>
+                        {% for col in res.and_table %}
+                        <td>{{ col.mask_oct }}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td>🧠 Máscara Equivalente (BIN)</td>
+                        {% for col in res.and_table %}
+                        <td>{{ col.mask_bin }}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr class="and-row-result">
+                        <td>✅ Validação (Wildcard + Máscara)</td>
+                        {% for col in res.and_table %}
+                        <td>{{ col.wild_oct|int + col.mask_oct|int }}</td>
+                        {% endfor %}
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="small text-secondary mb-0">
+            Regra chave do wildcard: em cada octeto, <strong>wildcard + máscara = 255</strong>. Essa validação confirma a equivalência com o CIDR calculado.
+        </div>
+    </div>
+    {% endif %}
+    {% if not res.somente_mascara %}
+    <div class="card-tech p-4 shadow mb-3">
+        <h6 class="text-info mb-2">🛠️ ACL/Cisco (base wildcard)</h6>
+        <pre class="small bg-dark border border-secondary rounded p-2 mb-2 text-light">{{ res.cisco_cli }}</pre>
+        <div class="small text-secondary mb-0">Use a wildcard para ACL/OSPF: o bloco acima já está alinhado com máscara e CIDR calculados.</div>
+    </div>
+    {% endif %}
+    {% else %}
     <div class="dynamic-theme"
          style="--dyn-bit1: {{ res.cor_bit1 }}; --dyn-and: {{ res.cor_resultado_and }}; --dyn-pulo: {{ res.cor_pulo }}; --dyn-resumo: {{ res.cor_borda_resumo }}; --dyn-accent: {{ res.cor_acento }}; --dyn-table-border: {{ res.cor_borda_tabela }}; --dyn-table-th-bg: {{ res.cor_cabecalho_tabela_bg }}; --dyn-table-th-text: {{ res.cor_cabecalho_tabela_texto }}; --dyn-row-highlight: {{ res.cor_linha_destaque }};">
     {% if res.somente_mascara %}
@@ -271,7 +309,9 @@
         <div class="classe-destaque-faixa">{{ res.classe_faixa }}</div>
     </div>
     {% endif %}
+    {% endif %}
 
+    {% if active_tab_pre != 'wildcard' %}
     <div class="card-tech shadow">
         <div class="p-3 border-bottom border-secondary text-info fw-bold d-flex flex-wrap justify-content-between align-items-center gap-2">
             <span class="icon-title">📊 DECOMPOSIÇÃO DO ARRAY DE 32 BITS
@@ -367,6 +407,7 @@
             <div class="small text-secondary">Didática SOC: o AND entre IP e máscara produz o endereço de rede, e a wildcard (inversa da máscara) é usada em ACL/OSPF.</div>
         </div>
     </div>
+    {% endif %}
     {% endif %}
 
     <div class="card-tech p-3 mb-3 dynamic-legend">
@@ -579,42 +620,107 @@
                 {% if not res.somente_mascara and res.abertura_intervalos %}
                 <hr class="border-secondary">
                 <h6 class="text-warning mb-2">📐 ABERTURA DOS INTERVALOS</h6>
-                <div class="small text-secondary mb-1">{{ res.abertura_intervalos.titulo }} ➜ {{ res.abertura_intervalos.ips_por_bloco }} IPs por bloco ({{ res.abertura_intervalos.uteis_por_bloco }} úteis)</div>
-                <div class="small mb-2">Faixa atual calculada: <span class="text-info">{{ res.abertura_intervalos.faixa_atual }}</span></div>
+                <div class="table-block table-block-conceito mb-2">
+                    <div class="table-block-header">
+                        <span class="table-block-title">🧠 Tabela 1 — Resumo Conceitual</span>
+                        <span class="table-block-caption">Mostra a logica do bloco atual e a faixa principal calculada.</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-dark table-bordered table-sm interval-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>🧠 Tipo</th>
+                                    <th>🏷️ Detalhe</th>
+                                    <th>✅ Valor</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><span class="interval-tag interval-tag-conceito">Conceito</span></td>
+                                    <td>{{ res.abertura_intervalos.titulo }}</td>
+                                    <td>{{ res.abertura_intervalos.ips_por_bloco }} IPs por bloco ({{ res.abertura_intervalos.uteis_por_bloco }} úteis)</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="interval-tag interval-tag-faixa">Faixa Atual</span></td>
+                                    <td>Faixa base calculada</td>
+                                    <td class="text-info">{{ res.abertura_intervalos.faixa_atual }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
                 {% if res.abertura_intervalos.exemplos %}
-                <ul class="small mb-0">
-                    {% for item in res.abertura_intervalos.exemplos %}
-                    <li><span class="text-secondary">{{ item.nome }}:</span> {{ item.faixa }}/{{ res.cidr }}</li>
-                    {% endfor %}
-                </ul>
+                <div class="table-block table-block-exemplos mb-2">
+                    <div class="table-block-header">
+                        <span class="table-block-title">🗺️ Tabela 2 — Exemplos de Faixas</span>
+                        <span class="table-block-caption">Compara a faixa atual com as proximas subnets do mesmo tamanho.</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-dark table-bordered table-sm interval-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>🏷️ Status</th>
+                                    <th>🧩 Subnet</th>
+                                    <th>🟢 Início</th>
+                                    <th>🔚 Fim</th>
+                                    <th>🧷 CIDR</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in res.abertura_intervalos.exemplos %}
+                                {% set faixa_partes = item.faixa.split(' até ') %}
+                                <tr class="{{ 'is-faixa-atual' if loop.first else '' }}">
+                                    <td>
+                                        {% if loop.first %}
+                                        <span class="interval-tag interval-tag-faixa">Atual</span>
+                                        {% else %}
+                                        <span class="interval-tag interval-tag-exemplo">Próxima</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ item.nome }}</td>
+                                    <td>{{ faixa_partes[0] if faixa_partes|length > 0 else item.faixa }}</td>
+                                    <td>{{ faixa_partes[1] if faixa_partes|length > 1 else '—' }}</td>
+                                    <td>/{{ res.cidr }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
                 {% endif %}
                 {% endif %}
                 {% if not res.somente_mascara and res.proximas_subredes %}
                 <hr class="border-secondary">
                 <h6 class="text-warning mb-2">📏 RÉGUA DE SUB-REDES (próximas {{ res.regua_count }})</h6>
-                <div class="table-responsive">
-                    <table class="table table-dark table-bordered table-sm regua-table mb-0">
-                        <thead>
-                            <tr>
-                                <th>🧩 SUBNET</th>
-                                <th>🧭 REDE</th>
-                                <th>✅ 1º HOST</th>
-                                <th>✅ ÚLTIMO HOST</th>
-                                <th>📣 BROADCAST</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for s in res.proximas_subredes %}
-                            <tr>
-                                <td>{{ s.nome }}</td>
-                                <td>{{ s.rede }}</td>
-                                <td>{{ s.primeiro_host }}</td>
-                                <td>{{ s.ultimo_host }}</td>
-                                <td>{{ s.broadcast }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                <div class="table-block table-block-operacional mb-0">
+                    <div class="table-block-header">
+                        <span class="table-block-title">⚙️ Tabela 3 — Régua Operacional</span>
+                        <span class="table-block-caption">Aplicação prática: para cada subnet, exibe rede, primeiro host, ultimo host e broadcast.</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-dark table-bordered table-sm regua-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>🧩 SUBNET</th>
+                                    <th>🧭 REDE</th>
+                                    <th>✅ 1º HOST</th>
+                                    <th>✅ ÚLTIMO HOST</th>
+                                    <th>📣 BROADCAST</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for s in res.proximas_subredes %}
+                                <tr class="{{ 'regua-current' if loop.first else '' }}">
+                                    <td>{{ s.nome }}</td>
+                                    <td>{{ s.rede }}</td>
+                                    <td>{{ s.primeiro_host }}</td>
+                                    <td>{{ s.ultimo_host }}</td>
+                                    <td>{{ s.broadcast }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
                 {% endif %}
             </div>
@@ -880,27 +986,34 @@
 </footer>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+    const activeTabFromServer = "{{ active_tab_pre }}";
     const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
     [...tooltipTriggerList].forEach((tooltipTriggerEl) => new bootstrap.Tooltip(tooltipTriggerEl));
     const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
     [...popoverTriggerList].forEach((popoverTriggerEl) => new bootstrap.Popover(popoverTriggerEl));
-
-    const form = document.getElementById('calc-form');
-    if (form) {
-        form.addEventListener('keydown', (ev) => {
-            if (ev.key === 'Enter' && ev.target && ev.target.tagName !== 'TEXTAREA') {
-                const active = document.activeElement;
-                if (active && active.tagName === 'BUTTON') {
-                    return;
-                }
-                ev.preventDefault();
-                const btn = form.querySelector('button[name="modo"][value="cidr"]');
-                if (btn) btn.click();
-            }
-        });
-    }
+    const tabButtons = document.querySelectorAll('.tab-trigger');
+    const tabPanels = document.querySelectorAll('.tab-panel');
+    let currentTab = activeTabFromServer || 'cidr';
+    const showTab = (tabId) => {
+        currentTab = tabId;
+        tabButtons.forEach((btn) => btn.classList.toggle('active', btn.dataset.tab === tabId));
+        tabPanels.forEach((panel) => panel.classList.toggle('active', panel.dataset.tabPanel === tabId));
+    };
+    tabButtons.forEach((btn) => {
+        btn.addEventListener('click', () => showTab(btn.dataset.tab));
+    });
+    showTab(currentTab);
 
     document.addEventListener('keydown', (ev) => {
+        if (ev.key === 'Enter' && !ev.altKey && ev.target && ev.target.tagName !== 'TEXTAREA') {
+            const activePanel = document.querySelector(`.tab-panel.active[data-tab-panel="${currentTab}"]`);
+            const activeForm = activePanel ? activePanel.querySelector('form.calc-form') : null;
+            if (activeForm) {
+                ev.preventDefault();
+                activeForm.requestSubmit();
+                return;
+            }
+        }
         if (!ev.altKey) return;
         const keyMap = {
             '1': 'cidr',
@@ -908,15 +1021,13 @@
             '3': 'wildcard',
             '4': 'autoip',
             '5': 'dominio',
-            '6': 'ipv6'
+            '6': 'ipv6',
+            '7': 'comparador'
         };
-        const modo = keyMap[ev.key];
-        if (!modo) return;
-        const btn = document.querySelector(`button[name="modo"][value="${modo}"]`);
-        if (btn) {
-            ev.preventDefault();
-            btn.click();
-        }
+        const tab = keyMap[ev.key];
+        if (!tab) return;
+        ev.preventDefault();
+        showTab(tab);
     });
 </script>
 </body>

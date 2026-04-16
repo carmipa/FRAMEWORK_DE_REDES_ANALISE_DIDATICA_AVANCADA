@@ -1,0 +1,33 @@
+<form method="POST" class="row g-3 calc-form" data-tab-form="cidr">
+    <input type="hidden" name="tab" value="cidr">
+    <div class="col-lg-5">
+        <label class="form-label small text-secondary">🌐 Endereço IPv4</label>
+        <input type="text" name="ip" class="form-control bg-dark text-light border-secondary {{ 'is-invalid' if 'ip' in invalid_fields else '' }}"
+               placeholder="Ex.: 172.16.0.10" value="{{ ip_pre }}"
+               data-bs-toggle="tooltip" data-bs-placement="top"
+               title="IP de host para calcular rede, broadcast e hosts úteis.">
+    </div>
+    <div class="col-lg-3">
+        <label class="form-label small text-secondary">🧷 CIDR</label>
+        <input type="number" name="cidr" class="form-control bg-dark text-light border-secondary {{ 'is-invalid' if 'cidr' in invalid_fields else '' }}"
+               min="0" max="32" value="{{ cidr_pre }}"
+               data-bs-toggle="tooltip" data-bs-placement="top"
+               title="Prefixo de rede (0 a 32). Ex.: /24">
+    </div>
+    <div class="col-lg-2">
+        <label class="form-label small text-secondary">📐 Régua</label>
+        <select name="regua_count" class="form-select bg-dark text-light border-secondary"
+                data-bs-toggle="tooltip" data-bs-placement="top"
+                title="Quantidade de linhas exibidas na régua de sub-redes">
+            <option value="5" {{ 'selected' if regua_count_pre == '5' else '' }}>5</option>
+            <option value="10" {{ 'selected' if regua_count_pre == '10' else '' }}>10</option>
+            <option value="15" {{ 'selected' if regua_count_pre == '15' else '' }}>15</option>
+            <option value="25" {{ 'selected' if regua_count_pre == '25' else '' }}>25</option>
+            <option value="50" {{ 'selected' if regua_count_pre == '50' else '' }}>50</option>
+            <option value="100" {{ 'selected' if regua_count_pre == '100' else '' }}>100</option>
+        </select>
+    </div>
+    <div class="col-lg-2 tab-actions d-grid gap-2">
+        <button type="submit" name="modo" value="cidr" class="btn btn-success fw-bold btn-sm w-100" data-bs-toggle="tooltip" data-bs-placement="top" title="Executa o cálculo com IP e CIDR informados.">🧮 Executar</button>
+    </div>
+</form>
