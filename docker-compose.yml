@@ -2,11 +2,19 @@ services:
   framework-redes:
     build: .
     container_name: framework-redes-analise
+    # SEGURANÇA: Vincula a porta APENAS ao localhost (127.0.0.1)
     ports:
-      - "5000:5000"
+      - "127.0.0.1:5000:5000"
     environment:
-      APP_HOST: "0.0.0.0"
+      APP_HOST: "0.0.0.0" # Pode manter 0.0.0.0 dentro do container
       APP_PORT: "5000"
       APP_DEBUG: "false"
       APP_LOG_LEVEL: "INFO"
     restart: unless-stopped
+    # CONECTIVIDADE: Permite que o Nginx Proxy Manager "enxergue" este container
+    networks:
+      - nginx-proxy-network
+
+networks:
+  nginx-proxy-network:
+    external: true
