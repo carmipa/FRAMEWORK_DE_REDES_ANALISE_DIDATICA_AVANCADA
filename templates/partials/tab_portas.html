@@ -18,34 +18,79 @@
             </select>
         </div>
         <div class="col-lg-5 tab-actions d-flex gap-2 align-items-center justify-content-end mb-1">
+            <div class="btn-group btn-group-sm me-2" role="group">
+                <button type="button" class="btn btn-outline-info active" onclick="toggleView('portas', 'table', this)" title="Visualização em Tabela">📄 Tabela</button>
+                <button type="button" class="btn btn-outline-info" onclick="toggleView('portas', 'grid', this)" title="Visualização em Grade">🔲 Grade</button>
+            </div>
             <button type="button" class="btn btn-sm btn-outline-warning text-nowrap" onclick="document.querySelector('[data-search-target=\'portas\']').value=''; document.querySelector('[data-filter-target=\'portas\']').value='all'; document.querySelector('[data-search-target=\'portas\']').dispatchEvent(new Event('input'));">🧹 Limpar</button>
             <button type="button" class="btn btn-success fw-bold btn-sm text-nowrap" onclick="document.querySelector('[data-search-target=\'portas\']').dispatchEvent(new Event('input'));">🧮 Executar</button>
-            <div class="small text-secondary comm-counter ms-2 text-nowrap" data-counter-target="portas" style="min-width: 60px;"></div>
         </div>
+    </div>
+    <div class="d-flex justify-content-end mb-2">
+        <div class="small text-secondary comm-counter text-nowrap" data-counter-target="portas"></div>
     </div>
 
     <div class="small text-secondary mb-3 border-start border-info border-2 ps-2 py-1 rounded-1" style="background: rgba(88, 166, 255, 0.06);" role="note">
         Catálogo dinâmico de portas para estudo de serviços e troubleshooting de rede.
     </div>
 
-    <div class="row g-3 comm-grid">
-        {% for item in portas_catalogo %}
-        <div class="col-md-6 col-xl-4 comm-item"
-             data-item-type="portas"
-             data-searchable="{{ item.porta }} {{ item.servico }} {{ item.protocolo_transporte }} {{ item.categoria }} {{ item.risco }} {{ item.recomendacao }}"
-             data-category="{{ item.categoria|lower }}">
-            <div class="card-tech p-3 h-100 comm-card comm-card-porta" style="border-left: 4px solid var(--bs-{{ item.badge_color }}); transition: all 0.2s ease;">
-                <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
-                    <h6 class="mb-0 text-info">🔌 Porta {{ item.porta }}</h6>
-                    <span class="badge bg-dark border border-{{ item.badge_color }} text-{{ item.badge_color }} shadow-sm">{{ item.badge }}</span>
+    <div class="view-container view-grid d-none" data-view-id="portas-grid">
+        <div class="row g-3 comm-grid">
+            {% for item in portas_catalogo %}
+            <div class="col-md-6 col-xl-4 comm-item"
+                 data-item-type="portas"
+                 data-searchable="{{ item.porta }} {{ item.servico }} {{ item.protocolo_transporte }} {{ item.categoria }} {{ item.risco }} {{ item.recomendacao }}"
+                 data-category="{{ item.categoria|lower }}">
+                <div class="card-tech p-3 h-100 comm-card comm-card-porta" style="border-left: 4px solid var(--bs-{{ item.badge_color }}); transition: all 0.2s ease;">
+                    <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                        <h6 class="mb-0 text-info">🔌 Porta {{ item.porta }}</h6>
+                        <span class="badge bg-dark border border-{{ item.badge_color }} text-{{ item.badge_color }} shadow-sm">{{ item.badge }}</span>
+                    </div>
+                    <div class="fw-bold text-light mb-2">{{ item.servico }} <span class="badge bg-secondary text-light ms-1">{{ item.protocolo_transporte }}</span></div>
+                    <div class="small mb-1"><span class="text-warning">Categoria:</span> <span class="text-secondary">{{ item.categoria }}</span></div>
+                    <div class="small mb-1"><span class="text-warning">Risco:</span> <span class="text-secondary">{{ item.risco }}</span></div>
+                    <div class="small mt-2 pt-2 border-top border-secondary border-opacity-50"><span class="text-warning">Recomendação:</span> <span class="text-info">{{ item.recomendacao }}</span></div>
                 </div>
-                <div class="fw-bold text-light mb-2">{{ item.servico }} <span class="badge bg-secondary text-light ms-1">{{ item.protocolo_transporte }}</span></div>
-                <div class="small mb-1"><span class="text-warning">Categoria:</span> <span class="text-secondary">{{ item.categoria }}</span></div>
-                <div class="small mb-1"><span class="text-warning">Risco:</span> <span class="text-secondary">{{ item.risco }}</span></div>
-                <div class="small mt-2 pt-2 border-top border-secondary border-opacity-50"><span class="text-warning">Recomendação:</span> <span class="text-info">{{ item.recomendacao }}</span></div>
             </div>
+            {% endfor %}
         </div>
-        {% endfor %}
+    </div>
+
+    <div class="view-container view-table" data-view-id="portas-table">
+        <div class="table-responsive">
+            <table class="table table-dark table-hover table-bordered align-middle mb-0" style="border-color: #30363d;">
+                <thead class="table-dark-header">
+                    <tr>
+                        <th style="width: 120px;">🔌 Porta</th>
+                        <th>🛠️ Serviço</th>
+                        <th>🏷️ Categoria</th>
+                        <th>⚠️ Risco</th>
+                        <th>🛡️ Recomendação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in portas_catalogo %}
+                    <tr class="comm-item" 
+                        data-item-type="portas"
+                        data-searchable="{{ item.porta }} {{ item.servico }} {{ item.protocolo_transporte }} {{ item.categoria }} {{ item.risco }} {{ item.recomendacao }}"
+                        data-category="{{ item.categoria|lower }}"
+                        style="border-left: 4px solid var(--bs-{{ item.badge_color }});">
+                        <td class="fw-bold text-info">{{ item.porta }}</td>
+                        <td>
+                            <div class="fw-bold text-light">{{ item.servico }}</div>
+                            <span class="badge bg-secondary text-light x-small">{{ item.protocolo_transporte }}</span>
+                        </td>
+                        <td class="small text-secondary">{{ item.categoria }}</td>
+                        <td>
+                            <span class="badge bg-dark border border-{{ item.badge_color }} text-{{ item.badge_color }}">{{ item.badge }}</span>
+                            <div class="small text-secondary mt-1">{{ item.risco }}</div>
+                        </td>
+                        <td class="small text-info">{{ item.recomendacao }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
     <div class="small text-warning mt-2 d-none" data-empty-target="portas">Nenhum resultado encontrado com os filtros atuais.</div>
 </div>
