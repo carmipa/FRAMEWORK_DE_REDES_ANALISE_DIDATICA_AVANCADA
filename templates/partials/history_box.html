@@ -1,0 +1,89 @@
+{% if history and history_limit > 0 %}
+<div class="card-tech p-3 shadow history-box">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+        <h6 class="text-info mb-0">🕘 Histórico de Consultas (últimas {{ history|length }})</h6>
+        <span class="shield-badge"><span class="icon">📚</span>Navegação por histórico</span>
+    </div>
+    <div class="mb-2">
+        <span class="shield-badge"><span class="icon">♻️</span>Reutilize cenários em 1 clique</span>
+        <span class="shield-badge"><span class="icon">🧠</span>Memória de laboratório local</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-dark table-bordered table-sm mb-0">
+            <thead>
+                <tr>
+                    <th>🆔 ID</th>
+                    <th>🕒 Timestamp</th>
+                    <th>⚙️ Modo</th>
+                    <th>🏷️ Tipo</th>
+                    <th>🌐 Entrada</th>
+                    <th>🧷 CIDR</th>
+                    <th>▶️ Ação</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in history_page_items %}
+                <tr>
+                    <td>{{ item.id }}</td>
+                    <td>{{ item.timestamp_utc or item.timestamp }}</td>
+                    <td>{{ item.modo }}</td>
+                    <td>
+                        {% if item.modo == 'cidr' %}
+                            IPv4 • CIDR
+                        {% elif item.modo == 'mask' %}
+                            IPv4 • Máscara
+                        {% elif item.modo == 'wildcard' %}
+                            IPv4 • Wildcard
+                        {% elif item.modo == 'autoip' %}
+                            IPv4 • Auto CIDR
+                        {% elif item.modo == 'dominio' %}
+                            IPv4 • Domínio
+                        {% elif item.modo == 'comparador' %}
+                            IPv4 • Comparador
+                        {% elif item.modo == 'ipv6' %}
+                            IPv6 • Análise
+                        {% elif item.modo == 'portas' %}
+                            Catálogo • Portas
+                        {% elif item.modo == 'protocolos' %}
+                            Catálogo • Protocolos
+                        {% else %}
+                            Geral • {{ item.modo or 'N/A' }}
+                        {% endif %}
+                    </td>
+                    <td>{{ item.ipv6_entrada or item.ip_entrada or '—' }}</td>
+                    <td>{{ item.cidr or item.cidr_entrada or '—' }}</td>
+                    <td><a class="btn btn-sm btn-outline-info" href="/?replay={{ item.id }}&tab={{ item.modo }}&history_limit={{ history_limit }}&history_page={{ history_page }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Reaplica esta consulta no formulário para análise imediata.">🔁 Recarregar</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="d-flex flex-wrap justify-content-center align-items-center gap-3 mt-2 history-pagination">
+        <div class="d-flex align-items-center gap-3">
+            {% if has_prev_history %}
+            <form method="GET" action="/" class="mb-0 d-inline">
+                <input type="hidden" name="tab" value="{{ active_tab_pre }}">
+                <input type="hidden" name="history_limit" value="{{ history_limit }}">
+                <input type="hidden" name="history_page" value="{{ history_page - 1 }}">
+                <button type="submit" class="btn btn-sm btn-outline-light">⬅️ Anterior</button>
+            </form>
+            {% else %}
+            <button class="btn btn-sm btn-outline-secondary" disabled>⬅️ Anterior</button>
+            {% endif %}
+            
+            <span class="text-light small fw-bold">Página {{ history_page }} de {{ total_history_pages }}</span>
+
+            {% if has_next_history %}
+            <form method="GET" action="/" class="mb-0 d-inline">
+                <input type="hidden" name="tab" value="{{ active_tab_pre }}">
+                <input type="hidden" name="history_limit" value="{{ history_limit }}">
+                <input type="hidden" name="history_page" value="{{ history_page + 1 }}">
+                <button type="submit" class="btn btn-sm btn-outline-light">Próxima ➡️</button>
+            </form>
+            {% else %}
+            <button class="btn btn-sm btn-outline-secondary" disabled>Próxima ➡️</button>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endif %}

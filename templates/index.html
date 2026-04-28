@@ -15,8 +15,22 @@
             font-size: 0.75rem;
             letter-spacing: 0.05em;
         }
+        .sortable { cursor: pointer; user-select: none; }
+        .sortable:hover { color: #9ecbff !important; }
+        .datagrid-wrap thead th {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+        .comm-summary {
+            background: #0f1724;
+            border: 1px solid #30363d;
+            border-left: 4px solid #1f6feb;
+            border-radius: 8px;
+            padding: 0.55rem 0.7rem;
+            font-size: 0.82rem;
+        }
         .x-small { font-size: 0.7rem; }
-        .view-container { transition: opacity 0.2s ease; }
     </style>
 </head>
 <body>
@@ -56,6 +70,9 @@
         <p class="small text-secondary mb-3 border-start border-info border-2 ps-2 py-1 rounded-1" style="background: rgba(88, 166, 255, 0.06);" role="note">
             <strong class="text-info">Funções em separado:</strong> cada aba possui fluxo independente. Nas abas de cálculo, use <strong>Executar</strong>. Nas abas de consulta, como Portas e Protocolos, a busca e os filtros atualizam os resultados automaticamente.
         </p>
+        {% if active_tab_pre in ['portas', 'protocolos'] %}
+        {% include "partials/history_box.html" %}
+        {% endif %}
 
         <div class="tab-panel" data-tab-panel="cidr">{% include "partials/tab_cidr.html" %}</div>
         <div class="tab-panel" data-tab-panel="mask">{% include "partials/tab_mask.html" %}</div>
@@ -114,90 +131,8 @@
     </div>
     {% endif %}
 
-    {% if history and history_limit > 0 %}
-    <div class="card-tech p-3 shadow history-box">
-        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
-            <h6 class="text-info mb-0">🕘 Histórico de Consultas (últimas {{ history|length }})</h6>
-            <span class="shield-badge"><span class="icon">📚</span>Navegação por histórico</span>
-        </div>
-        <div class="mb-2">
-            <span class="shield-badge"><span class="icon">♻️</span>Reutilize cenários em 1 clique</span>
-            <span class="shield-badge"><span class="icon">🧠</span>Memória de laboratório local</span>
-        </div>
-        <div class="table-responsive">
-            <table class="table table-dark table-bordered table-sm mb-0">
-                <thead>
-                    <tr>
-                        <th>🆔 ID</th>
-                        <th>🕒 Timestamp</th>
-                        <th>⚙️ Modo</th>
-                        <th>🏷️ Tipo</th>
-                        <th>🌐 Entrada</th>
-                        <th>🧷 CIDR</th>
-                        <th>▶️ Ação</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in history_page_items %}
-                    <tr>
-                        <td>{{ item.id }}</td>
-                        <td>{{ item.timestamp_utc or item.timestamp }}</td>
-                        <td>{{ item.modo }}</td>
-                        <td>
-                            {% if item.modo == 'cidr' %}
-                                IPv4 • CIDR
-                            {% elif item.modo == 'mask' %}
-                                IPv4 • Máscara
-                            {% elif item.modo == 'wildcard' %}
-                                IPv4 • Wildcard
-                            {% elif item.modo == 'autoip' %}
-                                IPv4 • Auto CIDR
-                            {% elif item.modo == 'dominio' %}
-                                IPv4 • Domínio
-                            {% elif item.modo == 'comparador' %}
-                                IPv4 • Comparador
-                            {% elif item.modo == 'ipv6' %}
-                                IPv6 • Análise
-                            {% else %}
-                                Geral • {{ item.modo or 'N/A' }}
-                            {% endif %}
-                        </td>
-                        <td>{{ item.ipv6_entrada or item.ip_entrada or '—' }}</td>
-                        <td>{{ item.cidr or item.cidr_entrada or '—' }}</td>
-                        <td><a class="btn btn-sm btn-outline-info" href="/?replay={{ item.id }}&tab={{ item.modo }}&history_limit={{ history_limit }}&history_page={{ history_page }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Reaplica esta consulta no formulário para análise imediata.">🔁 Recarregar</a></td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        <div class="d-flex flex-wrap justify-content-center align-items-center gap-3 mt-2 history-pagination">
-            <div class="d-flex align-items-center gap-3">
-                {% if has_prev_history %}
-                <form method="GET" action="/" class="mb-0 d-inline">
-                    <input type="hidden" name="tab" value="{{ active_tab_pre }}">
-                    <input type="hidden" name="history_limit" value="{{ history_limit }}">
-                    <input type="hidden" name="history_page" value="{{ history_page - 1 }}">
-                    <button type="submit" class="btn btn-sm btn-outline-light">⬅️ Anterior</button>
-                </form>
-                {% else %}
-                <button class="btn btn-sm btn-outline-secondary" disabled>⬅️ Anterior</button>
-                {% endif %}
-                
-                <span class="text-light small fw-bold">Página {{ history_page }} de {{ total_history_pages }}</span>
-
-                {% if has_next_history %}
-                <form method="GET" action="/" class="mb-0 d-inline">
-                    <input type="hidden" name="tab" value="{{ active_tab_pre }}">
-                    <input type="hidden" name="history_limit" value="{{ history_limit }}">
-                    <input type="hidden" name="history_page" value="{{ history_page + 1 }}">
-                    <button type="submit" class="btn btn-sm btn-outline-light">Próxima ➡️</button>
-                </form>
-                {% else %}
-                <button class="btn btn-sm btn-outline-secondary" disabled>Próxima ➡️</button>
-                {% endif %}
-            </div>
-        </div>
-    </div>
+    {% if active_tab_pre not in ['portas', 'protocolos'] %}
+    {% include "partials/history_box.html" %}
     {% endif %}
 
     {% if ipv6_res %}
@@ -1116,7 +1051,7 @@
             <span>ℹ️</span><span>Sobre o Projeto</span>
         </h6>
         <p class="small text-light mb-3" style="line-height: 1.6;">
-            Este framework foi desenvolvido como ferramenta didática para estudantes de Redes e Cyber Defense, permitindo calcular, validar e explicar conceitos de IPv4, CIDR, máscaras, wildcard, RFC1918, IPv6 e comandos Cisco CLI.
+            Este framework foi desenvolvido como ferramenta didática para estudantes de Redes e Cyber Defense, permitindo calcular, validar e explicar conceitos de IPv4, CIDR, máscaras, wildcard, RFC1918, IPv6, comandos Cisco CLI e também consultar catálogos técnicos de Portas e Protocolos com DataGrid interativo (filtros, ordenação, paginação e exportação).
         </p>
         <div class="d-flex flex-wrap align-items-center gap-2">
             <span class="text-secondary small fw-bold me-2">Competências demonstradas:</span>
@@ -1125,9 +1060,22 @@
             <span class="badge bg-dark border border-secondary text-info">Redes TCP/IP</span>
             <span class="badge bg-dark border border-secondary text-info">IPv4 / IPv6</span>
             <span class="badge bg-dark border border-secondary text-info">CIDR</span>
+            <span class="badge bg-dark border border-secondary text-info">Portas e Protocolos</span>
+            <span class="badge bg-dark border border-secondary text-info">DataGrid / UX</span>
             <span class="badge bg-dark border border-secondary text-info">Docker/VPS</span>
             <span class="badge bg-dark border border-secondary text-info">Deploy com HTTPS</span>
             <span class="badge bg-dark border border-secondary text-info">Cyber Defense</span>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="commDetailsModal" tabindex="-1" aria-labelledby="commDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content bg-dark text-light border border-secondary">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title" id="commDetailsModalLabel">Detalhes</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body" id="commDetailsModalBody"></div>
         </div>
     </div>
 </div>
@@ -1158,10 +1106,28 @@
     const tabButtons = document.querySelectorAll('.tab-trigger');
     const tabPanels = document.querySelectorAll('.tab-panel');
     let currentTab = activeTabFromServer || 'cidr';
+    const catalogHistorySent = new Set();
+    const registerCatalogHistory = async (tabId) => {
+        if (!["portas", "protocolos"].includes(tabId)) return;
+        if (catalogHistorySent.has(tabId)) return;
+        catalogHistorySent.add(tabId);
+        const searchInput = document.querySelector(`[data-grid-search="${tabId}"]`);
+        const entrada = searchInput ? (searchInput.value || "") : "";
+        try {
+            await fetch("/history/catalog", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ modo: tabId, entrada }),
+            });
+        } catch (error) {
+            console.warn("Falha ao registrar histórico de catálogo", error);
+        }
+    };
     const showTab = (tabId) => {
         currentTab = tabId;
         tabButtons.forEach((btn) => btn.classList.toggle('active', btn.dataset.tab === tabId));
         tabPanels.forEach((panel) => panel.classList.toggle('active', panel.dataset.tabPanel === tabId));
+        registerCatalogHistory(tabId);
     };
     tabButtons.forEach((btn) => {
         btn.addEventListener('click', () => showTab(btn.dataset.tab));
@@ -1196,58 +1162,203 @@
         showTab(tab);
     });
 
-    const setupCatalogFilter = (catalogId) => {
-        const searchInput = document.querySelector(`[data-search-target="${catalogId}"]`);
-        const filterSelect = document.querySelector(`[data-filter-target="${catalogId}"]`);
-        const counter = document.querySelector(`[data-counter-target="${catalogId}"]`);
-        const emptyState = document.querySelector(`[data-empty-target="${catalogId}"]`);
-        const items = [...document.querySelectorAll(`.comm-item[data-item-type="${catalogId}"]`)];
-        if (!searchInput || !filterSelect || !counter || !emptyState || items.length === 0) return;
+    const normalize = (value) => (value || "").toString().toLowerCase();
+    const parsePortValue = (value) => {
+        const raw = (value || "").toString();
+        const match = raw.match(/\d+/);
+        return match ? Number(match[0]) : Number.MAX_SAFE_INTEGER;
+    };
+    const riskOrder = { "crítico": 1, "atenção": 2, "seguro": 3, "didático": 4 };
+    const detailsModal = new bootstrap.Modal(document.getElementById("commDetailsModal"));
+    const detailsBody = document.getElementById("commDetailsModalBody");
+    const detailsTitle = document.getElementById("commDetailsModalLabel");
+
+    const updateSummary = (gridId, rows) => {
+        const summaryTarget = document.querySelector(`[data-summary-target="${gridId}"]`);
+        if (!summaryTarget) return;
+        const total = rows.length;
+        const stats = { "crítico": 0, "atenção": 0, "seguro": 0, "didático": 0 };
+        rows.forEach((row) => {
+            const txt = normalize(row.dataset.risco || row.dataset.nivel);
+            Object.keys(stats).forEach((k) => {
+                if (txt.includes(k)) stats[k] += 1;
+            });
+        });
+        summaryTarget.innerHTML = `
+            <strong>Total:</strong> ${total}
+            <span class="ms-2 text-danger">Críticas: ${stats["crítico"]}</span>
+            <span class="ms-2 text-warning">Atenção: ${stats["atenção"]}</span>
+            <span class="ms-2 text-success">Seguras: ${stats["seguro"]}</span>
+            <span class="ms-2 text-info">Didáticas: ${stats["didático"]}</span>
+        `;
+    };
+
+    const exportRowsJson = (gridId, rows) => {
+        const payload = rows.map((row) => ({ ...row.dataset }));
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `${gridId}_filtrado.json`;
+        link.click();
+        URL.revokeObjectURL(link.href);
+    };
+
+    const exportRowsPdf = (gridId, rows) => {
+        const popup = window.open("", "_blank");
+        if (!popup) return;
+        const lines = rows.map((r) => {
+            if (gridId === "portas") return `${r.dataset.porta} | ${r.dataset.servico} | ${r.dataset.transporte} | ${r.dataset.risco}`;
+            return `${r.dataset.nome} | ${r.dataset.camada} | ${r.dataset.transporte} | ${r.dataset.nivel}`;
+        });
+        popup.document.write(`<pre>${gridId.toUpperCase()}\n\n${lines.join("\n")}</pre>`);
+        popup.document.close();
+        popup.print();
+    };
+
+    const initGrid = (gridId) => {
+        const rows = [...document.querySelectorAll(`[data-grid-row="${gridId}"]`)];
+        if (!rows.length) return;
+        const search = document.querySelector(`[data-grid-search="${gridId}"]`);
+        const category = document.querySelector(`[data-grid-category="${gridId}"]`);
+        const transport = document.querySelector(`[data-grid-transport="${gridId}"]`);
+        const risk = document.querySelector(`[data-grid-risk="${gridId}"]`);
+        const clearBtn = document.querySelector(`[data-grid-clear="${gridId}"]`);
+        const counter = document.querySelector(`[data-grid-counter="${gridId}"]`);
+        const pageLabel = document.querySelector(`[data-grid-page-label="${gridId}"]`);
+        const prevBtn = document.querySelector(`[data-grid-prev="${gridId}"]`);
+        const nextBtn = document.querySelector(`[data-grid-next="${gridId}"]`);
+        const exportJsonBtn = document.querySelector(`[data-grid-export-json="${gridId}"]`);
+        const exportPdfBtn = document.querySelector(`[data-grid-export-pdf="${gridId}"]`);
+        const table = document.querySelector(`[data-grid-table="${gridId}"]`);
+        const tbody = document.querySelector(`[data-grid-body="${gridId}"]`);
+
+        let sortKey = "";
+        let sortDir = 1;
+        let page = 1;
+        const pageSize = 10;
+
+        const getFiltered = () => rows.filter((row) => {
+            const text = normalize(row.dataset.search);
+            const term = normalize(search && search.value);
+            const cat = normalize(category && category.value);
+            const trans = normalize(transport && transport.value);
+            const r = normalize(risk && risk.value);
+            const categoryValue = normalize(row.dataset.categoria || row.dataset.camada);
+            const transportValue = normalize(row.dataset.transporte || "");
+            const riskValue = normalize(row.dataset.risco || row.dataset.nivel || "");
+            const termOk = !term || text.includes(term);
+            const catOk = cat === "all" || categoryValue === cat;
+            const transOk = trans === "all" || transportValue.includes(trans);
+            const riskOk = r === "all" || riskValue.includes(r);
+            return termOk && catOk && transOk && riskOk;
+        });
 
         const apply = () => {
-            const term = (searchInput.value || "").trim().toLowerCase();
-            const category = (filterSelect.value || "all").toLowerCase();
-            let visible = 0;
-            items.forEach((item) => {
-                const searchable = (item.dataset.searchable || "").toLowerCase();
-                const itemCategory = (item.dataset.category || "").toLowerCase();
-                const termOk = !term || searchable.includes(term);
-                const categoryOk = category === "all" || itemCategory === category;
-                const shouldShow = termOk && categoryOk;
-                item.classList.toggle("d-none", !shouldShow);
-                if (shouldShow) visible += 1;
-            });
-            counter.textContent = `${Math.floor(visible / 2)} item(ns) exibido(s)`;
-            emptyState.classList.toggle("d-none", visible !== 0);
+            let filtered = getFiltered();
+            if (sortKey) {
+                filtered = [...filtered].sort((a, b) => {
+                    let va = normalize(a.dataset[sortKey]);
+                    let vb = normalize(b.dataset[sortKey]);
+                    if (sortKey === "porta") return (parsePortValue(va) - parsePortValue(vb)) * sortDir;
+                    if (sortKey === "risco" || sortKey === "nivel") return ((riskOrder[va.includes("crítico") ? "crítico" : va.includes("atenção") ? "atenção" : va.includes("seguro") ? "seguro" : "didático"] || 9) - (riskOrder[vb.includes("crítico") ? "crítico" : vb.includes("atenção") ? "atenção" : vb.includes("seguro") ? "seguro" : "didático"] || 9)) * sortDir;
+                    return va.localeCompare(vb, "pt-BR") * sortDir;
+                });
+            }
+            rows.forEach((r) => r.classList.add("d-none"));
+            const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+            if (page > totalPages) page = totalPages;
+            const start = (page - 1) * pageSize;
+            const current = filtered.slice(start, start + pageSize);
+            tbody.append(...current);
+            current.forEach((r) => r.classList.remove("d-none"));
+            counter.textContent = `${filtered.length} registro(s)`;
+            pageLabel.textContent = `Página ${page}/${totalPages}`;
+            prevBtn.disabled = page <= 1;
+            nextBtn.disabled = page >= totalPages;
+            updateSummary(gridId, filtered);
+            return filtered;
         };
 
-        searchInput.addEventListener("input", apply);
-        filterSelect.addEventListener("change", apply);
+        table.querySelectorAll(".sortable").forEach((th) => th.addEventListener("click", () => {
+            const key = th.dataset.sortKey;
+            if (sortKey === key) sortDir *= -1;
+            else {
+                sortKey = key;
+                sortDir = 1;
+            }
+            apply();
+        }));
+
+        [search, category, transport, risk].forEach((el) => el && el.addEventListener("input", () => {
+            page = 1;
+            apply();
+        }));
+        [category, transport, risk].forEach((el) => el && el.addEventListener("change", () => {
+            page = 1;
+            apply();
+        }));
+
+        prevBtn.addEventListener("click", () => {
+            if (page > 1) {
+                page -= 1;
+                apply();
+            }
+        });
+        nextBtn.addEventListener("click", () => {
+            page += 1;
+            apply();
+        });
+        clearBtn.addEventListener("click", () => {
+            if (search) search.value = "";
+            if (category) category.value = "all";
+            if (transport) transport.value = "all";
+            if (risk) risk.value = "all";
+            sortKey = "";
+            sortDir = 1;
+            page = 1;
+            apply();
+        });
+        exportJsonBtn.addEventListener("click", () => exportRowsJson(gridId, getFiltered()));
+        exportPdfBtn.addEventListener("click", () => exportRowsPdf(gridId, getFiltered()));
+
+        tbody.addEventListener("click", async (ev) => {
+            const copyBtn = ev.target.closest(`[data-grid-copy="${gridId}"]`);
+            const detailsBtn = ev.target.closest(`[data-grid-details="${gridId}"]`);
+            const row = ev.target.closest(`[data-grid-row="${gridId}"]`);
+            if (!row) return;
+            if (copyBtn) {
+                await navigator.clipboard.writeText(JSON.stringify({ ...row.dataset }, null, 2));
+            }
+            if (detailsBtn) {
+                if (gridId === "portas") {
+                    detailsTitle.textContent = `Porta ${row.dataset.porta} - ${row.dataset.servico}`;
+                    detailsBody.innerHTML = `
+                        <p><strong>Categoria:</strong> ${row.dataset.categoria}</p>
+                        <p><strong>Transporte:</strong> ${row.dataset.transporte}</p>
+                        <p><strong>Risco:</strong> ${row.dataset.risco}</p>
+                        <p><strong>Recomendação:</strong> ${row.dataset.recomendacao}</p>
+                        <p><strong>Alternativa segura:</strong> ${row.dataset.alternativa}</p>
+                    `;
+                } else {
+                    detailsTitle.textContent = `Protocolo ${row.dataset.nome}`;
+                    detailsBody.innerHTML = `
+                        <p><strong>Camada:</strong> ${row.dataset.camada}</p>
+                        <p><strong>Transporte:</strong> ${row.dataset.transporte}</p>
+                        <p><strong>Porta comum:</strong> ${row.dataset.porta}</p>
+                        <p><strong>Seguro:</strong> ${row.dataset.seguro}</p>
+                        <p><strong>Nível:</strong> ${row.dataset.nivel}</p>
+                        <p><strong>Função:</strong> ${row.dataset.funcao}</p>
+                    `;
+                }
+                detailsModal.show();
+            }
+        });
+
         apply();
     };
 
-    setupCatalogFilter("portas");
-    setupCatalogFilter("protocolos");
-
-    window.toggleView = (catalogId, viewType, btn) => {
-        const grid = document.querySelector(`[data-view-id="${catalogId}-grid"]`);
-        const table = document.querySelector(`[data-view-id="${catalogId}-table"]`);
-        const buttons = btn.parentElement.querySelectorAll('button');
-        
-        buttons.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-
-        if (viewType === 'grid') {
-            grid.classList.remove('d-none');
-            table.classList.add('d-none');
-        } else {
-            grid.classList.add('d-none');
-            table.classList.remove('d-none');
-        }
-        // Re-run filter for the new view
-        const searchInput = document.querySelector(`[data-search-target="${catalogId}"]`);
-        if (searchInput) searchInput.dispatchEvent(new Event('input'));
-    };
+    initGrid("portas");
+    initGrid("protocolos");
 </script>
 </body>
 </html>

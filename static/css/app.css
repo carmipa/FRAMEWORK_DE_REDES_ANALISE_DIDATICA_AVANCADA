@@ -169,6 +169,17 @@ body { background-color: #0d1117; color: #c9d1d9; font-family: 'Consolas', monos
         .comm-counter {
             text-align: right;
         }
+        .grid-action-btn {
+            min-width: 96px;
+            min-height: 31px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1.1;
+            letter-spacing: 0.01em;
+            padding-left: 0.6rem;
+            padding-right: 0.6rem;
+        }
 
         /* Layout Flexbox para eliminar barra de rolagem horizontal */
         .bit-container { 
@@ -733,6 +744,9 @@ body { background-color: #0d1117; color: #c9d1d9; font-family: 'Consolas', monos
             .action-buttons { grid-template-columns: 1fr; }
             .timeline-bloco { grid-template-columns: 1fr; }
             .comm-counter { text-align: left; margin-top: 0.35rem !important; }
+            .grid-action-btn {
+                min-width: 84px;
+            }
             .termos-table th, .termos-table td,
             .regua-table th, .regua-table td,
             .ref-table th, .ref-table td,

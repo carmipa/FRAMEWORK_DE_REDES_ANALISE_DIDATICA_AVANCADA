@@ -558,6 +558,59 @@ PROTOCOLOS_CATALOGO = [
 ]
 
 
+def _alternativa_segura_porta(item: dict) -> str:
+    alternativa = (item.get("alternativa_segura") or "").strip()
+    if alternativa:
+        return alternativa
+    servico = (item.get("servico") or "").strip().lower()
+    mapa = {
+        "ftp": "SFTP ou FTPS",
+        "telnet": "SSH",
+        "http": "HTTPS (TLS)",
+        "http alternativo": "HTTPS (443/8443)",
+        "pop3": "POP3S (995) ou IMAPS (993)",
+        "imap": "IMAPS (993)",
+        "ldap": "LDAPS (636)",
+        "netbios": "SMBv3 restrito + VPN",
+        "smb": "SMB assinado via VPN",
+        "rdp": "Acesso via VPN + MFA",
+        "vnc": "VNC via tunel SSH",
+        "sql server": "Acesso privado via VPN/bastion",
+        "oracle": "Acesso privado + criptografia",
+        "mysql": "Acesso privado via VPN/bastion",
+        "postgresql": "Acesso privado + SSL",
+        "redis": "Redis local com auth e TLS",
+        "elasticsearch": "Acesso privado com auth e TLS",
+        "mongodb": "Acesso privado com auth e TLS",
+        "dns": "DNS restrito + DNSSEC (quando aplicavel)",
+        "dhcp": "DHCP Snooping + segmentacao VLAN",
+        "ntp": "NTP autenticado e restrito",
+        "https": "Manter TLS 1.2/1.3 e certificados validos",
+        "https alternativo": "Manter TLS 1.2/1.3 e certificados validos",
+        "smtps": "MTA-STS + TLS forte",
+        "submission": "Submission 587 com STARTTLS obrigatorio",
+        "imaps": "IMAPS com TLS forte",
+        "pop3s": "POP3S com TLS forte",
+        "ssh": "SSH com chave publica e MFA",
+        "tftp": "SFTP/HTTPS para transferencia segura",
+    }
+    if servico in mapa:
+        return mapa[servico]
+    recomendacao = (item.get("recomendacao") or "").strip()
+    if recomendacao:
+        return recomendacao
+    return "Aplicar segmentacao, firewall e criptografia ponta a ponta"
+
+
+def montar_portas_catalogo_exibicao() -> list[dict]:
+    saida = []
+    for item in PORTAS_CATALOGO:
+        linha = dict(item)
+        linha["alternativa_segura"] = _alternativa_segura_porta(item)
+        saida.append(linha)
+    return saida
+
+
 def normalizar_hostname_entrada(entrada: str) -> str:
     bruto = (entrada or "").strip()
     if not bruto:
@@ -702,7 +755,7 @@ def home():
         selected = next((item for item in list_history() if item.get("id") == replay_id), None)
         if selected:
             modo_replay = (selected.get("modo") or "").strip().lower()
-            if modo_replay in {"cidr", "mask", "wildcard", "autoip", "dominio", "ipv6", "comparador"}:
+            if modo_replay in {"cidr", "mask", "wildcard", "autoip", "dominio", "ipv6", "comparador", "portas", "protocolos"}:
                 active_tab_pre = modo_replay
             if selected.get("modo") == "ipv6":
                 ipv6_p = selected.get("ipv6_entrada") or selected.get("ip_entrada", "")
@@ -744,7 +797,7 @@ def home():
 
         cidr_val = None
         forcar_somente_mascara = False
-        if modo not in {"cidr", "mask", "wildcard", "autoip", "dominio", "ipv6", "comparador"}:
+        if modo not in {"cidr", "mask", "wildcard", "autoip", "dominio", "ipv6", "comparador", "portas", "protocolos"}:
             if cidr_raw:
                 modo = "cidr"
             elif mask_dec_p:
@@ -1098,7 +1151,7 @@ def home():
         invalid_fields=invalid_fields,
         history=pag["history"],
         history_page_items=pag["history_page_items"],
-        portas_catalogo=PORTAS_CATALOGO,
+        portas_catalogo=montar_portas_catalogo_exibicao(),
         protocolos_catalogo=PROTOCOLOS_CATALOGO,
     )
 
@@ -1140,6 +1193,37 @@ def _handle_unexpected_error(exc):
 @app.route("/history", methods=["GET"])
 def history_api():
     return jsonify({"items": list_history()})
+
+
+@app.route("/history/catalog", methods=["POST"])
+def history_catalog():
+    payload = request.get_json(silent=True) or {}
+    modo = (payload.get("modo") or "").strip().lower()
+    if modo not in {"portas", "protocolos"}:
+        return jsonify({"ok": False, "erro": "modo inválido"}), 400
+    entrada = payload.get("entrada") or ""
+    try:
+        registrar_consulta(
+            {
+                "modo": modo,
+                "ip": entrada,
+                "ipv6": "",
+                "cidr": "",
+                "mask_decimal": "",
+                "wildcard_mask": "",
+            },
+            {
+                "rede": "N/A",
+                "broad": "N/A",
+                "mask": "N/A",
+                "cidr": "",
+                "nivel_tema": f"Consulta de catálogo: {modo}",
+            },
+        )
+    except HistoricoPersistenciaError as exc:
+        logger.warning("evento=history_catalog status=warn modo=%s erro=%s", modo, exc)
+        return jsonify({"ok": False, "erro": "persistencia_indisponivel"}), 503
+    return jsonify({"ok": True})
 
 
 @app.route("/export/json", methods=["GET"])

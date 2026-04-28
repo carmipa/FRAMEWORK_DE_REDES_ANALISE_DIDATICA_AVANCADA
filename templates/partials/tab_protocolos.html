@@ -1,16 +1,26 @@
-<div class="comm-catalog" data-comm-catalog="protocolos">
-    <div class="row g-3 align-items-end mb-2">
-        <div class="col-lg-4">
-            <label class="form-label small text-secondary">🔎 Buscar por protocolo, camada ou função</label>
-            <input
-                type="text"
-                class="form-control bg-dark text-light border-secondary comm-search-input"
-                placeholder="Ex: HTTP, DNS, SSH, transporte, aplicação..."
-                data-search-target="protocolos">
-        </div>
+<div class="comm-catalog" data-grid-id="protocolos">
+    <div class="small text-secondary mb-3 border-start border-info border-2 ps-2 py-1 rounded-1" style="background: rgba(88, 166, 255, 0.06);" role="note">
+        DataGrid didático de protocolos para comparar camada, transporte, segurança e função.
+    </div>
+    <div class="comm-summary mb-3" data-summary-target="protocolos"></div>
+    <div class="d-flex flex-wrap gap-2 mb-2">
+        <span class="shield-badge"><span class="icon">🔎</span>Busca por protocolo/camada</span>
+        <span class="shield-badge"><span class="icon">🎚️</span>Filtros por camada, transporte e nível</span>
+        <span class="shield-badge"><span class="icon">↕️</span>Clique no cabeçalho para ordenar</span>
+        <span class="shield-badge"><span class="icon">📋</span>Copie ou abra detalhes por linha</span>
+    </div>
+    <div class="row g-2 align-items-end mb-3">
         <div class="col-lg-3">
-            <label class="form-label small text-secondary">🧱 Camada</label>
-            <select class="form-select bg-dark text-light border-secondary comm-filter-select" data-filter-target="protocolos">
+            <label class="form-label small text-secondary d-flex align-items-center gap-1">🔎 Busca geral
+                <button type="button" class="help-hint-btn" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-placement="top" title="Busca no DataGrid" data-bs-content="Digite protocolo, camada, função, transporte ou nível para filtrar a tabela em tempo real.">ℹ️</button>
+            </label>
+            <input type="text" class="form-control bg-dark text-light border-secondary" data-grid-search="protocolos" placeholder="Protocolo, camada, função..." data-bs-toggle="tooltip" data-bs-placement="top" title="Busca geral: digite protocolo, camada, função, transporte ou nível.">
+        </div>
+        <div class="col-lg-2">
+            <label class="form-label small text-secondary d-flex align-items-center gap-1">🧱 Camada
+                <button type="button" class="help-hint-btn" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-placement="top" title="Filtro por camada" data-bs-content="Mostra protocolos da camada selecionada (Aplicação, Transporte, Rede ou Enlace).">ℹ️</button>
+            </label>
+            <select class="form-select bg-dark text-light border-secondary" data-grid-category="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Filtra os protocolos pela camada de atuação.">
                 <option value="all">Todas</option>
                 <option value="aplicação">Aplicação</option>
                 <option value="transporte">Transporte</option>
@@ -20,81 +30,102 @@
                 <option value="enlace">Enlace</option>
             </select>
         </div>
-        <div class="col-lg-5 tab-actions d-flex gap-2 align-items-center justify-content-end mb-1">
-            <div class="btn-group btn-group-sm me-2" role="group">
-                <button type="button" class="btn btn-outline-info active" onclick="toggleView('protocolos', 'table', this)" title="Visualização em Tabela">📄 Tabela</button>
-                <button type="button" class="btn btn-outline-info" onclick="toggleView('protocolos', 'grid', this)" title="Visualização em Grade">🔲 Grade</button>
-            </div>
-            <button type="button" class="btn btn-sm btn-outline-warning text-nowrap" onclick="document.querySelector('[data-search-target=\'protocolos\']').value=''; document.querySelector('[data-filter-target=\'protocolos\']').value='all'; document.querySelector('[data-search-target=\'protocolos\']').dispatchEvent(new Event('input'));">🧹 Limpar</button>
-            <button type="button" class="btn btn-success fw-bold btn-sm text-nowrap" onclick="document.querySelector('[data-search-target=\'protocolos\']').dispatchEvent(new Event('input'));">🧮 Executar</button>
+        <div class="col-lg-2">
+            <label class="form-label small text-secondary d-flex align-items-center gap-1">🔌 Transporte
+                <button type="button" class="help-hint-btn" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-placement="top" title="Filtro por transporte" data-bs-content="Filtra protocolos que usam TCP, UDP, ICMP ou N/A.">ℹ️</button>
+            </label>
+            <select class="form-select bg-dark text-light border-secondary" data-grid-transport="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Filtra protocolos conforme transporte (TCP, UDP, ICMP ou N/A).">
+                <option value="all">Todos</option>
+                <option value="tcp">TCP</option>
+                <option value="udp">UDP</option>
+                <option value="icmp">ICMP</option>
+                <option value="n/a">N/A</option>
+            </select>
+        </div>
+        <div class="col-lg-2">
+            <label class="form-label small text-secondary d-flex align-items-center gap-1">🛡️ Nível
+                <button type="button" class="help-hint-btn" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-placement="top" title="Nível de atenção" data-bs-content="Filtra pelo nível didático de segurança: Crítico, Atenção, Seguro ou Didático.">ℹ️</button>
+            </label>
+            <select class="form-select bg-dark text-light border-secondary" data-grid-risk="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Filtra pelo nível didático de segurança (Crítico, Atenção, Seguro, Didático).">
+                <option value="all">Todos</option>
+                <option value="crítico">Crítico</option>
+                <option value="atenção">Atenção</option>
+                <option value="seguro">Seguro</option>
+                <option value="didático">Didático</option>
+            </select>
+        </div>
+        <div class="col-lg-3 d-flex flex-wrap gap-2 justify-content-lg-end">
+            <button type="button" class="btn btn-sm btn-danger fw-bold text-white grid-action-btn" data-grid-clear="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Limpa busca, filtros e ordenação da tabela.">🧹 Limpar</button>
+            <button type="button" class="btn btn-sm btn-info fw-bold text-dark grid-action-btn" data-grid-export-json="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Exporta os protocolos filtrados para arquivo JSON.">⬇️ JSON</button>
+            <button type="button" class="btn btn-sm btn-primary fw-bold grid-action-btn" data-grid-export-pdf="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Gera versão para impressão/PDF com os dados filtrados.">📘 PDF</button>
         </div>
     </div>
-    <div class="d-flex justify-content-end mb-2">
-        <div class="small text-secondary comm-counter text-nowrap" data-counter-target="protocolos"></div>
+
+    <div class="table-responsive d-none d-lg-block datagrid-wrap">
+        <table class="table table-dark table-hover table-bordered align-middle mb-2 datagrid-table" data-grid-table="protocolos">
+            <thead class="table-dark-header">
+                <tr>
+                    <th class="sortable" data-sort-key="nome" title="Ordenar por nome do protocolo">Protocolo</th>
+                    <th class="sortable" data-sort-key="camada" title="Ordenar por camada OSI/TCP-IP">Camada</th>
+                    <th class="sortable" data-sort-key="transporte" title="Ordenar por tipo de transporte">Transporte</th>
+                    <th class="sortable" data-sort-key="porta" title="Ordenar por porta mais comum">Porta comum</th>
+                    <th class="sortable" data-sort-key="seguro" title="Ordenar por status de segurança">Seguro</th>
+                    <th class="sortable" data-sort-key="nivel" title="Ordenar por nível de atenção">Nível</th>
+                    <th title="Objetivo principal do protocolo">Função</th>
+                    <th title="Copiar linha ou abrir detalhes">Ações</th>
+                </tr>
+            </thead>
+            <tbody data-grid-body="protocolos">
+                {% for item in protocolos_catalogo %}
+                <tr
+                    data-grid-row="protocolos"
+                    data-search="{{ item.nome }} {{ item.camada }} {{ item.transporte }} {{ item.porta_comum }} {{ item.seguro }} {{ item.badge }} {{ item.funcao }}"
+                    data-nome="{{ item.nome }}"
+                    data-camada="{{ item.camada }}"
+                    data-transporte="{{ item.transporte }}"
+                    data-porta="{{ item.porta_comum }}"
+                    data-seguro="{{ item.seguro }}"
+                    data-nivel="{{ item.badge }}"
+                    data-funcao="{{ item.funcao }}">
+                    <td class="fw-bold text-info">{{ item.nome }}</td>
+                    <td>{{ item.camada }}</td>
+                    <td>{{ item.transporte }}</td>
+                    <td>{{ item.porta_comum }}</td>
+                    <td>{{ item.seguro }}</td>
+                    <td><span class="badge bg-dark border border-{{ item.badge_color }} text-{{ item.badge_color }}">{{ item.badge }}</span></td>
+                    <td class="small text-info">{{ item.funcao }}</td>
+                    <td class="text-nowrap">
+                        <button type="button" class="btn btn-sm btn-info text-dark fw-bold" data-grid-copy="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Copiar dados desta linha.">📋</button>
+                        <button type="button" class="btn btn-sm btn-primary fw-bold" data-grid-details="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Abrir detalhes deste protocolo.">Detalhes</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 
-    <div class="small text-secondary mb-3 border-start border-info border-2 ps-2 py-1 rounded-1" style="background: rgba(88, 166, 255, 0.06);" role="note">
-        Mapeamento dinâmico de protocolos, camadas e suas funções na rede para apoio didático.
-    </div>
-
-    <div class="view-container view-grid d-none" data-view-id="protocolos-grid">
-        <div class="row g-3 comm-grid">
+    <div class="d-lg-none">
+        <div class="row g-3" data-grid-mobile="protocolos">
             {% for item in protocolos_catalogo %}
-            <div class="col-md-6 col-xl-4 comm-item"
-                 data-item-type="protocolos"
-                 data-searchable="{{ item.nome }} {{ item.camada }} {{ item.funcao }} {{ item.transporte }} {{ item.porta_comum }}"
-                 data-category="{{ item.camada|lower }}">
-                <div class="card-tech p-3 h-100 comm-card comm-card-protocolo" style="border-left: 4px solid var(--bs-{{ item.badge_color }}); transition: all 0.2s ease;">
-                    <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
-                        <h6 class="mb-0 text-info">📡 {{ item.nome }}</h6>
-                        <span class="badge bg-dark border border-{{ item.badge_color }} text-{{ item.badge_color }} shadow-sm">{{ item.badge }}</span>
-                    </div>
-                    <div class="fw-bold text-light mb-2">Camada: <span class="text-secondary fw-normal">{{ item.camada }}</span></div>
-                    <div class="small mb-1"><span class="text-warning">Transporte:</span> <span class="text-secondary">{{ item.transporte }}</span></div>
-                    <div class="small mb-1"><span class="text-warning">Porta comum:</span> <span class="text-secondary">{{ item.porta_comum }}</span></div>
-                    <div class="small mb-1"><span class="text-warning">Seguro:</span> <span class="text-secondary">{{ item.seguro }}</span></div>
-                    <div class="small mt-2 pt-2 border-top border-secondary border-opacity-50"><span class="text-warning">Função:</span> <span class="text-info">{{ item.funcao }}</span></div>
+            <div class="col-12 card-tech p-3" data-grid-mobile-row="protocolos">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h6 class="mb-0 text-info">📡 {{ item.nome }}</h6>
+                    <span class="badge bg-dark border border-{{ item.badge_color }} text-{{ item.badge_color }}">{{ item.badge }}</span>
                 </div>
+                <div class="small text-secondary">Camada: {{ item.camada }}</div>
+                <div class="small text-secondary">Transporte: {{ item.transporte }}</div>
+                <div class="small text-secondary">Porta: {{ item.porta_comum }}</div>
+                <div class="small text-info mt-1">{{ item.funcao }}</div>
             </div>
             {% endfor %}
         </div>
     </div>
-
-    <div class="view-container view-table" data-view-id="protocolos-table">
-        <div class="table-responsive">
-            <table class="table table-dark table-hover table-bordered align-middle mb-0" style="border-color: #30363d;">
-                <thead class="table-dark-header">
-                    <tr>
-                        <th style="width: 150px;">📡 Protocolo</th>
-                        <th>🧱 Camada</th>
-                        <th>🔌 Porta Comum</th>
-                        <th>🛡️ Segurança</th>
-                        <th>🧠 Função</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in protocolos_catalogo %}
-                    <tr class="comm-item" 
-                        data-item-type="protocolos"
-                        data-searchable="{{ item.nome }} {{ item.camada }} {{ item.funcao }} {{ item.transporte }} {{ item.porta_comum }}"
-                        data-category="{{ item.camada|lower }}"
-                        style="border-left: 4px solid var(--bs-{{ item.badge_color }});">
-                        <td class="fw-bold text-info">
-                            {{ item.nome }}
-                            <div class="small text-secondary x-small mt-1">{{ item.transporte }}</div>
-                        </td>
-                        <td class="small text-light">{{ item.camada }}</td>
-                        <td class="small text-secondary">{{ item.porta_comum }}</td>
-                        <td>
-                            <span class="badge bg-dark border border-{{ item.badge_color }} text-{{ item.badge_color }}">{{ item.badge }}</span>
-                            <div class="small text-secondary mt-1">{{ item.seguro }}</div>
-                        </td>
-                        <td class="small text-info">{{ item.funcao }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <div class="d-flex flex-column align-items-center gap-2 mt-2">
+        <div class="small text-secondary text-center" data-grid-counter="protocolos"></div>
+        <div class="d-flex gap-2 align-items-center justify-content-center">
+            <button type="button" class="btn btn-sm btn-outline-light" data-grid-prev="protocolos">⬅️</button>
+            <span class="small text-secondary" data-grid-page-label="protocolos"></span>
+            <button type="button" class="btn btn-sm btn-outline-light" data-grid-next="protocolos">➡️</button>
         </div>
     </div>
-    <div class="small text-warning mt-2 d-none" data-empty-target="protocolos">Nenhum resultado encontrado com os filtros atuais.</div>
 </div>

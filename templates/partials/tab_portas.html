@@ -1,96 +1,127 @@
-<div class="comm-catalog" data-comm-catalog="portas">
-    <div class="row g-3 align-items-end mb-2">
-        <div class="col-lg-4">
-            <label class="form-label small text-secondary">🔎 Buscar por porta, serviço ou transporte</label>
-            <input
-                type="text"
-                class="form-control bg-dark text-light border-secondary comm-search-input"
-                placeholder="Ex: 22, 443, RDP, SSH, MySQL..."
-                data-search-target="portas">
-        </div>
+<div class="comm-catalog" data-grid-id="portas">
+    <div class="small text-secondary mb-3 border-start border-info border-2 ps-2 py-1 rounded-1" style="background: rgba(88, 166, 255, 0.06);" role="note">
+        DataGrid técnico de portas para consulta rápida, filtros por risco/categoria e ações operacionais.
+    </div>
+    <div class="comm-summary mb-3" data-summary-target="portas"></div>
+    <div class="d-flex flex-wrap gap-2 mb-2">
+        <span class="shield-badge"><span class="icon">🔎</span>Busca por porta/serviço</span>
+        <span class="shield-badge"><span class="icon">🎚️</span>Filtros por risco, categoria e transporte</span>
+        <span class="shield-badge"><span class="icon">↕️</span>Clique no cabeçalho para ordenar</span>
+        <span class="shield-badge"><span class="icon">📋</span>Copie ou abra detalhes por linha</span>
+    </div>
+    <div class="row g-2 align-items-end mb-3">
         <div class="col-lg-3">
-            <label class="form-label small text-secondary">🏷️ Categoria</label>
-            <select class="form-select bg-dark text-light border-secondary comm-filter-select" data-filter-target="portas">
-                <option value="all">Todas</option>
-                <option value="well-known (0-1023)">Well-known (0-1023)</option>
-                <option value="registered (1024-49151)">Registered (1024-49151)</option>
-                <option value="dynamic/private (49152-65535)">Dynamic/Private (49152-65535)</option>
+            <label class="form-label small text-secondary d-flex align-items-center gap-1">🔎 Busca geral
+                <button type="button" class="help-hint-btn" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-placement="top" title="Busca no DataGrid" data-bs-content="Digite porta, serviço, transporte, risco ou categoria para filtrar os registros em tempo real.">ℹ️</button>
+            </label>
+            <input type="text" class="form-control bg-dark text-light border-secondary" data-grid-search="portas" placeholder="Porta, serviço, transporte..." data-bs-toggle="tooltip" data-bs-placement="top" title="Busca geral: digite porta, serviço, transporte, categoria ou risco.">
+        </div>
+        <div class="col-lg-2">
+            <label class="form-label small text-secondary d-flex align-items-center gap-1">⚠️ Risco
+                <button type="button" class="help-hint-btn" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-placement="top" title="Filtro de risco" data-bs-content="Mostra apenas portas com nível Crítico, Atenção, Seguro ou Didático.">ℹ️</button>
+            </label>
+            <select class="form-select bg-dark text-light border-secondary" data-grid-risk="portas" data-bs-toggle="tooltip" data-bs-placement="top" title="Filtra pelas portas conforme nível de risco didático.">
+                <option value="all">Todos</option>
+                <option value="crítico">Crítico</option>
+                <option value="atenção">Atenção</option>
+                <option value="seguro">Seguro</option>
+                <option value="didático">Didático</option>
             </select>
         </div>
-        <div class="col-lg-5 tab-actions d-flex gap-2 align-items-center justify-content-end mb-1">
-            <div class="btn-group btn-group-sm me-2" role="group">
-                <button type="button" class="btn btn-outline-info active" onclick="toggleView('portas', 'table', this)" title="Visualização em Tabela">📄 Tabela</button>
-                <button type="button" class="btn btn-outline-info" onclick="toggleView('portas', 'grid', this)" title="Visualização em Grade">🔲 Grade</button>
-            </div>
-            <button type="button" class="btn btn-sm btn-outline-warning text-nowrap" onclick="document.querySelector('[data-search-target=\'portas\']').value=''; document.querySelector('[data-filter-target=\'portas\']').value='all'; document.querySelector('[data-search-target=\'portas\']').dispatchEvent(new Event('input'));">🧹 Limpar</button>
-            <button type="button" class="btn btn-success fw-bold btn-sm text-nowrap" onclick="document.querySelector('[data-search-target=\'portas\']').dispatchEvent(new Event('input'));">🧮 Executar</button>
+        <div class="col-lg-2">
+            <label class="form-label small text-secondary d-flex align-items-center gap-1">🏷️ Categoria
+                <button type="button" class="help-hint-btn" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-placement="top" title="Faixa de portas" data-bs-content="Filtra por Well-known, Registered ou Dynamic/Private conforme o intervalo da porta.">ℹ️</button>
+            </label>
+            <select class="form-select bg-dark text-light border-secondary" data-grid-category="portas" data-bs-toggle="tooltip" data-bs-placement="top" title="Filtra pela faixa de portas: Well-known, Registered ou Dynamic/Private.">
+                <option value="all">Todas</option>
+                <option value="well-known (0-1023)">Well-known</option>
+                <option value="registered (1024-49151)">Registered</option>
+                <option value="dynamic/private (49152-65535)">Dynamic/Private</option>
+            </select>
+        </div>
+        <div class="col-lg-2">
+            <label class="form-label small text-secondary d-flex align-items-center gap-1">🔌 Transporte
+                <button type="button" class="help-hint-btn" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-placement="top" title="Filtro de transporte" data-bs-content="Filtra registros por TCP, UDP ou combinações TCP/UDP.">ℹ️</button>
+            </label>
+            <select class="form-select bg-dark text-light border-secondary" data-grid-transport="portas" data-bs-toggle="tooltip" data-bs-placement="top" title="Filtra pelo protocolo de transporte (TCP, UDP, TCP/UDP).">
+                <option value="all">Todos</option>
+                <option value="tcp">TCP</option>
+                <option value="udp">UDP</option>
+                <option value="tcp/udp">TCP/UDP</option>
+                <option value="udp/tcp">UDP/TCP</option>
+            </select>
+        </div>
+        <div class="col-lg-3 d-flex flex-wrap gap-2 justify-content-lg-end">
+            <button type="button" class="btn btn-sm btn-danger fw-bold text-white grid-action-btn" data-grid-clear="portas" data-bs-toggle="tooltip" data-bs-placement="top" title="Limpa busca, filtros e ordenação da tabela.">🧹 Limpar</button>
+            <button type="button" class="btn btn-sm btn-info fw-bold text-dark grid-action-btn" data-grid-export-json="portas" data-bs-toggle="tooltip" data-bs-placement="top" title="Exporta os registros filtrados para arquivo JSON.">⬇️ JSON</button>
+            <button type="button" class="btn btn-sm btn-primary fw-bold grid-action-btn" data-grid-export-pdf="portas" data-bs-toggle="tooltip" data-bs-placement="top" title="Gera versão para impressão/PDF com os dados filtrados.">📘 PDF</button>
         </div>
     </div>
-    <div class="d-flex justify-content-end mb-2">
-        <div class="small text-secondary comm-counter text-nowrap" data-counter-target="portas"></div>
+
+    <div class="table-responsive d-none d-lg-block datagrid-wrap">
+        <table class="table table-dark table-hover table-bordered align-middle mb-2 datagrid-table" data-grid-table="portas">
+            <thead class="table-dark-header">
+                <tr>
+                    <th class="sortable" data-sort-key="porta" title="Ordenar por número da porta">Porta</th>
+                    <th class="sortable" data-sort-key="servico" title="Ordenar por serviço associado">Serviço</th>
+                    <th class="sortable" data-sort-key="transporte" title="Ordenar por protocolo de transporte">Transporte</th>
+                    <th class="sortable" data-sort-key="categoria" title="Ordenar por faixa de categoria">Categoria</th>
+                    <th class="sortable" data-sort-key="risco" title="Ordenar por nível de risco">Risco</th>
+                    <th title="Ação recomendada para reduzir exposição">Recomendação</th>
+                    <th title="Alternativa mais segura para operação">Alternativa segura</th>
+                    <th title="Copiar linha ou abrir detalhes">Ações</th>
+                </tr>
+            </thead>
+            <tbody data-grid-body="portas">
+                {% for item in portas_catalogo %}
+                <tr
+                    data-grid-row="portas"
+                    data-search="{{ item.porta }} {{ item.servico }} {{ item.protocolo_transporte }} {{ item.categoria }} {{ item.risco }} {{ item.recomendacao }} {{ item.alternativa_segura or '-' }}"
+                    data-porta="{{ item.porta }}"
+                    data-servico="{{ item.servico }}"
+                    data-transporte="{{ item.protocolo_transporte }}"
+                    data-categoria="{{ item.categoria }}"
+                    data-risco="{{ item.badge }}"
+                    data-recomendacao="{{ item.recomendacao }}"
+                    data-alternativa="{{ item.alternativa_segura or '-' }}">
+                    <td class="fw-bold text-info">{{ item.porta }}</td>
+                    <td>{{ item.servico }}</td>
+                    <td>{{ item.protocolo_transporte }}</td>
+                    <td>{{ item.categoria }}</td>
+                    <td><span class="badge bg-dark border border-{{ item.badge_color }} text-{{ item.badge_color }}">{{ item.badge }}</span></td>
+                    <td class="small text-info">{{ item.recomendacao }}</td>
+                    <td class="small text-info">{{ item.alternativa_segura or "-" }}</td>
+                    <td class="text-nowrap">
+                        <button type="button" class="btn btn-sm btn-info text-dark fw-bold" data-grid-copy="portas" data-bs-toggle="tooltip" data-bs-placement="top" title="Copiar dados desta linha.">📋</button>
+                        <button type="button" class="btn btn-sm btn-primary fw-bold" data-grid-details="portas" data-bs-toggle="tooltip" data-bs-placement="top" title="Abrir detalhes desta porta.">Detalhes</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 
-    <div class="small text-secondary mb-3 border-start border-info border-2 ps-2 py-1 rounded-1" style="background: rgba(88, 166, 255, 0.06);" role="note">
-        Catálogo dinâmico de portas para estudo de serviços e troubleshooting de rede.
-    </div>
-
-    <div class="view-container view-grid d-none" data-view-id="portas-grid">
-        <div class="row g-3 comm-grid">
+    <div class="d-lg-none">
+        <div class="row g-3" data-grid-mobile="portas">
             {% for item in portas_catalogo %}
-            <div class="col-md-6 col-xl-4 comm-item"
-                 data-item-type="portas"
-                 data-searchable="{{ item.porta }} {{ item.servico }} {{ item.protocolo_transporte }} {{ item.categoria }} {{ item.risco }} {{ item.recomendacao }}"
-                 data-category="{{ item.categoria|lower }}">
-                <div class="card-tech p-3 h-100 comm-card comm-card-porta" style="border-left: 4px solid var(--bs-{{ item.badge_color }}); transition: all 0.2s ease;">
-                    <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
-                        <h6 class="mb-0 text-info">🔌 Porta {{ item.porta }}</h6>
-                        <span class="badge bg-dark border border-{{ item.badge_color }} text-{{ item.badge_color }} shadow-sm">{{ item.badge }}</span>
-                    </div>
-                    <div class="fw-bold text-light mb-2">{{ item.servico }} <span class="badge bg-secondary text-light ms-1">{{ item.protocolo_transporte }}</span></div>
-                    <div class="small mb-1"><span class="text-warning">Categoria:</span> <span class="text-secondary">{{ item.categoria }}</span></div>
-                    <div class="small mb-1"><span class="text-warning">Risco:</span> <span class="text-secondary">{{ item.risco }}</span></div>
-                    <div class="small mt-2 pt-2 border-top border-secondary border-opacity-50"><span class="text-warning">Recomendação:</span> <span class="text-info">{{ item.recomendacao }}</span></div>
+            <div class="col-12 card-tech p-3" data-grid-mobile-row="portas">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h6 class="mb-0 text-info">🔌 {{ item.porta }} - {{ item.servico }}</h6>
+                    <span class="badge bg-dark border border-{{ item.badge_color }} text-{{ item.badge_color }}">{{ item.badge }}</span>
                 </div>
+                <div class="small text-secondary">Transporte: {{ item.protocolo_transporte }}</div>
+                <div class="small text-secondary">Categoria: {{ item.categoria }}</div>
+                <div class="small text-info mt-1">{{ item.recomendacao }}</div>
             </div>
             {% endfor %}
         </div>
     </div>
-
-    <div class="view-container view-table" data-view-id="portas-table">
-        <div class="table-responsive">
-            <table class="table table-dark table-hover table-bordered align-middle mb-0" style="border-color: #30363d;">
-                <thead class="table-dark-header">
-                    <tr>
-                        <th style="width: 120px;">🔌 Porta</th>
-                        <th>🛠️ Serviço</th>
-                        <th>🏷️ Categoria</th>
-                        <th>⚠️ Risco</th>
-                        <th>🛡️ Recomendação</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in portas_catalogo %}
-                    <tr class="comm-item" 
-                        data-item-type="portas"
-                        data-searchable="{{ item.porta }} {{ item.servico }} {{ item.protocolo_transporte }} {{ item.categoria }} {{ item.risco }} {{ item.recomendacao }}"
-                        data-category="{{ item.categoria|lower }}"
-                        style="border-left: 4px solid var(--bs-{{ item.badge_color }});">
-                        <td class="fw-bold text-info">{{ item.porta }}</td>
-                        <td>
-                            <div class="fw-bold text-light">{{ item.servico }}</div>
-                            <span class="badge bg-secondary text-light x-small">{{ item.protocolo_transporte }}</span>
-                        </td>
-                        <td class="small text-secondary">{{ item.categoria }}</td>
-                        <td>
-                            <span class="badge bg-dark border border-{{ item.badge_color }} text-{{ item.badge_color }}">{{ item.badge }}</span>
-                            <div class="small text-secondary mt-1">{{ item.risco }}</div>
-                        </td>
-                        <td class="small text-info">{{ item.recomendacao }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <div class="d-flex flex-column align-items-center gap-2 mt-2">
+        <div class="small text-secondary text-center" data-grid-counter="portas"></div>
+        <div class="d-flex gap-2 align-items-center justify-content-center">
+            <button type="button" class="btn btn-sm btn-outline-light" data-grid-prev="portas">⬅️</button>
+            <span class="small text-secondary" data-grid-page-label="portas"></span>
+            <button type="button" class="btn btn-sm btn-outline-light" data-grid-next="portas">➡️</button>
         </div>
     </div>
-    <div class="small text-warning mt-2 d-none" data-empty-target="portas">Nenhum resultado encontrado com os filtros atuais.</div>
 </div>
