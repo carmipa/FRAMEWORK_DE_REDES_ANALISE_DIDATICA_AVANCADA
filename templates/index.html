@@ -42,9 +42,7 @@
             <button type="button" class="btn btn-outline-info tab-trigger" data-tab="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Catálogo dinâmico de protocolos de comunicação.">📡 Protocolos</button>
         </div>
         <p class="small text-secondary mb-3 border-start border-info border-2 ps-2 py-1 rounded-1" style="background: rgba(88, 166, 255, 0.06);" role="note">
-            <strong class="text-info">Funções em separado:</strong> cada aba é um fluxo independente
-            (CIDR com ou sem barra, <strong>aba Máscara só com máscara decimal</strong>, wildcard, Auto CIDR só pelo IP, domínio→IPv4, IPv6, comparador).
-            O enunciado define qual usar; a análise abaixo corresponde só à aba em que você clicou <strong>Executar</strong>.
+            <strong class="text-info">Funções em separado:</strong> cada aba possui fluxo independente. Nas abas de cálculo, use <strong>Executar</strong>. Nas abas de consulta, como Portas e Protocolos, a busca e os filtros atualizam os resultados automaticamente.
         </p>
 
         <div class="tab-panel" data-tab-panel="cidr">{% include "partials/tab_cidr.html" %}</div>

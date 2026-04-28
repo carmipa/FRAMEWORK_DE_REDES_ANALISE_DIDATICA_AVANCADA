@@ -1,51 +1,52 @@
 <div class="comm-catalog" data-comm-catalog="protocolos">
     <div class="row g-3 align-items-end mb-2">
-        <div class="col-lg-6">
-            <label class="form-label small text-secondary">🔎 Buscar por protocolo, camada ou descricao</label>
+        <div class="col-lg-4">
+            <label class="form-label small text-secondary">🔎 Buscar por protocolo, camada ou função</label>
             <input
                 type="text"
                 class="form-control bg-dark text-light border-secondary comm-search-input"
-                placeholder="Ex.: Transporte, HTTPS, confiavel"
+                placeholder="Ex: HTTP, DNS, SSH, transporte, aplicação..."
                 data-search-target="protocolos">
         </div>
         <div class="col-lg-3">
             <label class="form-label small text-secondary">🧱 Camada</label>
             <select class="form-select bg-dark text-light border-secondary comm-filter-select" data-filter-target="protocolos">
                 <option value="all">Todas</option>
-                <option value="aplicacao">Aplicacao</option>
+                <option value="aplicação">Aplicação</option>
                 <option value="transporte">Transporte</option>
+                <option value="transporte/sessão">Transporte/Sessão</option>
                 <option value="rede">Rede</option>
+                <option value="rede/transporte">Rede/Transporte</option>
+                <option value="enlace">Enlace</option>
             </select>
         </div>
-        <div class="col-lg-3">
-            <div class="small text-secondary comm-counter mt-4" data-counter-target="protocolos"></div>
+        <div class="col-lg-5 tab-actions d-flex gap-2 align-items-center justify-content-end mb-1">
+            <button type="button" class="btn btn-sm btn-outline-warning text-nowrap" onclick="document.querySelector('[data-search-target=\'protocolos\']').value=''; document.querySelector('[data-filter-target=\'protocolos\']').value='all'; document.querySelector('[data-search-target=\'protocolos\']').dispatchEvent(new Event('input'));">🧹 Limpar</button>
+            <button type="button" class="btn btn-success fw-bold btn-sm text-nowrap" onclick="document.querySelector('[data-search-target=\'protocolos\']').dispatchEvent(new Event('input'));">🧮 Executar</button>
+            <div class="small text-secondary comm-counter ms-2 text-nowrap" data-counter-target="protocolos" style="min-width: 60px;"></div>
         </div>
     </div>
 
     <div class="small text-secondary mb-3 border-start border-info border-2 ps-2 py-1 rounded-1" style="background: rgba(88, 166, 255, 0.06);" role="note">
-        Mapeamento dinâmico de protocolos e suas portas mais comuns para apoio didático.
+        Mapeamento dinâmico de protocolos, camadas e suas funções na rede para apoio didático.
     </div>
 
     <div class="row g-3 comm-grid">
         {% for item in protocolos_catalogo %}
         <div class="col-md-6 col-xl-4 comm-item"
              data-item-type="protocolos"
-             data-searchable="{{ item.nome }} {{ item.camada }} {{ item.descricao }} {{ item.portas_relacionadas|join(' ') }}"
+             data-searchable="{{ item.nome }} {{ item.camada }} {{ item.funcao }} {{ item.transporte }} {{ item.porta_comum }}"
              data-category="{{ item.camada|lower }}">
-            <div class="card-tech p-3 h-100 comm-card comm-card-protocolo">
+            <div class="card-tech p-3 h-100 comm-card comm-card-protocolo" style="border-left: 4px solid var(--bs-{{ item.badge_color }}); transition: all 0.2s ease;">
                 <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
                     <h6 class="mb-0 text-info">📡 {{ item.nome }}</h6>
-                    <span class="badge bg-dark border border-warning text-warning">{{ item.camada }}</span>
+                    <span class="badge bg-dark border border-{{ item.badge_color }} text-{{ item.badge_color }} shadow-sm">{{ item.badge }}</span>
                 </div>
-                <div class="small text-secondary mb-2">{{ item.descricao }}</div>
-                <div class="small text-light">
-                    <span class="text-warning">Portas comuns:</span>
-                    {% if item.portas_relacionadas %}
-                        {{ item.portas_relacionadas|join(', ') }}
-                    {% else %}
-                        N/A (nao usa portas)
-                    {% endif %}
-                </div>
+                <div class="fw-bold text-light mb-2">Camada: <span class="text-secondary fw-normal">{{ item.camada }}</span></div>
+                <div class="small mb-1"><span class="text-warning">Transporte:</span> <span class="text-secondary">{{ item.transporte }}</span></div>
+                <div class="small mb-1"><span class="text-warning">Porta comum:</span> <span class="text-secondary">{{ item.porta_comum }}</span></div>
+                <div class="small mb-1"><span class="text-warning">Seguro:</span> <span class="text-secondary">{{ item.seguro }}</span></div>
+                <div class="small mt-2 pt-2 border-top border-secondary border-opacity-50"><span class="text-warning">Função:</span> <span class="text-info">{{ item.funcao }}</span></div>
             </div>
         </div>
         {% endfor %}
