@@ -150,6 +150,25 @@ body { background-color: #0d1117; color: #c9d1d9; font-family: 'Consolas', monos
             color: #8b949e;
             margin-bottom: 0.6rem;
         }
+        .comm-card {
+            border-left: 3px solid #1f6feb;
+            transition: transform 0.15s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .comm-card:hover {
+            transform: translateY(-2px);
+            border-color: #58a6ff;
+            box-shadow: 0 8px 18px rgba(31, 111, 235, 0.18);
+        }
+        .comm-card-protocolo {
+            border-left-color: #d29922;
+        }
+        .comm-card-protocolo:hover {
+            border-left-color: #f2cc60;
+            box-shadow: 0 8px 18px rgba(210, 153, 34, 0.18);
+        }
+        .comm-counter {
+            text-align: right;
+        }
 
         /* Layout Flexbox para eliminar barra de rolagem horizontal */
         .bit-container { 
@@ -453,6 +472,57 @@ body { background-color: #0d1117; color: #c9d1d9; font-family: 'Consolas', monos
         .cv-reservado, .cv-loopback, .cv-outros { border-color: #484f58; }
         .cv-reservado .classe-destaque-valor, .cv-loopback .classe-destaque-valor, .cv-outros .classe-destaque-valor { color: #f85149; }
 
+        /* Cartão único: letra A/B/C grande + prefixo /cidr menor */
+        .classe-card-unificada {
+            border-width: 3px;
+            border-style: solid;
+            border-radius: 10px;
+            background: linear-gradient(165deg, #1c2128 0%, #161b22 55%, #0d1117 100%);
+        }
+        .classe-unif-hero {
+            row-gap: 0.35rem !important;
+        }
+        .classe-unif-classe {
+            font-size: clamp(3.35rem, 11vw, 5.15rem);
+            font-weight: 800;
+            line-height: 0.95;
+        }
+        .classe-unif-barra {
+            font-size: clamp(1.25rem, 3.85vw, 2rem);
+            font-weight: 700;
+            line-height: 1.1;
+        }
+        .classe-unif-barra-so {
+            font-size: clamp(1.65rem, 5.1vw, 2.65rem);
+        }
+        .classe-card-unificada.cv-a .classe-unif-classe { color: #3fb950; text-shadow: 0 0 28px rgba(63, 185, 80, 0.35); }
+        .classe-card-unificada.cv-b .classe-unif-classe { color: #79c0ff; text-shadow: 0 0 28px rgba(121, 192, 255, 0.25); }
+        .classe-card-unificada.cv-c .classe-unif-classe { color: #e3b341; text-shadow: 0 0 28px rgba(227, 179, 65, 0.28); }
+        .classe-card-unificada.cv-a .classe-unif-barra,
+        .classe-card-unificada.cv-a .classe-unif-barra-so { color: #58a6ff; }
+        .classe-card-unificada.cv-b .classe-unif-barra,
+        .classe-card-unificada.cv-b .classe-unif-barra-so { color: #a5d6ff; }
+        .classe-card-unificada.cv-c .classe-unif-barra,
+        .classe-card-unificada.cv-c .classe-unif-barra-so { color: #ffa657; }
+        .classe-card-unificada.cv-outros .classe-unif-barra,
+        .classe-card-unificada.cv-outros .classe-unif-barra-so {
+            color: #ff7b72;
+            text-shadow: 0 0 18px rgba(248, 81, 73, 0.28);
+        }
+
+        /* Referência fixa A / B / C (três caixas) */
+        .classe-abc-pill {
+            background: linear-gradient(165deg, #1c2128 0%, #161b22 100%);
+            transition: box-shadow 0.2s ease, border-color 0.2s ease;
+        }
+        .classe-abc-pill-ativo { box-shadow: 0 0 22px rgba(99, 179, 88, 0.2); }
+        .classe-abc-pill-ativo.cv-a { border-color: #238636 !important; }
+        .classe-abc-pill-ativo.cv-a .classe-abc-letra { color: #3fb950; }
+        .classe-abc-pill-ativo.cv-b { border-color: #388bfd !important; }
+        .classe-abc-pill-ativo.cv-b .classe-abc-letra { color: #79c0ff; }
+        .classe-abc-pill-ativo.cv-c { border-color: #d29922 !important; }
+        .classe-abc-pill-ativo.cv-c .classe-abc-letra { color: #e3b341; }
+
         /* Tema dinâmico aplicado ao bloco de resultados */
         .dynamic-theme .card-tech { border-color: var(--dyn-table-border); }
         .dynamic-theme .border-secondary { border-color: var(--dyn-table-border) !important; }
@@ -662,6 +732,7 @@ body { background-color: #0d1117; color: #c9d1d9; font-family: 'Consolas', monos
             .wildcard-banner { font-size: 0.9rem; padding: 8px 10px; }
             .action-buttons { grid-template-columns: 1fr; }
             .timeline-bloco { grid-template-columns: 1fr; }
+            .comm-counter { text-align: left; margin-top: 0.35rem !important; }
             .termos-table th, .termos-table td,
             .regua-table th, .regua-table td,
             .ref-table th, .ref-table td,

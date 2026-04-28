@@ -1,23 +1,210 @@
 from backend.common import EntradaInvalidaError
 
 
+def banner_contexto_analise_com_ip(ip_txt, cidr, mask_s, wildcard_s, rede_s, broad_s, total, uties, pulo):
+    """Painel inicial didático: deixa explícito para qual /cidr e qual sub-rede vale o restante da página."""
+    return {
+        "titulo": "Contexto desta análise",
+        "subtitulo": (
+            "Todos os quadros abaixo (bits, régua, tabela dinâmica, ACL Cisco etc.) "
+            "referem-se apenas a este cenário."
+        ),
+        "itens": [
+            {"rotulo": "Prefixo e máscara utilizados", "valor": f"/{cidr} · {mask_s} · wildcard {wildcard_s}"},
+            {
+                "rotulo": "Cada máscara → um / específico",
+                "valor": (
+                    f"O /{cidr} vem diretamente desta máscara ({mask_s}): é o número de bits 1 consecutivos a "
+                    "contar da esquerda. Se a aula usar outra máscara, o / muda e o tamanho de bloco muda — "
+                    "não existe o mesmo / com duas máscaras pontuadas diferentes."
+                ),
+            },
+            {
+                "rotulo": "Sub-rede que contém este IP",
+                "valor": (
+                    f"Rede {rede_s}, broadcast {broad_s}. "
+                    f"O IP informado ({ip_txt}) está dentro deste bloco /{cidr}."
+                ),
+            },
+            {
+                "rotulo": "Para que serve este / (o que ele “corta” na prática)",
+                "valor": (
+                    f"Cada rede /{cidr} tem até {total} endereços IPv4 no bloco "
+                    f"({uties} em geral atribuíveis a hosts). "
+                    f"O “pulo” entre sub-redes vizinhas, no desenho que você estiver vendo, costuma ser {pulo} "
+                    f"no octeto em que a rede muda — isso explica de quanto em quanto a rede “destrava”."
+                ),
+            },
+            {
+                "rotulo": "Na disciplina aparecem vários / — aqui só este cenário",
+                "valor": (
+                    "Na mesma disciplina há exercícios com granulometrias diferentes: enlaces podem aparecer como "
+                    "/30 ou /31; redes maiores como /18 ou /20; LANs típicas como /24; etc. Isso depende sempre "
+                    f"do IP e da máscara da questão (ou só da máscara). Esta análise fixa apenas o seu caso atual: "
+                    f"/{cidr} para este conjunto informado."
+                ),
+            },
+        ],
+    }
+
+
+def banner_contexto_analise_so_mascara(cidr, mask_s, wildcard_s, total, uties, pulo):
+    """Contexto quando o aluno colocou só a máscara: ainda não há uma rede fixa."""
+    return {
+        "titulo": "Contexto desta análise (só máscara, sem IP)",
+        "subtitulo": (
+            "Você definiu o tamanho de bloco (/ e máscara). Os números abaixo valem para qualquer rede com "
+            "este prefixo; ainda não há um endereço de rede/broadcast concreto."
+        ),
+        "itens": [
+            {"rotulo": "Prefixo e máscara", "valor": f"/{cidr} · {mask_s} · wildcard {wildcard_s}"},
+            {
+                "rotulo": "Cada máscara → um / específico",
+                "valor": (
+                    f"Para {mask_s} o CIDR só pode ser /{cidr} (conta de bits 1 da máscara = {cidr}). "
+                    "Não se escolhe o / separado da máscara: ele depende dela. Outro desenho de máscara, outro / e outra tabela de intervalos."
+                ),
+            },
+            {
+                "rotulo": "Sub-rede concreta (rede + broadcast)",
+                "valor": "Ainda não: informe um endereço IP (modo Máscara ou CIDR) para o framework fechar a sub-rede de exemplo.",
+            },
+            {
+                "rotulo": "Para que serve este /",
+                "valor": (
+                    f"Indica o tamanho de cada pedaço: {total} endereços por rede (típicos {uties} hosts úteis). "
+                    f"O salto entre sub-redes consecutivas, nessa granulometria, costuma ser múltiplo de {pulo} no octeto de variação."
+                ),
+            },
+            {
+                "rotulo": "Vários / na aula — um / por máscara de cada vez",
+                "valor": (
+                    "O material percorre muitos prefixos: /30 em ponto a ponto, /18 ou /19 em blocos maiores, /28 em "
+                    "sub-redes pequenas, etc. Cada máscara gera o seu /; esta tela mostra só o "
+                    f"que resulta da máscara que acabou de usar: /{cidr}. "
+                    "Troque a máscara (ou o IP com outra máscara) e o / e toda a tabela acompanham o novo exercício."
+                ),
+            },
+        ],
+    }
+
+
+def nota_cidr_cisco(cidr):
+    """
+    Alinhamento didático: no CCNA a ênfase em *endereçamento unicast* é classes A, B e C;
+    sub-redes reais usam CIDR/VLSM (ex.: /18) e não precisam ser /8, /16 ou /24.
+    """
+    if cidr in (8, 16, 24):
+        return (
+            "Máscara padrão classful: /8 (A), /16 (B) ou /24 (C) — o que o material Cisco costuma associar "
+            "a cada classe de rede base."
+        )
+    return (
+        f"Prefixo /{cidr} (CIDR/VLSM): no material Cisco, o estudo de *rede* e *sub-rede* foca nas classes A, B e C; "
+        "máscaras como 255.255.192.0 segmentam blocos com qualquer prefixo válido, sem ser a 'classe' de 8, 16 ou 24 sozinha."
+    )
+
+
+def referencia_fixa_classes_abc(o1):
+    """
+    Referência visual fixa: sempre A, B e C com destaque na que corresponde ao 1º octeto (se houver).
+    """
+    sel_a = 1 <= o1 <= 126
+    sel_b = 128 <= o1 <= 191
+    sel_c = 192 <= o1 <= 223
+    return [
+        {
+            "letra": "A",
+            "faixa_octeto": "1 – 126",
+            "mascara_padrao": "/8 · 255.0.0.0",
+            "ativo": sel_a,
+        },
+        {
+            "letra": "B",
+            "faixa_octeto": "128 – 191",
+            "mascara_padrao": "/16 · 255.255.0.0",
+            "ativo": sel_b,
+        },
+        {
+            "letra": "C",
+            "faixa_octeto": "192 – 223",
+            "mascara_padrao": "/24 · 255.255.255.0",
+            "ativo": sel_c,
+        },
+    ]
+
+
+def referencia_cartao_unico_abc(letra):
+    """
+    Um único cartão (A, B ou C) para aula: o aluno foca no / (barra) e na faixa alvo, sem comparar
+    as três de uma vez. `letra` deve ser 'A', 'B' ou 'C'; outro valor retorna lista vazia.
+    """
+    if letra == "E":
+        return [{
+            "letra": "Classe E teórica",
+            "faixa_octeto": "240 – 255",
+            "mascara_padrao": "/4 · 240.0.0.0",
+            "ativo": True,
+        }]
+    if letra not in {"A", "B", "C"}:
+        return []
+    ref = referencia_fixa_classes_abc(1 if letra == "A" else (128 if letra == "B" else 192))
+    for c in ref:
+        if c["letra"] == letra:
+            return [{**c, "ativo": True}]
+    return []
+
+
+def classe_referencia_por_prefixo(cidr):
+    """
+    Em exercícios só de máscara (VLSM), um único cartão A/B/C alinhado ao “/ (barra)” que está no quadro:
+    /1–/8 → A; /9–/23 → B (inclui /16 padrão B e /18 com 255.255.192.0); /24–/32 → C (4.º octeto).
+    """
+    if not isinstance(cidr, int) or not (0 <= cidr <= 32):
+        return None
+    if cidr == 4:
+        return "E"
+    if cidr == 0:
+        return "A"
+    if 1 <= cidr <= 8:
+        return "A"
+    if 9 <= cidr <= 23:
+        return "B"
+    return "C"  # 24-32
+
+
 def classe_ipv4_didatica(o1):
-    """Classificação didática pelo 1º octeto (IPv4 classful); CIDR tornou isso só referência histórica."""
-    if o1 == 0:
-        return "Reservado", "(0.0.0.0/8 — não roteável na Internet)"
-    if o1 == 127:
-        return "Loopback", "(127.0.0.0/8)"
+    """
+    Foco didático: o destaque principal é sempre A, B ou C (unicast). Fora disso, a letra exibida
+    no painel central fica neutra e o detalhe (D, E, 0, 127) vai para `classe_observacao`.
+    Retorno: (classe, classe_faixa, classe_observacao) — observacao pode ser None.
+    """
     if 1 <= o1 <= 126:
-        return "A", "faixa clássica 1–126 no 1º octeto"
+        return "A", "1º octeto 1–126 — máscara padrão /8 (255.0.0.0)", None
     if 128 <= o1 <= 191:
-        return "B", "faixa clássica 128–191 no 1º octeto"
+        return "B", "1º octeto 128–191 — máscara padrão /16 (255.255.0.0)", None
     if 192 <= o1 <= 223:
-        return "C", "faixa clássica 192–223 no 1º octeto"
+        return "C", "1º octeto 192–223 — máscara padrão /24 (255.255.255.0)", None
+
+    if o1 == 0:
+        return "—", "Fora das faixas A, B e C (unicast do 1º octeto).", (
+            "Observação: faixa 0.0.0.0/8 é reservada (não usada como host de produção na Internet)."
+        )
+    if o1 == 127:
+        return "—", "Fora das faixas A, B e C (unicast do 1º octeto).", (
+            "Observação: 127.0.0.0/8 é loopback (localhost); não é tratada como classe A/B/C aplicável."
+        )
     if 224 <= o1 <= 239:
-        return "D", "multicast (224–239)"
+        return "—", "Fora das faixas A, B e C (unicast do 1º octeto).", (
+            "Observação (modelo classful completo): 1º octeto 224–239 = faixa D, "
+            "endereçamento multicast (não é host unicast)."
+        )
     if 240 <= o1 <= 255:
-        return "E", "experimental / reservado (240–255)"
-    return "—", ""
+        return "—", "Fora das faixas A, B e C (unicast do 1º octeto).", (
+            "Observação (modelo classful completo): 1º octeto 240–255 = faixa E, "
+            "reservada / experimental (não atribuível a host comum)."
+        )
+    return "—", "Indefinido para o 1º octeto.", None
 
 
 def classe_variant_css(classe):
@@ -26,17 +213,17 @@ def classe_variant_css(classe):
         "A": "a",
         "B": "b",
         "C": "c",
-        "D": "d",
-        "E": "e",
-        "Reservado": "reservado",
-        "Loopback": "loopback",
         "—": "outros",
     }.get(classe, "outros")
 
 
 def privacidade_rfc1918(parts):
     """Identifica tipo de IP para cenários comuns de prova."""
-    o1, o2 = parts[0], parts[1]
+    o1, o2, o3, o4 = parts[0], parts[1], parts[2], parts[3]
+    if o1 == 0:
+        return "Especial", "Faixa 0.0.0.0/8 (Rede atual / especial)"
+    if o1 == 255 and o2 == 255 and o3 == 255 and o4 == 255:
+        return "Broadcast Limitado", "Endereço 255.255.255.255"
     if o1 == 127:
         return "Loopback", "Faixa 127.0.0.0/8 (localhost, teste local)"
     if o1 == 169 and o2 == 254:
@@ -87,18 +274,18 @@ def inferir_cidr_por_ip(ip_s):
     parts = parse_ipv4_parts(ip_s, "IP")
     o1 = parts[0]
     if o1 == 0:
-        return 8, "Inferido por classe: reservado 0.x.x.x => /8"
+        return 8, "Inferido (classful): 0.x.x.x => /8"
     if 1 <= o1 <= 126:
-        return 8, "Inferido por classe A => /8"
+        return 8, "Inferido (classful): classe A => /8"
     if o1 == 127:
-        return 8, "Inferido por loopback 127.x.x.x => /8"
+        return 8, "Inferido (classful): loopback 127.x.x.x => /8"
     if 128 <= o1 <= 191:
-        return 16, "Inferido por classe B => /16"
+        return 16, "Inferido (classful): classe B => /16"
     if 192 <= o1 <= 223:
-        return 24, "Inferido por classe C => /24"
+        return 24, "Inferido (classful): classe C => /24"
     if 224 <= o1 <= 239:
-        return 4, "Inferido por classe D (multicast) => /4"
-    return 4, "Inferido por classe E (experimental/reservado) => /4"
+        return 4, "Inferido (classful): classe D (multicast) => /4"
+    return 4, "Inferido (classful): classe E (reservada) => /4"
 
 
 def mascara_dotted_para_cidr(mask_s):
@@ -302,7 +489,10 @@ def tabela_conversao_bits(cidr):
 
 
 def processar_somente_mascara(cidr):
-    """Exercício com máscara/CIDR sem endereço IP: sem rede/broadcast/hosts específicos."""
+    """
+    Lógica didática **só de sub-rede / prefixo** (máscara, /, intervalos, tamanho de bloco).
+    Não usa endereço de host: `enunciado_prova` e tabelas valem para o tamanho de rede, não para “um IP na mesa”.
+    """
     c = core_mascara(cidr)
     if c is None:
         return None
@@ -311,6 +501,7 @@ def processar_somente_mascara(cidr):
     tabela_conv, conv_atual = tabela_conversao_bits(cidr)
     tema = tema_dinamico(cidr, c["total"])
     out["somente_mascara"] = True
+    out["contexto_didatico"] = "prefixo_subrede"
     out["cidr_origem"] = ""
     out["octeto_referencia"] = octeto_ref
     out["tabela_referencia"] = tabela_ref
@@ -318,6 +509,45 @@ def processar_somente_mascara(cidr):
     out["conversao_atual"] = conv_atual
     out.update(tema)
     out["rede"] = out["broad"] = out["primeiro_host"] = out["ultimo_host"] = "—"
+    out["nota_cidr_cisco"] = nota_cidr_cisco(cidr)
+    letra_ref = classe_referencia_por_prefixo(cidr)
+    out["classes_abc_fixas"] = referencia_cartao_unico_abc(letra_ref) if letra_ref else []
+    
+    if cidr == 4:
+        out["classe_observacao"] = (
+            "Representa teoricamente o bloco 240.0.0.0/4, associado à faixa Classe E/reservada: "
+            "240.0.0.0 até 255.255.255.255. Não é usado como máscara comum em redes locais."
+        )
+    else:
+        out["classe_observacao"] = (
+            "Foco em aula: o que importa é o / (barra) e a máscara no quadro; o cartão mostra só a referência A/B/C "
+            "que costuma acompanhar esse prefixo no material (ex.: /18 → B)."
+        )
+    out["classe"] = letra_ref or "—"
+    out["classe_faixa"] = (
+        f"Prefixo em estudo: /{cidr} com máscara {out['mask']} — acompanhe só essa barra na conversão binária e na tabela."
+    )
+    out["classe_variant"] = classe_variant_css(letra_ref) if letra_ref else "outros"
+    out["primeiro_octeto"] = None
+    out["banner_contexto"] = banner_contexto_analise_so_mascara(
+        cidr,
+        out["mask"],
+        out["wildcard"],
+        c["total"],
+        c["uteis"],
+        c["pulo"],
+    )
+    out["ip_informado"] = None
+    out["enunciado_prova"] = enunciado_prova_intervalos(
+        cidr, c["pulo"], c["total"], c["uteis"], octeto_ref
+    )
+    out["texto_copia"] = (
+        f"Máscara: {c['mask']}\n"
+        f"CIDR: /{cidr}\n"
+        f"Wildcard: {c['wildcard']}\n"
+        f"Total de hosts (bloco): {c['total']}\n"
+        f"Hosts úteis: {c['uteis']}"
+    )
     return out
 
 
@@ -345,6 +575,69 @@ def papel_ip_no_bloco(ip_i, rede_i, broad_i, cidr):
     return "Host válido", ""
 
 
+def _potencia_de_2_expoente(n):
+    """Se n é potência de 2 (>0), retorna o expoente k tal que n = 2^k; senão None."""
+    if not isinstance(n, int) or n <= 0:
+        return None
+    if n & (n - 1):
+        return None
+    return n.bit_length() - 1
+
+
+def enunciado_prova_intervalos(cidr, pulo, total, uteis, octeto_referencia):
+    """
+    Itens comuns em provas BR, dada a máscara/CIDR: quantidade de intervalos no octeto
+    de variação, passo (variação) e capacidade por sub-rede (total e hosts úteis).
+    Alinhado a `resumo_abertura_intervalos` (256 // pulo no octeto de referência).
+    """
+    if pulo > 0:
+        qtde_intervalos = max(1, 256 // pulo)
+    else:
+        qtde_intervalos = 1
+    nota = ""
+    if cidr == 31:
+        nota = (
+            "Em /31 (RFC 3021) os dois endereços do bloco costumam ser usáveis em enlace ponto a ponto; "
+            "a regra clássica 2^n−2 de “rede + broadcast” não se aplica do mesmo modo."
+        )
+    elif cidr == 32:
+        nota = "Em /32 há um único endereço; não há subtração de rede e broadcast em sub-rede com 1 IP."
+    # Frase no estilo de quadro/slide (prova BR), alinhada ao material didático comum.
+    end_cli = "endereço" if total == 1 else "endereços"
+    frase_estilo_quadro = (
+        f"{qtde_intervalos} intervalos que variam de {pulo} em {pulo} no {octeto_referencia}º octeto; "
+        f"cada intervalo comporta {total} {end_cli} no bloco"
+    )
+    if uteis != total:
+        frase_estilo_quadro += f" ({uteis} em geral atribuíveis a hosts, descontando rede e broadcast)."
+    else:
+        frase_estilo_quadro += "."
+    eq_q = _potencia_de_2_expoente(qtde_intervalos)
+    eq_p = _potencia_de_2_expoente(pulo)
+    eq_ips = _potencia_de_2_expoente(total)
+    partes_quadro = []
+    if eq_q is not None and eq_p is not None:
+        partes_quadro.append(
+            f"Potências (estilo quadro / slide): 2^{eq_q} = {qtde_intervalos} (intervalos no {octeto_referencia}º octeto); "
+            f"2^{eq_p} = {pulo} (variação / salto entre redes consecutivas nesse octeto)."
+        )
+    if eq_ips is not None and total > 0:
+        partes_quadro.append(
+            f" Cada intervalo: 2^{eq_ips} = {total} endereços no bloco (como no enunciado “IPs disponíveis” no total do bloco)."
+        )
+    linha_potencias_quadro = "".join(partes_quadro).strip()
+    return {
+        "qtde_intervalos": qtde_intervalos,
+        "variacao": pulo,
+        "ips_total_por_subrede": total,
+        "ips_uteis_por_subrede": uteis,
+        "octeto_referencia": octeto_referencia,
+        "nota": nota,
+        "frase_estilo_quadro": frase_estilo_quadro,
+        "linha_potencias_quadro": linha_potencias_quadro,
+    }
+
+
 def resumo_abertura_intervalos(cidr, pulo, total, uteis, rede, broad, octeto_referencia, proximas_subredes):
     intervalos_no_octeto = max(1, 256 // pulo) if pulo > 0 else 1
     exemplos = [
@@ -369,6 +662,10 @@ def resumo_abertura_intervalos(cidr, pulo, total, uteis, rede, broad, octeto_ref
 
 
 def processar(ip_s, cidr, regua_count=5):
+    """
+    Lógica didática **com endereço IP (host)**: classe/1.º octeto, AND, rede, broadcast, hosts, papel do IP.
+    Não mistura o bloco “resposta tipo prova (máscara pura)” — esse fica em `processar_somente_mascara`.
+    """
     c = core_mascara(cidr)
     if c is None:
         raise EntradaInvalidaError("CIDR inválido para cálculo de rede.")
@@ -381,7 +678,11 @@ def processar(ip_s, cidr, regua_count=5):
     tamanho = c["total"]
     primeiro_host, ultimo_host = hosts_da_subrede(r_i, b_i, cidr)
 
-    classe, classe_faixa = classe_ipv4_didatica(parts[0])
+    classe, classe_faixa, classe_observacao = classe_ipv4_didatica(parts[0])
+    if classe in {"A", "B", "C"}:
+        classes_abc_fixas = referencia_cartao_unico_abc(classe)
+    else:
+        classes_abc_fixas = []
     ip_tipo_privacidade, ip_faixa_privacidade = privacidade_rfc1918(parts)
     hosts_recomendados = ip_tipo_privacidade not in {"Multicast", "Reservado/Experimental"}
 
@@ -496,7 +797,46 @@ def processar(ip_s, cidr, regua_count=5):
                 ),
             }
         )
-    elif "Privado" not in ip_tipo_privacidade and ip_tipo_privacidade not in [
+        
+    # Detecção de IPs Especiais para fins didáticos/segurança
+    if ip_tipo_privacidade == "Reservado/Experimental":
+        seguranca_dicas.append({
+            "tipo": "danger",
+            "icon": "🚫",
+            "texto": "Endereço Classe E / Reservado. Não deve ser usado para hosts comuns em LAN ou WAN."
+        })
+    elif ip_tipo_privacidade == "Multicast":
+        seguranca_dicas.append({
+            "tipo": "info",
+            "icon": "📡",
+            "texto": "Endereço Classe D / Multicast. Usado para transmitir tráfego para múltiplos hosts simultaneamente (ex: OSPF, IPTV)."
+        })
+    elif ip_tipo_privacidade == "Loopback":
+        seguranca_dicas.append({
+            "tipo": "info",
+            "icon": "🔁",
+            "texto": "Endereço de Loopback. Usado para testar a pilha TCP/IP local no próprio dispositivo."
+        })
+    elif ip_tipo_privacidade == "APIPA":
+        seguranca_dicas.append({
+            "tipo": "warning",
+            "icon": "⚠️",
+            "texto": "Link-Local / APIPA. Ocorre quando o dispositivo falha em obter IP via DHCP."
+        })
+    elif ip_tipo_privacidade == "Especial":
+        seguranca_dicas.append({
+            "tipo": "warning",
+            "icon": "🔍",
+            "texto": "Rede Especial (0.x.x.x). Usado como rede atual ou default route (0.0.0.0), não aplicável como host normal."
+        })
+    elif ip_tipo_privacidade == "Broadcast Limitado":
+        seguranca_dicas.append({
+            "tipo": "danger",
+            "icon": "📣",
+            "texto": "Broadcast Limitado (255.255.255.255). Envia pacotes a todos os hosts da mesma rede local, não é roteado além do roteador."
+        })
+        
+    if "Privado" not in ip_tipo_privacidade and ip_tipo_privacidade not in [
         "Loopback",
         "APIPA",
         "Multicast",
@@ -529,6 +869,7 @@ def processar(ip_s, cidr, regua_count=5):
         {
             "seguranca_dicas": seguranca_dicas,
             "somente_mascara": False,
+            "contexto_didatico": "ip_host",
             "cidr_origem": "",
             "rede": fmt_ip(r_i),
             "broad": fmt_ip(b_i),
@@ -536,6 +877,8 @@ def processar(ip_s, cidr, regua_count=5):
             "ultimo_host": ultimo_host,
             "classe": classe,
             "classe_faixa": classe_faixa,
+            "classe_observacao": classe_observacao,
+            "classes_abc_fixas": classes_abc_fixas,
             "classe_variant": classe_variant_css(classe),
             "primeiro_octeto": parts[0],
             "ip_tipo_privacidade": ip_tipo_privacidade,
@@ -565,6 +908,30 @@ def processar(ip_s, cidr, regua_count=5):
                 "interface g0/0\n"
                 f"ip address {primeiro_host} {c['mask']}\n"
                 "no shutdown"
+            ),
+            "nota_cidr_cisco": nota_cidr_cisco(cidr),
+            "banner_contexto": banner_contexto_analise_com_ip(
+                fmt_ip(ip_i),
+                cidr,
+                c["mask"],
+                c["wildcard"],
+                fmt_ip(r_i),
+                fmt_ip(b_i),
+                c["total"],
+                c["uteis"],
+                c["pulo"],
+            ),
+            "ip_informado": fmt_ip(ip_i),
+            "texto_copia": (
+                f"IP analisado: {fmt_ip(ip_i)}\n"
+                f"CIDR: /{cidr}\n"
+                f"Máscara: {c['mask']}\n"
+                f"Wildcard: {c['wildcard']}\n"
+                f"Rede: {fmt_ip(r_i)}\n"
+                f"Broadcast: {fmt_ip(b_i)}\n"
+                f"Hosts válidos: {primeiro_host} até {ultimo_host}\n"
+                f"Total de hosts: {c['total']}\n"
+                f"RFC1918: {'Sim' if 'Privado' in ip_tipo_privacidade else 'Não'}"
             ),
         }
     )

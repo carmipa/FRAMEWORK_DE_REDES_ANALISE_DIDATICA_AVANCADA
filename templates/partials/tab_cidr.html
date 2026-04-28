@@ -8,11 +8,11 @@
                title="IP de host para calcular rede, broadcast e hosts úteis.">
     </div>
     <div class="col-lg-3">
-        <label class="form-label small text-secondary">🧷 CIDR</label>
+        <label class="form-label small text-secondary">🧷 CIDR <span class="text-secondary fw-normal">(opcional)</span></label>
         <input type="number" name="cidr" class="form-control bg-dark text-light border-secondary {{ 'is-invalid' if 'cidr' in invalid_fields else '' }}"
                min="0" max="32" value="{{ cidr_pre }}"
                data-bs-toggle="tooltip" data-bs-placement="top"
-               title="Prefixo de rede (0 a 32). Ex.: /24">
+               title="Barra /0–/32. Se vazio e o IP estiver preenchido, o prefixo é inferido pelo 1º octeto (classful).">
     </div>
     <div class="col-lg-2">
         <label class="form-label small text-secondary">📐 Régua</label>

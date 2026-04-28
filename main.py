@@ -41,6 +41,182 @@ app = Flask(__name__)
 REGUA_COUNT_OPCOES = {5, 10, 15, 25, 50, 100}
 COMPARADOR_CIDR_PADRAO_A = "20"
 COMPARADOR_CIDR_PADRAO_B = "24"
+PORTAS_CATALOGO = [
+    {
+        "porta": 20,
+        "protocolo_transporte": "TCP",
+        "servico": "FTP Data",
+        "categoria": "Well-known",
+        "descricao": "Canal de dados do FTP ativo para transferencia de arquivos.",
+    },
+    {
+        "porta": 21,
+        "protocolo_transporte": "TCP",
+        "servico": "FTP Control",
+        "categoria": "Well-known",
+        "descricao": "Canal de controle para comandos e autenticacao no FTP.",
+    },
+    {
+        "porta": 22,
+        "protocolo_transporte": "TCP",
+        "servico": "SSH",
+        "categoria": "Well-known",
+        "descricao": "Acesso remoto seguro e tunelamento criptografado.",
+    },
+    {
+        "porta": 23,
+        "protocolo_transporte": "TCP",
+        "servico": "Telnet",
+        "categoria": "Well-known",
+        "descricao": "Acesso remoto sem criptografia (evitar em producao).",
+    },
+    {
+        "porta": 25,
+        "protocolo_transporte": "TCP",
+        "servico": "SMTP",
+        "categoria": "Well-known",
+        "descricao": "Envio de e-mails entre clientes e servidores.",
+    },
+    {
+        "porta": 53,
+        "protocolo_transporte": "UDP/TCP",
+        "servico": "DNS",
+        "categoria": "Well-known",
+        "descricao": "Resolucao de nomes de dominio para enderecos IP.",
+    },
+    {
+        "porta": 67,
+        "protocolo_transporte": "UDP",
+        "servico": "DHCP Server",
+        "categoria": "Well-known",
+        "descricao": "Distribuicao dinamica de configuracao IP para clientes.",
+    },
+    {
+        "porta": 68,
+        "protocolo_transporte": "UDP",
+        "servico": "DHCP Client",
+        "categoria": "Well-known",
+        "descricao": "Recebe parametros de rede enviados pelo servidor DHCP.",
+    },
+    {
+        "porta": 80,
+        "protocolo_transporte": "TCP",
+        "servico": "HTTP",
+        "categoria": "Well-known",
+        "descricao": "Transporte de paginas web sem criptografia.",
+    },
+    {
+        "porta": 110,
+        "protocolo_transporte": "TCP",
+        "servico": "POP3",
+        "categoria": "Well-known",
+        "descricao": "Recebimento de e-mails por download local.",
+    },
+    {
+        "porta": 123,
+        "protocolo_transporte": "UDP",
+        "servico": "NTP",
+        "categoria": "Well-known",
+        "descricao": "Sincronismo de horario entre dispositivos de rede.",
+    },
+    {
+        "porta": 143,
+        "protocolo_transporte": "TCP",
+        "servico": "IMAP",
+        "categoria": "Well-known",
+        "descricao": "Acesso e sincronizacao de caixas de e-mail no servidor.",
+    },
+    {
+        "porta": 161,
+        "protocolo_transporte": "UDP",
+        "servico": "SNMP",
+        "categoria": "Well-known",
+        "descricao": "Gerenciamento e monitoramento de dispositivos.",
+    },
+    {
+        "porta": 389,
+        "protocolo_transporte": "TCP/UDP",
+        "servico": "LDAP",
+        "categoria": "Well-known",
+        "descricao": "Consulta e autenticacao em diretorios corporativos.",
+    },
+    {
+        "porta": 443,
+        "protocolo_transporte": "TCP",
+        "servico": "HTTPS",
+        "categoria": "Well-known",
+        "descricao": "Navegacao web segura com TLS.",
+    },
+    {
+        "porta": 3389,
+        "protocolo_transporte": "TCP/UDP",
+        "servico": "RDP",
+        "categoria": "Registered",
+        "descricao": "Acesso remoto grafico em sistemas Windows.",
+    },
+]
+PROTOCOLOS_CATALOGO = [
+    {
+        "nome": "TCP",
+        "camada": "Transporte",
+        "descricao": "Confiavel, orientado a conexao e com controle de fluxo.",
+        "portas_relacionadas": [20, 21, 22, 25, 80, 110, 143, 443],
+    },
+    {
+        "nome": "UDP",
+        "camada": "Transporte",
+        "descricao": "Baixa latencia, sem conexao e sem garantia de entrega.",
+        "portas_relacionadas": [53, 67, 68, 123, 161],
+    },
+    {
+        "nome": "ICMP",
+        "camada": "Rede",
+        "descricao": "Mensagens de controle e diagnostico (ping/traceroute).",
+        "portas_relacionadas": [],
+    },
+    {
+        "nome": "HTTP",
+        "camada": "Aplicacao",
+        "descricao": "Protocolo base para transferencia de hipertexto na web.",
+        "portas_relacionadas": [80],
+    },
+    {
+        "nome": "HTTPS",
+        "camada": "Aplicacao",
+        "descricao": "HTTP protegido por TLS para confidencialidade e integridade.",
+        "portas_relacionadas": [443],
+    },
+    {
+        "nome": "DNS",
+        "camada": "Aplicacao",
+        "descricao": "Traduz nomes de dominio para IP e vice-versa.",
+        "portas_relacionadas": [53],
+    },
+    {
+        "nome": "DHCP",
+        "camada": "Aplicacao",
+        "descricao": "Atribui endereco IP e parametros de rede automaticamente.",
+        "portas_relacionadas": [67, 68],
+    },
+    {
+        "nome": "SMTP",
+        "camada": "Aplicacao",
+        "descricao": "Encaminha mensagens de e-mail entre servidores.",
+        "portas_relacionadas": [25],
+    },
+    {
+        "nome": "SSH",
+        "camada": "Aplicacao",
+        "descricao": "Acesso remoto seguro para administracao e automacao.",
+        "portas_relacionadas": [22],
+    },
+    {
+        "nome": "SNMP",
+        "camada": "Aplicacao",
+        "descricao": "Coleta metricas e envia traps de rede para monitoramento.",
+        "portas_relacionadas": [161],
+    },
+]
 
 
 def normalizar_hostname_entrada(entrada: str) -> str:
@@ -60,12 +236,15 @@ def normalizar_hostname_entrada(entrada: str) -> str:
 def montar_wizard_calculo(res):
     if not res or res.get("somente_mascara"):
         return []
+    texto_classe = f"Classe {res.get('classe')} ({res.get('classe_faixa')})."
+    if res.get("classe_observacao"):
+        texto_classe += f" {res.get('classe_observacao')}"
     return [
         {
             "icone": "🧭",
             "etapa": "Classe/faixa",
             "acao": f"Identificar o 1º octeto ({res.get('primeiro_octeto')})",
-            "resultado": f"Classe {res.get('classe')} ({res.get('classe_faixa')}).",
+            "resultado": texto_classe,
         },
         {
             "icone": "📏",
@@ -225,6 +404,7 @@ def home():
         regua_count_pre = str(regua_count)
 
         cidr_val = None
+        forcar_somente_mascara = False
         if modo not in {"cidr", "mask", "wildcard", "autoip", "dominio", "ipv6", "comparador"}:
             if cidr_raw:
                 modo = "cidr"
@@ -317,45 +497,96 @@ def home():
                     invalid_fields.add("ip")
 
         elif erro is None and modo == "cidr":
-            if not cidr_raw:
-                erro = "No modo CIDR, preencha o campo CIDR."
-                invalid_fields.add("cidr")
-            else:
+            if cidr_raw:
                 try:
                     cidr_val = int(cidr_raw)
                 except ValueError:
                     logger.warning("evento=calc status=invalid_input modo=cidr campo=cidr")
                     erro = "O CIDR deve ser um número inteiro entre 0 e 32."
                     invalid_fields.add("cidr")
-
-        elif erro is None and modo == "mask":
-            if not mask_dec_p and not ip_p:
-                erro = "No modo Máscara Decimal, informe ao menos a máscara (ex.: 255.255.255.240) ou um IP."
-                invalid_fields.add("mask_decimal")
-                invalid_fields.add("ip")
-            elif mask_dec_p:
-                cidr_val = mascara_dotted_para_cidr(mask_dec_p)
-                if cidr_val is None:
-                    try:
-                        parse_ipv4_parts(mask_dec_p, "Máscara decimal")
-                        erro = (
-                            "Máscara decimal inválida. Use máscara contígua "
-                            "(ex.: 255.255.255.0), não valores como 255.0.255.0."
-                        )
-                    except EntradaInvalidaError as exc:
-                        logger.warning("evento=calc status=invalid_input modo=mask campo=mask_decimal erro=%s", exc)
-                        erro = str(exc)
-                        invalid_fields.add("mask_decimal")
-                elif ip_p:
-                    cidr_origem = f"Máscara {mask_dec_p} convertida para /{cidr_val}."
-            else:
+            elif ip_p:
                 try:
                     cidr_val, origem_inferida = inferir_cidr_por_ip(ip_p)
-                    cidr_origem = f"CIDR inferido automaticamente pelo IP informado. {origem_inferida}."
+                    cidr_origem = (
+                        "Campo CIDR vazio — prefixo (/barra) inferido pelo 1º octeto do IP "
+                        "(modelo classful didático). "
+                        f"{origem_inferida}"
+                    )
                 except EntradaInvalidaError as exc:
-                    logger.warning("evento=calc status=invalid_input modo=mask campo=ip erro=%s", exc)
+                    logger.warning("evento=calc status=invalid_input modo=cidr campo=ip erro=%s", exc)
                     erro = str(exc)
                     invalid_fields.add("ip")
+            else:
+                erro = (
+                    "No modo CIDR, informe o endereço IPv4 e o CIDR (0–32), "
+                    "ou apenas o IPv4 para descobrir o / automaticamente pelo 1º octeto."
+                )
+                invalid_fields.add("cidr")
+                invalid_fields.add("ip")
+
+        elif erro is None and modo == "mask":
+            cidr_i = mascara_dotted_para_cidr(ip_p) if ip_p else None
+            cidr_m = mascara_dotted_para_cidr(mask_dec_p) if mask_dec_p else None
+            forcar_somente_mascara = False
+            if not mask_dec_p and not ip_p:
+                erro = (
+                    "No modo Máscara Decimal, informe a máscara contígua (ex.: 255.255.255.240). "
+                    "Esta aba é só para análise da máscara/prefixo; com IP + máscara use a aba CIDR."
+                )
+                invalid_fields.add("mask_decimal")
+                invalid_fields.add("ip")
+            elif mask_dec_p and cidr_m is None:
+                try:
+                    parse_ipv4_parts(mask_dec_p, "Máscara decimal")
+                    erro = (
+                        "Máscara decimal inválida. Use máscara contígua "
+                        "(ex.: 255.255.255.0), não valores como 255.0.255.0."
+                    )
+                except EntradaInvalidaError as exc:
+                    logger.warning("evento=calc status=invalid_input modo=mask campo=mask_decimal erro=%s", exc)
+                    erro = str(exc)
+                    invalid_fields.add("mask_decimal")
+            elif not mask_dec_p and ip_p:
+                if cidr_i is not None:
+                    cidr_val = cidr_i
+                    cidr_origem = (
+                        f"O valor no campo “Endereço IPv4” é uma máscara contígua (→ /{cidr_val}). "
+                        "Dica: coloque a máscara no campo Máscara ou deixe o IP vazio — o / (barra) da aula é o do exercício."
+                    )
+                    forcar_somente_mascara = True
+                else:
+                    try:
+                        cidr_val, origem_inferida = inferir_cidr_por_ip(ip_p)
+                        cidr_origem = f"CIDR inferido automaticamente pelo IP informado. {origem_inferida}."
+                    except EntradaInvalidaError as exc:
+                        logger.warning("evento=calc status=invalid_input modo=mask campo=ip erro=%s", exc)
+                        erro = str(exc)
+                        invalid_fields.add("ip")
+            elif mask_dec_p and not ip_p:
+                cidr_val = cidr_m
+                cidr_origem = f"Máscara {mask_dec_p} convertida para /{cidr_val}."
+            else:
+                if cidr_i is not None and cidr_m is not None and cidr_i != cidr_m:
+                    if ip_p.strip().startswith("255."):
+                        cidr_val = cidr_i
+                        cidr_origem = (
+                            f"Conflito: o / (barra) usado na aula é /{cidr_val} (máscara 255.x no campo IP, p. ex. /18). "
+                            f"O campo Máscara decimal apontava para /{cidr_m} — deixe só um conjunto coerente."
+                        )
+                        forcar_somente_mascara = True
+                    else:
+                        cidr_val = cidr_m
+                        cidr_origem = (
+                            f"Usando /{cidr_val} a partir do campo Máscara decimal. "
+                            f"O endereço {ip_p} também se lê como máscara (→ /{cidr_i}) — use um host (ex.: 10.0.0.1) "
+                            "se o exercício for o AND com a máscara do outro campo."
+                        )
+                elif cidr_i is not None and cidr_m is not None and cidr_i == cidr_m:
+                    cidr_val = cidr_m
+                    cidr_origem = f"Máscara {mask_dec_p} (e o valor no IP) → /{cidr_val}."
+                else:
+                    cidr_val = cidr_m
+                    cidr_origem = f"Máscara {mask_dec_p} → /{cidr_val} (rede calculada com o IP {ip_p})."
 
         elif erro is None and modo == "wildcard":
             if not ip_p and not wildcard_p:
@@ -434,11 +665,32 @@ def home():
             invalid_fields.add("cidr")
 
         if erro is None and cidr_val is not None:
+            # Se o "IP" é na verdade uma máscara (ex.: 255.255.192.0), não usar lógica de host:
+            # o 1º octeto 255 seria mostrado como classe E — o desejado é o modo sub-rede (A/B/C pelo /).
+            ci_como_mascara = mascara_dotted_para_cidr(ip_p) if ip_p else None
+            if ci_como_mascara is not None and not forcar_somente_mascara:
+                if ci_como_mascara != cidr_val:
+                    cidr_val = ci_como_mascara
+                    cidr_origem = (
+                        f"O texto no campo de endereço é uma máscara contígua (→ /{cidr_val}). "
+                        "O número depois do / foi alinhado a essa máscara para não classificar 255.x como host "
+                        "(como faixa E)."
+                    )
+                else:
+                    suf = (
+                        " Campo de endereço reconhecido como máscara pontuada — análise só sub-rede "
+                        "(referência de classe pelo prefixo /), não pelo 1º octeto como host."
+                    )
+                    cidr_origem = ((cidr_origem or "").strip() + suf).strip()
+                forcar_somente_mascara = True
             try:
-                if ip_p:
+                if forcar_somente_mascara:
+                    res = processar_somente_mascara(cidr_val)
+                elif ip_p:
                     res = processar(ip_p, cidr_val, regua_count=regua_count)
                 else:
                     res = processar_somente_mascara(cidr_val)
+                if res is not None and res.get("somente_mascara"):
                     res["regua_count"] = regua_count
 
                 if res is not None:
@@ -507,6 +759,8 @@ def home():
         invalid_fields=invalid_fields,
         history=pag["history"],
         history_page_items=pag["history_page_items"],
+        portas_catalogo=PORTAS_CATALOGO,
+        protocolos_catalogo=PROTOCOLOS_CATALOGO,
     )
 
 

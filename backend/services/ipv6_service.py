@@ -36,19 +36,19 @@ def escopo_ipv6(addr):
 def sinais_ipv6(addr):
     sinais = []
     if addr.is_loopback:
-        sinais.append("Loopback")
+        sinais.append("Loopback (::1)")
     if addr.is_link_local:
-        sinais.append("Link-local")
+        sinais.append("Link-local (fe80::/10)")
     if addr.is_private:
-        sinais.append("ULA")
+        sinais.append("ULA (fc00::/7)")
     if addr.is_global:
-        sinais.append("Global")
+        sinais.append("Global (2000::/3)")
     if addr.is_multicast:
-        sinais.append("Multicast")
+        sinais.append("Multicast (ff00::/8)")
     if addr.is_reserved:
         sinais.append("Reservado")
     if addr.is_unspecified:
-        sinais.append("Não especificado")
+        sinais.append("Não especificado (::)")
     if addr.ipv4_mapped:
         sinais.append(f"IPv4-mapped ({addr.ipv4_mapped})")
     if addr.sixtofour:
@@ -56,6 +56,39 @@ def sinais_ipv6(addr):
     if addr.teredo:
         sinais.append(f"Teredo ({addr.teredo[0]} -> {addr.teredo[1]})")
     return sinais or ["Sem sinais especiais"]
+
+
+def faixa_referencia_ipv6(addr):
+    if addr.is_loopback:
+        return "::1/128"
+    if addr.is_link_local:
+        return "fe80::/10"
+    if addr.is_private:
+        return "fc00::/7"
+    if addr.is_multicast:
+        return "ff00::/8"
+    if addr.is_global:
+        return "2000::/3"
+    return "Outro/Variável"
+
+def uso_ipv6(addr):
+    if addr.is_loopback:
+        return "Testes internos e comunicação dentro do próprio dispositivo"
+    if addr.is_link_local:
+        return "Comunicação local no enlace, auto-configuração (NDP)"
+    if addr.is_private:
+        return "Comunicação em rede privada, similar ao RFC1918 (ULA)"
+    if addr.is_multicast:
+        return "Transmissão para um grupo de dispositivos"
+    if addr.is_global:
+        return "Comunicação pública na Internet"
+    return "Especial ou reservado"
+
+def roteavel_ipv6(addr):
+    if addr.is_global:
+        return "Sim"
+    return "Não"
+
 
 
 def grc_ipv6(addr):
@@ -97,14 +130,20 @@ def processar_ipv6(ipv6_s):
     rede_64 = str(ipaddress.IPv6Network(f"{addr}/64", strict=False).network_address)
     sinais = sinais_ipv6(addr)
     comprimido = addr.compressed + (f"%{zone}" if zone else "")
+    faixa = faixa_referencia_ipv6(addr)
+    uso = uso_ipv6(addr)
+    roteavel = roteavel_ipv6(addr)
+    
     itens_exibicao = [
         {"icone": "📥", "campo": "IPv6 informado", "valor": raw},
-        {"icone": "🗜️", "campo": "Comprimido", "valor": comprimido},
-        {"icone": "🧱", "campo": "Expandido", "valor": addr.exploded},
-        {"icone": "🏷️", "campo": "Classificação", "valor": classificar_ipv6(addr)},
-        {"icone": "🧭", "campo": "Escopo", "valor": escopo_ipv6(addr)},
-        {"icone": "📌", "campo": "Prefixo sugerido", "valor": "/64 (didático para LAN IPv6)"},
-        {"icone": "🌐", "campo": "Rede /64 estimada", "valor": f"{rede_64}/64"},
+        {"icone": "🗜️", "campo": "Compactação IPv6", "valor": comprimido},
+        {"icone": "🧱", "campo": "Expansão IPv6", "valor": addr.exploded},
+        {"icone": "🏷️", "campo": "Tipo do endereço", "valor": classificar_ipv6(addr)},
+        {"icone": "📍", "campo": "Faixa", "valor": faixa},
+        {"icone": "⚙️", "campo": "Uso", "valor": uso},
+        {"icone": "🌍", "campo": "Roteável na internet", "valor": roteavel},
+        {"icone": "📌", "campo": "Prefixo sugerido", "valor": "/64"},
+        {"icone": "🌐", "campo": "Rede estimada (/64)", "valor": f"{rede_64}/64"},
         {"icone": "🆔", "campo": "Zone index", "valor": zone or "—"},
         {"icone": "🧠", "campo": "Primeiros 64 bits", "valor": primeiros_64},
         {"icone": "🔚", "campo": "Últimos 64 bits", "valor": ultimos_64},
@@ -113,13 +152,26 @@ def processar_ipv6(ipv6_s):
         {"icone": "🛡️", "campo": "Sinais especiais", "valor": ", ".join(sinais)},
         {"icone": "✅", "campo": "Resumo GRC", "valor": grc_ipv6(addr)},
     ]
+    
+    texto_copia = (
+        f"Entrada: {raw}\n\n"
+        f"Resultado:\n"
+        f"Tipo: {classificar_ipv6(addr)}\n"
+        f"Faixa: {faixa}\n"
+        f"Uso: {uso}\n"
+        f"Roteável na internet: {roteavel.lower()}"
+    )
+    
     return {
         "entrada": raw,
         "comprimido": comprimido,
         "expandido": addr.exploded,
         "tipo": classificar_ipv6(addr),
         "escopo": escopo_ipv6(addr),
-        "prefixo_sugerido": "/64 (didático para LAN IPv6)",
+        "faixa": faixa,
+        "uso": uso,
+        "roteavel": roteavel,
+        "prefixo_sugerido": "/64",
         "blocos_16": blocos_16,
         "hextetos": hextetos,
         "primeiros_64": primeiros_64,
@@ -130,5 +182,6 @@ def processar_ipv6(ipv6_s):
         "grc_ipv6": grc_ipv6(addr),
         "itens_exibicao": itens_exibicao,
         "zone_index": zone or "—",
+        "texto_copia": texto_copia,
     }
 

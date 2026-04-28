@@ -17,6 +17,9 @@
             <span>🛡️</span>
             <span>FRAMEWORK DE REDES - ANÁLISE DIDÁTICA | AVANÇADA</span>
         </h2>
+        <p class="text-light mt-2 mb-1 opacity-75 small text-center" style="max-width: 800px; margin: 0 auto;">
+            Ferramenta didática para análise de IPv4, CIDR, máscaras, wildcard, RFC1918, IPv6 e comandos Cisco CLI.
+        </p>
         <div class="mt-2">
             <span class="shield-badge"><span class="icon">🧠</span>Bitwise AND</span>
             <span class="shield-badge"><span class="icon">🎯</span>RFC1918</span>
@@ -29,13 +32,20 @@
     <div class="card-tech p-4 shadow">
         <div class="tab-nav d-flex flex-wrap gap-2 mb-3">
             <button type="button" class="btn btn-outline-info tab-trigger" data-tab="cidr" data-bs-toggle="tooltip" data-bs-placement="top" title="Calcula rede e hosts a partir de CIDR.">🧮 CIDR</button>
-            <button type="button" class="btn btn-outline-info tab-trigger" data-tab="mask" data-bs-toggle="tooltip" data-bs-placement="top" title="Converte máscara decimal para análise completa.">📏 Máscara</button>
+            <button type="button" class="btn btn-outline-info tab-trigger" data-tab="mask" data-bs-toggle="tooltip" data-bs-placement="top" title="Só máscara decimal: prefixo /, intervalos e tamanho de bloco (sem campo IP). Para host + máscara use CIDR.">📏 Máscara</button>
             <button type="button" class="btn btn-outline-info tab-trigger" data-tab="wildcard" data-bs-toggle="tooltip" data-bs-placement="top" title="Análise focada em wildcard com IP + máscara inversa.">🧩 Wildcard</button>
             <button type="button" class="btn btn-outline-info tab-trigger" data-tab="autoip" data-bs-toggle="tooltip" data-bs-placement="top" title="Descobre CIDR automaticamente com base no IP.">🎯 Auto CIDR</button>
             <button type="button" class="btn btn-outline-info tab-trigger" data-tab="dominio" data-bs-toggle="tooltip" data-bs-placement="top" title="Resolve domínio para IPv4 e decompõe rede.">🌐 Domínio</button>
             <button type="button" class="btn btn-outline-info tab-trigger" data-tab="ipv6" data-bs-toggle="tooltip" data-bs-placement="top" title="Analisa endereço IPv6 em formato didático.">🛰️ IPv6</button>
             <button type="button" class="btn btn-outline-info tab-trigger" data-tab="comparador" data-bs-toggle="tooltip" data-bs-placement="top" title="Compara dois CIDRs para o mesmo IP.">🆚 Comparador</button>
+            <button type="button" class="btn btn-outline-info tab-trigger" data-tab="portas" data-bs-toggle="tooltip" data-bs-placement="top" title="Catálogo dinâmico de portas de comunicação.">🔌 Portas</button>
+            <button type="button" class="btn btn-outline-info tab-trigger" data-tab="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Catálogo dinâmico de protocolos de comunicação.">📡 Protocolos</button>
         </div>
+        <p class="small text-secondary mb-3 border-start border-info border-2 ps-2 py-1 rounded-1" style="background: rgba(88, 166, 255, 0.06);" role="note">
+            <strong class="text-info">Funções em separado:</strong> cada aba é um fluxo independente
+            (CIDR com ou sem barra, <strong>aba Máscara só com máscara decimal</strong>, wildcard, Auto CIDR só pelo IP, domínio→IPv4, IPv6, comparador).
+            O enunciado define qual usar; a análise abaixo corresponde só à aba em que você clicou <strong>Executar</strong>.
+        </p>
 
         <div class="tab-panel" data-tab-panel="cidr">{% include "partials/tab_cidr.html" %}</div>
         <div class="tab-panel" data-tab-panel="mask">{% include "partials/tab_mask.html" %}</div>
@@ -44,12 +54,28 @@
         <div class="tab-panel" data-tab-panel="dominio">{% include "partials/tab_dominio.html" %}</div>
         <div class="tab-panel" data-tab-panel="ipv6">{% include "partials/tab_ipv6.html" %}</div>
         <div class="tab-panel" data-tab-panel="comparador">{% include "partials/tab_comparador.html" %}</div>
+        <div class="tab-panel" data-tab-panel="portas">{% include "partials/tab_portas.html" %}</div>
+        <div class="tab-panel" data-tab-panel="protocolos">{% include "partials/tab_protocolos.html" %}</div>
         <div class="action-buttons mt-3">
             <a href="/export/json" class="btn btn-info fw-bold text-dark" data-bs-toggle="tooltip" data-bs-placement="top" title="Exporta histórico e dados em JSON para auditoria.">📦 Exportar JSON</a>
             <a href="/export/pdf" class="btn btn-primary fw-bold" data-bs-toggle="tooltip" data-bs-placement="top" title="Exporta relatório PDF da última análise processada.">🧾 Exportar PDF</a>
+            {% if (res and res.texto_copia) or (ipv6_res and ipv6_res.texto_copia) %}
+            <button type="button" class="btn btn-secondary fw-bold text-white" onclick="copiarResultado()" data-bs-toggle="tooltip" data-bs-placement="top" title="Copia um resumo textual da análise para a área de transferência.">📋 Copiar resultado</button>
+            <textarea id="texto_copia_hidden" style="display:none;">{{ res.texto_copia if res and res.texto_copia else ipv6_res.texto_copia }}</textarea>
+            <script>
+                function copiarResultado() {
+                    const texto = document.getElementById("texto_copia_hidden").value;
+                    navigator.clipboard.writeText(texto).then(() => {
+                        alert("Resultado copiado para a área de transferência!");
+                    }).catch(err => {
+                        console.error('Erro ao copiar: ', err);
+                    });
+                }
+            </script>
+            {% endif %}
             <a href="/?tab={{ active_tab_pre or 'cidr' }}" class="btn btn-danger fw-bold text-white" data-bs-toggle="tooltip" data-bs-placement="top" title="Limpa os dados e mantém a aba atual selecionada.">🧹 Limpar Tela</a>
         </div>
-        <div class="small text-secondary mt-2">Atalhos: Alt+1..7 troca abas | Enter executa a aba ativa.</div>
+        <div class="small text-secondary mt-2">Atalhos: Alt+1..9 troca abas | Enter executa a aba ativa.</div>
     </div>
 
     {% if comparador_cards and comparador_cards|length == 2 %}
@@ -135,39 +161,31 @@
             </table>
         </div>
         <div class="d-flex flex-wrap justify-content-center align-items-center gap-3 mt-2 history-pagination">
-            <div class="d-flex align-items-center gap-2">
+            <div class="d-flex align-items-center gap-3">
                 {% if has_prev_history %}
                 <form method="GET" action="/" class="mb-0 d-inline">
                     <input type="hidden" name="tab" value="{{ active_tab_pre }}">
                     <input type="hidden" name="history_limit" value="{{ history_limit }}">
                     <input type="hidden" name="history_page" value="{{ history_page - 1 }}">
-                    <button type="submit" class="btn btn-sm btn-outline-light" data-bs-toggle="tooltip" data-bs-placement="top" title="Volta para a página anterior do histórico.">⬅️ Anterior</button>
+                    <button type="submit" class="btn btn-sm btn-outline-light">⬅️ Anterior</button>
                 </form>
                 {% else %}
-                <button class="btn btn-sm btn-outline-light" disabled>⬅️ Anterior</button>
+                <button class="btn btn-sm btn-outline-secondary" disabled>⬅️ Anterior</button>
                 {% endif %}
-                <form method="GET" action="/" class="history-inline-form d-flex align-items-center mb-0">
-                    <select id="history_limit_inline" name="history_limit" class="form-select form-select-sm bg-dark text-light border-secondary" onchange="this.form.submit()" data-bs-toggle="tooltip" data-bs-placement="top" title="Quantidade de registros exibidos no histórico (0 oculta o bloco).">
-                        <option value="0" {{ 'selected' if history_limit_pre == '0' else '' }}>Ocultar</option>
-                        {% for n in range(1, history_limit_max + 1) %}
-                        <option value="{{ n }}" {{ 'selected' if history_limit_pre == (n|string) else '' }}>{{ n }}</option>
-                        {% endfor %}
-                    </select>
-                    <input type="hidden" name="tab" value="{{ active_tab_pre }}">
-                    <input type="hidden" name="history_page" value="1">
-                </form>
+                
+                <span class="text-light small fw-bold">Página {{ history_page }} de {{ total_history_pages }}</span>
+
                 {% if has_next_history %}
                 <form method="GET" action="/" class="mb-0 d-inline">
                     <input type="hidden" name="tab" value="{{ active_tab_pre }}">
                     <input type="hidden" name="history_limit" value="{{ history_limit }}">
                     <input type="hidden" name="history_page" value="{{ history_page + 1 }}">
-                    <button type="submit" class="btn btn-sm btn-outline-light" data-bs-toggle="tooltip" data-bs-placement="top" title="Avança para a próxima página do histórico.">Próxima ➡️</button>
+                    <button type="submit" class="btn btn-sm btn-outline-light">Próxima ➡️</button>
                 </form>
                 {% else %}
-                <button class="btn btn-sm btn-outline-light" disabled>Próxima ➡️</button>
+                <button class="btn btn-sm btn-outline-secondary" disabled>Próxima ➡️</button>
                 {% endif %}
             </div>
-            <span class="small text-secondary" data-bs-toggle="tooltip" data-bs-placement="top" title="Página atual do histórico com base no limite selecionado.">Página {{ history_page }} de {{ total_history_pages }}</span>
         </div>
     </div>
     {% endif %}
@@ -203,6 +221,7 @@
     {% endif %}
 
     {% if res %}
+
     {% if active_tab_pre == 'wildcard' %}
     <div class="card-tech p-4 shadow mb-3">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 border-bottom border-secondary pb-2 mb-3">
@@ -289,25 +308,60 @@
     <div class="dynamic-theme"
          style="--dyn-bit1: {{ res.cor_bit1 }}; --dyn-and: {{ res.cor_resultado_and }}; --dyn-pulo: {{ res.cor_pulo }}; --dyn-resumo: {{ res.cor_borda_resumo }}; --dyn-accent: {{ res.cor_acento }}; --dyn-table-border: {{ res.cor_borda_tabela }}; --dyn-table-th-bg: {{ res.cor_cabecalho_tabela_bg }}; --dyn-table-th-text: {{ res.cor_cabecalho_tabela_texto }}; --dyn-row-highlight: {{ res.cor_linha_destaque }};">
     {% if res.somente_mascara %}
-    <div class="classe-destaque cv-outros card-tech shadow mb-3 py-4 px-3 text-center">
-        <div class="d-flex justify-content-center mb-1">
-            <button type="button" class="help-hint-btn" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-placement="top" title="Classe IPv4 didática" data-bs-content="Bloco visual para identificar classe IPv4 pelo primeiro octeto e reforçar a faixa clássica correspondente.">ℹ️</button>
+    <div class="classe-card-unificada cv-{{ res.classe_variant }} card-tech shadow mb-3 py-4 px-3 text-center">
+        <div class="d-flex justify-content-between align-items-start mb-3 px-1">
+            <span class="small text-secondary text-uppercase fw-semibold" style="letter-spacing:0.06em;">REFERÊNCIA - MÁSCARA / PREFIXO</span>
+            <button type="button" class="help-hint-btn" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-placement="top" title="Classe + prefixo no mesmo quadro" data-bs-content="Letra grande = referência A/B/C usual para esse /. À direita, o / (barra) em fonte menor é o prefixo da máscara do exercício.">ℹ️</button>
         </div>
-        <div class="classe-destaque-rotulo">Modo só máscara (sem IP)</div>
-        <div class="classe-destaque-valor">/{{ res.cidr }}</div>
-        <div class="classe-destaque-octeto">Máscara: <span class="text-warning fw-bold">{{ res.mask }}</span></div>
-        <div class="classe-destaque-faixa">Classe A/B/C depende do 1º octeto de um IP. Rede, broadcast e hosts só aparecem quando você informar um endereço dentro do bloco.</div>
+        {% if res.classes_abc_fixas %}
+        {% set ref = res.classes_abc_fixas[0] %}
+        <div class="classe-unif-hero d-flex align-items-baseline justify-content-center flex-wrap gap-2 gap-md-4 mb-3">
+            <span class="classe-unif-classe">{{ ref.letra }}</span>
+            <span class="classe-unif-barra">/{{ res.cidr }}</span>
+        </div>
+        <p class="small text-secondary mb-3">1º octeto {{ ref.faixa_octeto }} · {{ ref.mascara_padrao }}</p>
+        {% else %}
+        <div class="classe-unif-hero d-flex justify-content-center mb-3">
+            <span class="classe-unif-barra classe-unif-barra-so">/{{ res.cidr }}</span>
+        </div>
+        {% endif %}
+        <div class="classe-destaque-octeto mb-2">Máscara: <span class="text-warning fw-bold">{{ res.mask }}</span></div>
+        <div class="classe-destaque-faixa">{{ res.classe_faixa }}</div>
+        <div class="small text-secondary mt-3 pt-2 border-top border-secondary border-opacity-25">{{ res.classe_observacao }}</div>
+    </div>
+    {% else %}
+    {% if res.classes_abc_fixas %}
+    {% set ref = res.classes_abc_fixas[0] %}
+    <div class="classe-card-unificada cv-{{ res.classe_variant }} card-tech shadow mb-3 py-4 px-3 text-center">
+        <div class="d-flex justify-content-between align-items-start mb-3 px-1">
+            <span class="small text-secondary text-uppercase fw-semibold" style="letter-spacing:0.06em;">Host + máscara · classe &amp; /</span>
+            <button type="button" class="help-hint-btn" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-placement="top" title="Classe pelo IP e prefixo da máscara" data-bs-content="Letra grande: classe unicast pelo 1º octeto do IP. / em fonte menor: prefixo que você usou no cálculo.">ℹ️</button>
+        </div>
+        <div class="classe-unif-hero d-flex align-items-baseline justify-content-center flex-wrap gap-2 gap-md-4 mb-3">
+            <span class="classe-unif-classe">{{ ref.letra }}</span>
+            <span class="classe-unif-barra">/{{ res.cidr }}</span>
+        </div>
+        <p class="small text-secondary mb-2">Ref. {{ ref.faixa_octeto }} · {{ ref.mascara_padrao }}</p>
+        <div class="classe-destaque-octeto mb-2">1º octeto do IP: <span class="text-warning fw-bold">{{ res.primeiro_octeto }}</span></div>
+        <div class="classe-destaque-faixa">{{ res.classe_faixa }}</div>
+        {% if res.classe_observacao %}
+        <div class="alert alert-secondary border border-secondary small text-start mt-3 mb-0 py-2">{{ res.classe_observacao }}</div>
+        {% endif %}
     </div>
     {% else %}
     <div class="classe-destaque cv-{{ res.classe_variant }} card-tech shadow mb-3 py-4 px-3 text-center">
         <div class="d-flex justify-content-center mb-1">
-            <button type="button" class="help-hint-btn" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-placement="top" title="Classe IPv4 didática" data-bs-content="Bloco visual para identificar classe IPv4 pelo primeiro octeto e reforçar a faixa clássica correspondente.">ℹ️</button>
+            <button type="button" class="help-hint-btn" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-placement="top" title="Fora de A/B/C" data-bs-content="Não há cartão A/B/C: o 1º octeto não é unicast A, B ou C. A explicação abaixo detalha. O / ainda é o do exercício.">ℹ️</button>
         </div>
-        <div class="classe-destaque-rotulo">Classe IPv4 clássica</div>
+        <div class="classe-destaque-rotulo">Classificação do endereço (1º octeto)</div>
         <div class="classe-destaque-valor">{{ res.classe }}</div>
-        <div class="classe-destaque-octeto">1º octeto do IP informado: <span class="text-warning fw-bold">{{ res.primeiro_octeto }}</span></div>
+        <div class="classe-destaque-octeto">1º octeto: <span class="text-warning fw-bold">{% if res.primeiro_octeto is not none %}{{ res.primeiro_octeto }}{% else %}—{% endif %}</span> · <span class="text-info">/{{ res.cidr }}</span> <span class="text-secondary small">(prefixo usado)</span></div>
         <div class="classe-destaque-faixa">{{ res.classe_faixa }}</div>
+        {% if res.classe_observacao %}
+        <div class="alert alert-secondary border border-secondary small text-start mt-3 mb-0 py-2">{{ res.classe_observacao }}</div>
+        {% endif %}
     </div>
+    {% endif %}
     {% endif %}
     {% endif %}
 
@@ -728,6 +782,11 @@
     </div>
 
     {% if res.tabela_referencia %}
+    {% if res.nota_cidr_cisco %}
+    <div class="alert alert-info border border-info small py-2 px-3 mb-2 text-info-emphasis" role="status">
+        <strong>Cisco / CIDR:</strong> {{ res.nota_cidr_cisco }}
+    </div>
+    {% endif %}
     <div class="card-tech shadow mt-3">
         <div class="p-3 border-bottom border-secondary text-info fw-bold d-flex flex-wrap justify-content-between align-items-center gap-2">
             <span class="icon-title">📚 TABELA DE REFERÊNCIA DINÂMICA (OCTETO {{ res.octeto_referencia }})
@@ -955,6 +1014,82 @@
             <div class="small text-secondary mt-3 mb-0">Validação rápida de prova: no Windows use <code>ipconfig /all</code> + <code>arp -a</code> + <code>tracert 8.8.8.8</code>; no Linux use <code>ip a</code> + <code>ip route</code> + <code>ip neigh</code> + <code>traceroute 8.8.8.8</code>.</div>
         </div>
     </div>
+
+    {% if res.banner_contexto %}
+    <div class="card-tech border border-info border-2 shadow mb-3 banner-contexto-didatico mt-3">
+        <div class="p-3">
+            <h6 class="text-info mb-2 icon-title d-flex flex-wrap align-items-center gap-2">
+                <span>📌</span><span>{{ res.banner_contexto.titulo }}</span>
+                {% if res.ip_informado %}
+                <span class="badge bg-secondary fw-normal">IP {{ res.ip_informado }}</span>
+                {% endif %}
+                {% if res.contexto_didatico == 'ip_host' %}
+                <span class="badge bg-primary fw-normal">Lógica: host (IP + /)</span>
+                {% elif res.contexto_didatico == 'prefixo_subrede' %}
+                <span class="badge bg-warning text-dark fw-normal">Lógica: sub-rede (só / e máscara)</span>
+                {% endif %}
+                <button type="button" class="help-hint-btn ms-auto" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-placement="top" title="Por que ler isto primeiro?" data-bs-content="Em sala, o professor costuma projetar só uma parte da tela. Esta faixa diz qual prefixo (/cidr), qual máscara e qual sub-rede você está estudando antes de baixar o olhar para as tabelas longas.">ℹ️</button>
+            </h6>
+            <p class="small text-secondary mb-3">{{ res.banner_contexto.subtitulo }}</p>
+            <ul class="list-unstyled mb-0">
+                {% for it in res.banner_contexto.itens %}
+                <li class="mb-2 pb-2 border-bottom border-secondary border-opacity-25 last-child-pb-0">
+                    <div class="text-warning fw-bold text-uppercase small" style="letter-spacing:0.04em;">{{ it.rotulo }}</div>
+                    <div class="text-light mt-1">{{ it.valor }}</div>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    {% endif %}
+    {% if res.contexto_didatico == 'prefixo_subrede' and res.enunciado_prova %}
+    <div class="card-tech border border-warning border-opacity-50 shadow mb-3 enunciado-prova-mascara">
+        <div class="p-3">
+            <h6 class="text-warning mb-2 icon-title d-flex flex-wrap align-items-center gap-2">
+                <span>📋</span><span>Resposta tipo prova (máscara / sub-rede)</span>
+                <span class="badge bg-secondary fw-normal">/{{ res.cidr }}</span>
+            </h6>
+            <p class="small text-secondary mb-2">Itens que costumam ser pedidos em lista quando só se dá a máscara (ou o prefixo):</p>
+            {% if res.enunciado_prova.frase_estilo_quadro %}
+            <p class="frase-estilo-quadro p-3 rounded border border-info border-opacity-25 text-light small mb-3" style="background: rgba(31, 111, 235, 0.08);">
+                <span class="text-info text-uppercase small d-block mb-1" style="letter-spacing:0.04em;">Resumo estilo quadro (aula)</span>
+                {{ res.enunciado_prova.frase_estilo_quadro }}
+            </p>
+            {% endif %}
+            {% if res.enunciado_prova.linha_potencias_quadro %}
+            <p class="linha-potencias-quadro p-2 mb-3 rounded small text-secondary border border-secondary border-opacity-25 font-monospace">{{ res.enunciado_prova.linha_potencias_quadro }}</p>
+            {% endif %}
+            <ul class="list-unstyled mb-0">
+                <li class="mb-2 pb-2 border-bottom border-secondary border-opacity-25">
+                    <span class="text-info fw-bold text-uppercase small" style="letter-spacing:0.04em;">Qtde de intervalos</span>
+                    <div class="mt-1 text-light">
+                        <span class="fw-bold">{{ res.enunciado_prova.qtde_intervalos }}</span>
+                        no {{ res.enunciado_prova.octeto_referencia }}º octeto (onde o endereço de rede avança de
+                        <span class="highlight-pulo">{{ res.enunciado_prova.variacao }}</span> em
+                        <span class="highlight-pulo">{{ res.enunciado_prova.variacao }}</span>).
+                    </div>
+                </li>
+                <li class="mb-2 pb-2 border-bottom border-secondary border-opacity-25">
+                    <span class="text-info fw-bold text-uppercase small" style="letter-spacing:0.04em;">Variação dos intervalos</span>
+                    <div class="mt-1 text-light">
+                        Passo entre redes consecutivas nesse octeto:
+                        <span class="fw-bold highlight-pulo">{{ res.enunciado_prova.variacao }}</span>
+                    </div>
+                </li>
+                <li class="mb-0">
+                    <span class="text-info fw-bold text-uppercase small" style="letter-spacing:0.04em;">IPs disponíveis</span>
+                    <div class="mt-1 text-light">
+                        Por sub-rede (bloco): <span class="fw-bold">{{ res.enunciado_prova.ips_total_por_subrede }}</span> endereços no total;
+                        <span class="fw-bold">{{ res.enunciado_prova.ips_uteis_por_subrede }}</span> em geral atribuíveis a hosts (quando rede + broadcast se aplicam).
+                    </div>
+                </li>
+            </ul>
+            {% if res.enunciado_prova.nota %}
+            <p class="small text-secondary mt-3 mb-0 border-top border-secondary border-opacity-25 pt-2">{{ res.enunciado_prova.nota }}</p>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
     {% endif %}
 
     {% if erro %}
@@ -966,6 +1101,25 @@
     </div>
     {% endif %}
     {% endif %}
+    <div class="card-tech p-4 shadow mt-4 mb-2">
+        <h6 class="text-info mb-3 icon-title">
+            <span>ℹ️</span><span>Sobre o Projeto</span>
+        </h6>
+        <p class="small text-light mb-3" style="line-height: 1.6;">
+            Este framework foi desenvolvido como ferramenta didática para estudantes de Redes e Cyber Defense, permitindo calcular, validar e explicar conceitos de IPv4, CIDR, máscaras, wildcard, RFC1918, IPv6 e comandos Cisco CLI.
+        </p>
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <span class="text-secondary small fw-bold me-2">Competências demonstradas:</span>
+            <span class="badge bg-dark border border-secondary text-info">Python</span>
+            <span class="badge bg-dark border border-secondary text-info">Flask</span>
+            <span class="badge bg-dark border border-secondary text-info">Redes TCP/IP</span>
+            <span class="badge bg-dark border border-secondary text-info">IPv4 / IPv6</span>
+            <span class="badge bg-dark border border-secondary text-info">CIDR</span>
+            <span class="badge bg-dark border border-secondary text-info">Docker/VPS</span>
+            <span class="badge bg-dark border border-secondary text-info">Deploy com HTTPS</span>
+            <span class="badge bg-dark border border-secondary text-info">Cyber Defense</span>
+        </div>
+    </div>
 </div>
 <footer class="container pb-4">
     <div class="card-tech p-3 text-center small text-secondary">
@@ -1022,13 +1176,48 @@
             '4': 'autoip',
             '5': 'dominio',
             '6': 'ipv6',
-            '7': 'comparador'
+            '7': 'comparador',
+            '8': 'portas',
+            '9': 'protocolos'
         };
         const tab = keyMap[ev.key];
         if (!tab) return;
         ev.preventDefault();
         showTab(tab);
     });
+
+    const setupCatalogFilter = (catalogId) => {
+        const searchInput = document.querySelector(`[data-search-target="${catalogId}"]`);
+        const filterSelect = document.querySelector(`[data-filter-target="${catalogId}"]`);
+        const counter = document.querySelector(`[data-counter-target="${catalogId}"]`);
+        const emptyState = document.querySelector(`[data-empty-target="${catalogId}"]`);
+        const items = [...document.querySelectorAll(`.comm-item[data-item-type="${catalogId}"]`)];
+        if (!searchInput || !filterSelect || !counter || !emptyState || items.length === 0) return;
+
+        const apply = () => {
+            const term = (searchInput.value || "").trim().toLowerCase();
+            const category = (filterSelect.value || "all").toLowerCase();
+            let visible = 0;
+            items.forEach((item) => {
+                const searchable = (item.dataset.searchable || "").toLowerCase();
+                const itemCategory = (item.dataset.category || "").toLowerCase();
+                const termOk = !term || searchable.includes(term);
+                const categoryOk = category === "all" || itemCategory === category;
+                const shouldShow = termOk && categoryOk;
+                item.classList.toggle("d-none", !shouldShow);
+                if (shouldShow) visible += 1;
+            });
+            counter.textContent = `${visible} item(ns) exibido(s)`;
+            emptyState.classList.toggle("d-none", visible !== 0);
+        };
+
+        searchInput.addEventListener("input", apply);
+        filterSelect.addEventListener("change", apply);
+        apply();
+    };
+
+    setupCatalogFilter("portas");
+    setupCatalogFilter("protocolos");
 </script>
 </body>
 </html>
