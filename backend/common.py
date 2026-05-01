@@ -18,6 +18,33 @@ class UTCFormatter(logging.Formatter):
     converter = time.gmtime
 
 
+class ConsoleUTCFormatter(UTCFormatter):
+    ANSI_RESET = "\033[0m"
+    LEVEL_STYLES = {
+        "DEBUG": ("🔍", "36"),  # ciano
+        "INFO": ("✅", "32"),  # verde
+        "WARNING": ("⚠️", "33"),  # amarelo
+        "ERROR": ("❌", "31"),  # vermelho
+        "CRITICAL": ("🛑", "35"),  # magenta
+    }
+
+    def __init__(self, fmt: str, use_color: bool):
+        super().__init__(fmt)
+        self.use_color = use_color
+
+    def format(self, record):
+        icon, color = self.LEVEL_STYLES.get(record.levelname, ("•", "37"))
+        original_levelname = record.levelname
+        styled_level = f"{icon} {record.levelname}"
+        if self.use_color:
+            styled_level = f"\033[{color}m{styled_level}{self.ANSI_RESET}"
+        record.levelname = styled_level
+        try:
+            return super().format(record)
+        finally:
+            record.levelname = original_levelname
+
+
 class RequestIdFilter(logging.Filter):
     def filter(self, record):
         if not hasattr(record, "request_id"):
@@ -30,8 +57,14 @@ class RequestIdFilter(logging.Filter):
 
 for handler in logging.getLogger().handlers:
     handler.addFilter(RequestIdFilter())
+    stream = getattr(handler, "stream", None)
+    stream_is_tty = bool(getattr(stream, "isatty", lambda: False)())
+    allow_color = os.getenv("APP_LOG_COLOR", "1") != "0"
     handler.setFormatter(
-        UTCFormatter("%(asctime)sZ | %(levelname)s | %(name)s | req=%(request_id)s | %(message)s")
+        ConsoleUTCFormatter(
+            "%(asctime)sZ | %(levelname)s | %(name)s | req=%(request_id)s | %(message)s",
+            use_color=allow_color and stream_is_tty,
+        )
     )
 
 

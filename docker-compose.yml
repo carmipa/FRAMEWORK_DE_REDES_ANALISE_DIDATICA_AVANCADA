@@ -10,6 +10,9 @@ services:
       APP_PORT: "5000"
       APP_DEBUG: "false"
       APP_LOG_LEVEL: "INFO"
+      APP_LOG_COLOR: "1"
+    tty: true
+    stdin_open: true
     restart: unless-stopped
     # CONECTIVIDADE: Permite que o Nginx Proxy Manager "enxergue" este container
     networks:

@@ -1062,16 +1062,37 @@ def home():
 def resolucao_problemas():
     erro = None
     invalid_fields = set()
-    form_data = {"base_network": "172.21.0.0/16", "topology_type": "ring"}
+    form_data = {
+        "base_network": "172.21.0.0/16",
+        "base_network_ip": "172.21.0.0",
+        "base_network_cidr": "16",
+        "topology_type": "ring",
+    }
     locations = [dict(item) for item in DEFAULT_LOCATIONS]
     scenario = None
 
     if request.method == "POST":
         action_type = request.form.get("action_type", "calculate").strip().lower()
+        base_network_raw = request.form.get("base_network", "").strip()
+        base_network_ip = request.form.get("base_network_ip", "").strip()
+        base_network_cidr = request.form.get("base_network_cidr", "").strip()
+        if base_network_ip and base_network_cidr:
+            base_network_value = f"{base_network_ip}/{base_network_cidr}"
+        elif base_network_raw:
+            base_network_value = base_network_raw
+        else:
+            base_network_value = ""
         form_data = {
-            "base_network": request.form.get("base_network", "").strip(),
+            "base_network": base_network_value,
+            "base_network_ip": base_network_ip,
+            "base_network_cidr": base_network_cidr,
             "topology_type": request.form.get("topology_type", "ring").strip().lower() or "ring",
         }
+        if form_data["base_network"] and (not form_data["base_network_ip"] or not form_data["base_network_cidr"]):
+            if "/" in form_data["base_network"]:
+                ip_part, cidr_part = form_data["base_network"].split("/", 1)
+                form_data["base_network_ip"] = form_data["base_network_ip"] or ip_part.strip()
+                form_data["base_network_cidr"] = form_data["base_network_cidr"] or cidr_part.strip()
         location_names = request.form.getlist("loc_name")
         location_hosts = request.form.getlist("loc_hosts")
         locations = []

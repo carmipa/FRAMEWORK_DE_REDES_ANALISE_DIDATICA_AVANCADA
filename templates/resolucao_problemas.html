@@ -177,17 +177,33 @@
         <h5 class="text-light mb-3 problem-title"><span>📥</span><span>Cenário de entrada</span></h5>
         <form method="POST" action="/resolucao-problemas">
             <div class="row g-3">
-                <div class="col-lg-4 col-md-6">
-                    <label class="form-label text-secondary">Rede base (IPv4/CIDR)</label>
+                <div class="col-lg-3 col-md-6">
+                    <label class="form-label text-secondary">IP da rede base (IPv4)</label>
                     <input
                         type="text"
                         class="form-control {{ 'is-invalid' if 'base_network' in invalid_fields else '' }}"
-                        name="base_network"
-                        value="{{ form_data.base_network }}"
-                        placeholder="Ex.: 172.21.0.0/16"
+                        name="base_network_ip"
+                        value="{{ form_data.base_network_ip }}"
+                        placeholder="Ex.: 172.21.0.0"
                         data-bs-toggle="tooltip"
                         data-bs-placement="top"
-                        title="Rede principal que será subdividida para LANs e WANs."
+                        title="Endereço IPv4 da rede principal (sem a barra CIDR)."
+                        required
+                    >
+                </div>
+                <div class="col-lg-2 col-md-6">
+                    <label class="form-label text-secondary">CIDR</label>
+                    <input
+                        type="number"
+                        class="form-control {{ 'is-invalid' if 'base_network' in invalid_fields else '' }}"
+                        name="base_network_cidr"
+                        min="0"
+                        max="32"
+                        value="{{ form_data.base_network_cidr }}"
+                        placeholder="16"
+                        data-bs-toggle="tooltip"
+                        data-bs-placement="top"
+                        title="Prefixo da rede (0 a 32) para compor o CIDR."
                         required
                     >
                 </div>
@@ -409,6 +425,8 @@
         </p>
         <form method="POST" action="/resolucao-problemas" class="d-flex flex-wrap align-items-center gap-2 export-actions">
             <input type="hidden" name="base_network" value="{{ form_data.base_network }}">
+            <input type="hidden" name="base_network_ip" value="{{ form_data.base_network_ip }}">
+            <input type="hidden" name="base_network_cidr" value="{{ form_data.base_network_cidr }}">
             <input type="hidden" name="topology_type" value="{{ form_data.topology_type }}">
             {% for loc in locations %}
             <input type="hidden" name="loc_name" value="{{ loc.name }}">

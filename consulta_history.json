@@ -1,5 +1,20 @@
 [
   {
+    "id": "827e13de",
+    "timestamp": "2026-05-01T17:44:08.831383+00:00",
+    "modo": "cidr",
+    "ip_entrada": "176.16.8.0",
+    "ipv6_entrada": "",
+    "cidr_entrada": "",
+    "mask_entrada": "255.255.0.0",
+    "wildcard_entrada": "0.0.255.255",
+    "rede": "176.16.0.0",
+    "broadcast": "176.16.255.255",
+    "mask": "255.255.0.0",
+    "cidr": 16,
+    "tema": "Risco elevado"
+  },
+  {
     "id": "03124e1b",
     "timestamp": "2026-05-01T17:21:23.551874+00:00",
     "modo": "cidr",
@@ -12,7 +27,8 @@
     "broadcast": "10.0.0.255",
     "mask": "255.255.255.0",
     "cidr": 24,
-    "tema": "Baixo risco operacional"
+    "tema": "Baixo risco operacional",
+    "timestamp_utc": "2026-05-01 17:21:23 UTC"
   },
   {
     "id": "c9251574",
