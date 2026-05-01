@@ -1,4 +1,5 @@
 import ipaddress
+from datetime import datetime
 from io import BytesIO
 import zipfile
 
@@ -193,3 +194,119 @@ def generate_packet_tracer_zip_buffer(scenario):
         files_written=len(router_blocks) + 3,
     )
     return memory_file
+
+
+def generate_entrega_relatorio_txt(scenario):
+    """Relatório textual único com resumo, tabelas LAN/WAN, topologia Mermaid e CLI."""
+    if not scenario:
+        log_event("warning", "problem_export_entrega", status="empty_scenario")
+        raise EntradaInvalidaError("Cenário vazio para exportação.")
+
+    lan_blocks = scenario.get("lan_blocks") or []
+    if not lan_blocks:
+        log_event("warning", "problem_export_entrega", status="empty_locations")
+        raise EntradaInvalidaError("Não há localidades no cenário para exportação.")
+
+    wan_links = scenario.get("wan_links") or []
+    topology_type = (scenario.get("topology_type") or "-").upper()
+    wan_prefix = scenario.get("wan_prefix")
+    lines = [
+        "=" * 78,
+        "DOCUMENTACAO DO CENARIO DE REDE — EXPORTACAO AUTOMATICA",
+        "=" * 78,
+        f"Gerado em: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+        "",
+        "1) RESUMO DO PLANEJAMENTO",
+        "-" * 78,
+        f"Rede base:           {scenario.get('base_network', '-')}",
+        f"Hosts solicitados:   {scenario.get('total_hosts_requested', '-')}",
+        f"Localidades:         {scenario.get('total_locations', '-')}",
+        f"Topologia WAN:       {topology_type}",
+        f"Prefixo WAN:         /{wan_prefix}" if wan_prefix is not None else "Prefixo WAN:         -",
+        "",
+        "2) LANs (VLSM)",
+        "-" * 78,
+        f"{'Local':<18} {'Rede':<22} {'Mascara':<18} {'Wildcard':<14} {'Gateway':<14}",
+        f"{'-' * 18} {'-' * 22} {'-' * 18} {'-' * 14} {'-' * 14}",
+    ]
+
+    for lan in lan_blocks:
+        rede = f"{lan['network']}/{lan['prefix']}"
+        lines.append(
+            f"{lan['location_name']:<18} {rede:<22} {lan['netmask']:<18} "
+            f"{lan['wildcard']:<14} {lan['gateway']:<14}"
+        )
+        faixa = f"{lan['host_range_start']} - {lan['host_range_end']}"
+        neces = f"{lan['hosts_required']} / {lan['hosts_supported']}"
+        lines.append(f"    Faixa de hosts: {faixa}")
+        lines.append(f"    Necessario / Suportado: {neces}")
+        lines.append("")
+
+    lines.extend(
+        [
+            "3) Links WAN",
+            "-" * 78,
+        ]
+    )
+    if not wan_links:
+        lines.append("(nenhum link WAN neste cenario)")
+        lines.append("")
+    else:
+        for link in wan_links:
+            a, b = link["endpoints"]
+            ips = link.get("ips") or {}
+            lines.append(
+                f"{link['name']}: {link['network']}/{link['prefix']} "
+                f"(mascara {link['netmask']})"
+            )
+            lines.append(f"    {a} -> {ips.get(a, '-')}")
+            lines.append(f"    {b} -> {ips.get(b, '-')}")
+            lines.append("")
+
+    lines.extend(
+        [
+            "4) Topologia Mermaid (copiar para editores que renderizam Mermaid)",
+            "-" * 78,
+            (scenario.get("topology_mermaid") or "").strip(),
+            "",
+            "5) Sequencia sugerida no Packet Tracer",
+            "-" * 78,
+        ]
+    )
+    for index, step in enumerate(scenario.get("packet_tracer_steps") or [], start=1):
+        lines.append(f"{index}. {step}")
+    lines.append("")
+
+    router_commands = scenario.get("router_commands") or {}
+    lines.extend(
+        [
+            "6) Comandos Cisco CLI por roteador",
+            "-" * 78,
+        ]
+    )
+    for router_name in sorted(router_commands.keys()):
+        lines.append("")
+        lines.append("!" + "=" * 77)
+        lines.append(f"! ROTEADOR: {router_name.upper()}")
+        lines.append("!" + "=" * 77)
+        lines.append((router_commands[router_name] or "").strip())
+        lines.append("")
+
+    lines.extend(
+        [
+            "=" * 78,
+            "FIM DO RELATORIO",
+            "=" * 78,
+            "",
+        ]
+    )
+
+    content = "\n".join(lines).strip() + "\n"
+    log_event(
+        "info",
+        "problem_export_entrega",
+        status="ok",
+        routers_count=len(router_commands),
+        wan_links_count=len(wan_links),
+    )
+    return content

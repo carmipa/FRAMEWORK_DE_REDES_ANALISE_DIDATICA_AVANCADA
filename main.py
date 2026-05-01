@@ -44,6 +44,7 @@ from backend.services.home_web_helpers import (
 from backend.services.pdf_service import gerar_pdf_simples
 from backend.services.problem_resolution_service import (
     DEFAULT_LOCATIONS,
+    generate_entrega_relatorio_txt,
     generate_packet_tracer_script,
     generate_packet_tracer_zip_buffer,
     solve_network_problem,
@@ -1067,6 +1068,7 @@ def resolucao_problemas():
         "base_network_ip": "172.21.0.0",
         "base_network_cidr": "16",
         "topology_type": "ring",
+        "wan_prefix": "30",
     }
     locations = [dict(item) for item in DEFAULT_LOCATIONS]
     scenario = None
@@ -1076,6 +1078,13 @@ def resolucao_problemas():
         base_network_raw = request.form.get("base_network", "").strip()
         base_network_ip = request.form.get("base_network_ip", "").strip()
         base_network_cidr = request.form.get("base_network_cidr", "").strip()
+        wan_prefix = request.form.get("wan_prefix", "30").strip() or "30"
+        if base_network_ip and not base_network_cidr:
+            try:
+                inferred_cidr, _ = inferir_cidr_por_ip(base_network_ip)
+                base_network_cidr = str(inferred_cidr)
+            except EntradaInvalidaError:
+                pass
         if base_network_ip and base_network_cidr:
             base_network_value = f"{base_network_ip}/{base_network_cidr}"
         elif base_network_raw:
@@ -1087,6 +1096,7 @@ def resolucao_problemas():
             "base_network_ip": base_network_ip,
             "base_network_cidr": base_network_cidr,
             "topology_type": request.form.get("topology_type", "ring").strip().lower() or "ring",
+            "wan_prefix": wan_prefix,
         }
         if form_data["base_network"] and (not form_data["base_network_ip"] or not form_data["base_network_cidr"]):
             if "/" in form_data["base_network"]:
@@ -1117,6 +1127,7 @@ def resolucao_problemas():
                 form_data["base_network"],
                 locations,
                 topology_type=form_data["topology_type"],
+                wan_prefix=form_data["wan_prefix"],
             )
             if action_type == "export":
                 log_event(
@@ -1146,6 +1157,20 @@ def resolucao_problemas():
                     as_attachment=True,
                     download_name="laboratorio_packet_tracer.zip",
                 )
+            if action_type == "export_entrega":
+                log_event(
+                    "info",
+                    "problem_resolution_export",
+                    export_type="entrega_txt",
+                    reason="Usuário exportou relatório completo da tela para entrega.",
+                )
+                content = generate_entrega_relatorio_txt(scenario)
+                filename = "documentacao_cenario_rede.txt"
+                return app.response_class(
+                    content,
+                    mimetype="text/plain; charset=utf-8",
+                    headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+                )
         except EntradaInvalidaError as exc:
             erro = str(exc)
             if not form_data["base_network"]:
@@ -1154,6 +1179,12 @@ def resolucao_problemas():
                 invalid_fields.add("loc_hosts")
             if form_data["topology_type"] not in {"ring", "mesh"}:
                 invalid_fields.add("topology_type")
+            try:
+                wan_prefix_i = int(form_data["wan_prefix"])
+                if wan_prefix_i < 0 or wan_prefix_i > 30:
+                    invalid_fields.add("wan_prefix")
+            except (TypeError, ValueError):
+                invalid_fields.add("wan_prefix")
         except Exception as exc:
             log_event(
                 "error",

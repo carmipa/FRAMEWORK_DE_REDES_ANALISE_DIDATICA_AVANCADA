@@ -176,8 +176,8 @@
     <div class="problem-box p-3 mb-3">
         <h5 class="text-light mb-3 problem-title"><span>📥</span><span>Cenário de entrada</span></h5>
         <form method="POST" action="/resolucao-problemas">
-            <div class="row g-3">
-                <div class="col-lg-3 col-md-6">
+            <div class="row g-3 align-items-end">
+                <div class="col-lg-4 col-md-6">
                     <label class="form-label text-secondary">IP da rede base (IPv4)</label>
                     <input
                         type="text"
@@ -192,7 +192,7 @@
                     >
                 </div>
                 <div class="col-lg-2 col-md-6">
-                    <label class="form-label text-secondary">CIDR</label>
+                    <label class="form-label text-secondary">CIDR da rede base</label>
                     <input
                         type="number"
                         class="form-control {{ 'is-invalid' if 'base_network' in invalid_fields else '' }}"
@@ -200,14 +200,29 @@
                         min="0"
                         max="32"
                         value="{{ form_data.base_network_cidr }}"
-                        placeholder="16"
+                        placeholder="16 (opcional)"
                         data-bs-toggle="tooltip"
                         data-bs-placement="top"
-                        title="Prefixo da rede (0 a 32) para compor o CIDR."
+                        title="Prefixo da rede principal (super-rede). Se vazio, o sistema infere automaticamente pelo IP base."
+                    >
+                </div>
+                <div class="col-lg-2 col-md-6">
+                    <label class="form-label text-secondary">Prefixo WAN</label>
+                    <input
+                        type="number"
+                        class="form-control {{ 'is-invalid' if 'wan_prefix' in invalid_fields else '' }}"
+                        name="wan_prefix"
+                        min="0"
+                        max="30"
+                        value="{{ form_data.wan_prefix }}"
+                        placeholder="30"
+                        data-bs-toggle="tooltip"
+                        data-bs-placement="top"
+                        title="Prefixo aplicado aos links WAN. Use 30 para o cenário clássico ponto a ponto."
                         required
                     >
                 </div>
-                <div class="col-lg-3 col-md-6">
+                <div class="col-lg-2 col-md-6">
                     <label class="form-label text-secondary">Topologia WAN</label>
                     <select
                         name="topology_type"
@@ -225,20 +240,22 @@
                         type="submit"
                         name="action_type"
                         value="calculate"
-                        class="btn btn-primary mt-4"
+                        class="btn btn-primary w-100"
                         data-bs-toggle="tooltip"
                         data-bs-placement="top"
                         title="Processa o cenário e monta LANs, WANs, CLI e topologia."
                     >Calcular cenário</button>
                 </div>
-                <div class="col-lg-2 col-md-6 d-grid align-items-end">
-                    <a
-                        href="/resolucao-problemas"
-                        class="btn btn-danger mt-4"
-                        data-bs-toggle="tooltip"
-                        data-bs-placement="top"
-                        title="Limpa o formulario e remove os resultados exibidos."
-                    >🧹 Limpar tela</a>
+                <div class="col-lg-2 col-md-6 offset-lg-10">
+                    <div class="d-grid mt-1">
+                        <a
+                            href="/resolucao-problemas"
+                            class="btn btn-danger w-100"
+                            data-bs-toggle="tooltip"
+                            data-bs-placement="top"
+                            title="Limpa o formulario e remove os resultados exibidos."
+                        >🧹 Limpar tela</a>
+                    </div>
                 </div>
             </div>
             <hr class="border-secondary">
@@ -310,7 +327,7 @@
         <h5 class="text-warning mb-2 problem-title"><span>🧭</span><span>Resumo do planejamento</span></h5>
         <p class="mb-1 text-light">Rede base: <strong>{{ scenario.base_network }}</strong></p>
         <p class="mb-1 text-light">Total de hosts solicitados: <strong>{{ scenario.total_hosts_requested }}</strong></p>
-        <p class="mb-0 text-light">Localidades: <strong>{{ scenario.total_locations }}</strong> | Topologia WAN: <strong>{{ scenario.topology_type|upper }}</strong></p>
+        <p class="mb-0 text-light">Localidades: <strong>{{ scenario.total_locations }}</strong> | Topologia WAN: <strong>{{ scenario.topology_type|upper }}</strong> | Prefixo WAN: <strong>/{{ scenario.wan_prefix }}</strong></p>
         <div class="result-strip">
             <span class="section-chip chip-info">🧱 Base {{ scenario.base_network }}</span>
             <span class="section-chip chip-success">👥 Hosts {{ scenario.total_hosts_requested }}</span>
@@ -421,13 +438,14 @@
     <div class="problem-box p-3 mb-3">
         <h5 class="text-success mb-2 problem-title"><span>📦</span><span>Área de Exportação do Laboratório</span></h5>
         <p class="small text-secondary mb-3">
-            Gere o arquivo consolidado com todos os comandos dos roteadores para usar no Cisco Packet Tracer.
+            Gere o arquivo consolidado com comandos para o Packet Tracer, ou um relatório único com tudo que aparece na página para entregar na disciplina.
         </p>
         <form method="POST" action="/resolucao-problemas" class="d-flex flex-wrap align-items-center gap-2 export-actions">
             <input type="hidden" name="base_network" value="{{ form_data.base_network }}">
             <input type="hidden" name="base_network_ip" value="{{ form_data.base_network_ip }}">
             <input type="hidden" name="base_network_cidr" value="{{ form_data.base_network_cidr }}">
             <input type="hidden" name="topology_type" value="{{ form_data.topology_type }}">
+            <input type="hidden" name="wan_prefix" value="{{ form_data.wan_prefix }}">
             {% for loc in locations %}
             <input type="hidden" name="loc_name" value="{{ loc.name }}">
             <input type="hidden" name="loc_hosts" value="{{ loc.hosts }}">
@@ -450,6 +468,15 @@
                 data-bs-placement="top"
                 title="Baixa um .zip com consolidado, configs individuais, topologia e README."
             >🗜️ Exportar Lab (.zip)</button>
+            <button
+                type="submit"
+                name="action_type"
+                value="export_entrega"
+                class="btn btn-warning fw-bold text-dark"
+                data-bs-toggle="tooltip"
+                data-bs-placement="top"
+                title="Baixa um .txt com resumo, LANs, WANs, topologia Mermaid, passos e todos os scripts CLI."
+            >📄 Exportar entrega (.txt)</button>
             <span class="section-chip chip-success">Pronto para colar no CLI dos roteadores</span>
         </form>
     </div>

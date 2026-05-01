@@ -42,7 +42,7 @@ O framework cobre fluxo didático completo para aula, laboratório e revisão t�
 - conversão entre CIDR, máscara e wildcard;
 - resolução DNS com cache e timeout;
 - classificação e contexto de risco/GRC;
-- geração automática de cenário de laboratório com roteadores e links WAN.
+- geração automática de cenário de laboratório (VLSM, links WAN com prefixo configurável, CLI e exportação para laboratório ou entrega em um único `.txt`).
 
 ---
 
@@ -61,14 +61,18 @@ O framework cobre fluxo didático completo para aula, laboratório e revisão t�
 
 ### Módulo 2 - Resolução de Problemas (VLSM + WAN)
 
-- entrada dinâmica com N localidades;
-- alocação VLSM automática por prioridade de hosts;
-- geração de links WAN `/30` em topologia `ring` ou `mesh`;
+- entrada dinâmica com N localidades (nome + quantidade de hosts);
+- **CIDR da rede base** (super-rede): define o bloco IPv4 onde serão alocadas as sub-redes LAN e os links WAN;
+  - **opcional**: se o campo ficar vazio, o sistema infere o prefixo pelo primeiro octeto do IP base (modelo didático *classful*: `10.x` → `/8`, `172.x` → `/16`, `192.x` → `/24`), alinhado ao botão “Auto CIDR” da análise principal;
+- **Prefixo WAN** separado do CIDR da base (padrão `30` para enlaces ponto a ponto); os links seriais usam esse prefixo; intervalo aceito `0`–`30` (com validação de IPs utilizáveis por link);
+- alocação VLSM automática por prioridade de hosts (maior demanda primeiro);
+- topologia WAN `ring` ou `mesh` com alocação sequencial de sub-redes WAN dentro da rede base;
 - diagrama lógico automático (Mermaid);
-- blocos CLI Cisco por roteador;
+- blocos CLI Cisco por roteador (LAN, seriais, DHCP pool, RIPv2);
 - exportação:
-  - consolidado `.txt`;
-  - pacote `.zip` com configs individuais, diagrama e README de laboratório.
+  - **Lab** — `.txt` consolidado só com scripts IOS para colar no Packet Tracer;
+  - **Lab** — `.zip` com consolidado, configs por roteador, `LAB_TOPOLOGY.mermaid` e `README_LAB.txt`;
+  - **Entrega** — `documentacao_cenario_rede.txt` com resumo, tabelas LAN/WAN, topologia Mermaid em texto, passos sugeridos e todos os scripts CLI (adequado para entregar documentação da atividade).
 
 ---
 
@@ -99,14 +103,15 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-    I[Entrada base_network + localidades + topology_type] --> N[Normalizacao e validacao]
+    I[Entrada rede base + localidades + topology_type + prefixo WAN] --> N[Normalizacao e validacao]
     N --> L[VLSM LAN blocks]
-    L --> W[WAN /30 links]
+    L --> W[Links WAN com prefixo configuravel]
     W --> C[Geracao CLI Cisco]
     C --> M[Geracao Mermaid]
     M --> O[Render HTML]
-    C --> E1[Export TXT consolidado]
-    C --> E2[Export ZIP laboratório]
+    C --> E1[Export TXT lab]
+    C --> E2[Export ZIP lab]
+    C --> E3[Export TXT entrega completa]
 ```
 
 ### Fluxo de logging server-side (sem tela de logs)
@@ -250,8 +255,10 @@ A suíte cobre:
 - validações dos modos principais;
 - resolução de problemas com múltiplas localidades;
 - topologias WAN ring e mesh;
-- exportações `.txt` e `.zip`;
+- exportações laboratório (`.txt` consolidado e `.zip`);
 - regressões de comportamento e renderização crítica.
+
+> O relatório único de entrega (`export_entrega` → `documentacao_cenario_rede.txt`) pode ser validado manualmente após o cálculo do cenário na interface.
 
 ---
 
@@ -276,6 +283,9 @@ Esse desenho reduz acoplamento e facilita manutenção incremental.
 - [x] VLSM dinâmico para N localidades
 - [x] topologia WAN ring/mesh
 - [x] geração CLI Cisco + export laboratório
+- [x] prefixo WAN configurável (separado do CIDR da rede base)
+- [x] CIDR da rede base opcional com inferência didática pelo IP
+- [x] exportação texto único para entrega acadêmica (`documentacao_cenario_rede.txt`)
 - [x] logging estruturado com `request_id` e UTC
 - [x] responsividade geral da interface
 - [ ] persistência externa de logs operacionais (arquivo/stack observabilidade)

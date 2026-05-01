@@ -98,20 +98,31 @@ def build_wan_pairs(location_keys, topology_type):
     raise EntradaInvalidaError("Topologia WAN inválida. Use 'ring' ou 'mesh'.")
 
 
-def build_wan_links(base_network, used_subnets, location_keys, topology_type):
+def build_wan_links(base_network, used_subnets, location_keys, topology_type, wan_prefix=30):
     wan_pairs = build_wan_pairs(location_keys, topology_type)
+    try:
+        wan_prefix = int(wan_prefix)
+    except (TypeError, ValueError) as exc:
+        raise EntradaInvalidaError("Prefixo WAN invalido. Informe um inteiro entre 0 e 30.") from exc
+    if wan_prefix < 0 or wan_prefix > 30:
+        raise EntradaInvalidaError("Prefixo WAN invalido. Informe um inteiro entre 0 e 30.")
     log_event(
         "info",
         "problem_wan_planning",
         status="start",
         topology_type=topology_type,
+        wan_prefix=wan_prefix,
         links_expected=len(wan_pairs),
     )
     links = []
     for index, pair in enumerate(wan_pairs, start=1):
-        subnet = find_next_available_subnet(base_network, 30, used_subnets)
+        subnet = find_next_available_subnet(base_network, wan_prefix, used_subnets)
         used_subnets.append(subnet)
         hosts = list(subnet.hosts())
+        if len(hosts) < 2:
+            raise EntradaInvalidaError(
+                f"A sub-rede WAN /{wan_prefix} nao oferece dois IPs utilizaveis para o link {pair[0]} <-> {pair[1]}."
+            )
         links.append(
             {
                 "name": f"WAN-{index}",

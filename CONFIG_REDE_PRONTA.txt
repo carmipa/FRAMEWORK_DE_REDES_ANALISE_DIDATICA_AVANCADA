@@ -1,0 +1,98 @@
+ATIVIDADE - PLANO PRONTO PARA USO (SEM CIDR)
+
+Rede base fornecida: 172.21.0.0
+
+1) SUBREDES DEFINIDAS (MASCARA DECIMAL)
+- Matriz LAN:   172.21.0.0   mascara 255.255.254.0
+- Filial1 LAN:  172.21.2.0   mascara 255.255.254.0
+- Filial2 LAN:  172.21.4.0   mascara 255.255.254.0
+- WAN MxF1:     172.21.6.0   mascara 255.255.255.252
+- WAN MxF2:     172.21.6.4   mascara 255.255.255.252
+
+2) IP DAS INTERFACES DOS ROTEADORES
+
+Roteador MATRIZ
+- G0/0     172.21.0.1   255.255.254.0
+- S0/0/0   172.21.6.1   255.255.255.252   (link com Filial1)
+- S0/0/1   172.21.6.5   255.255.255.252   (link com Filial2)
+
+Roteador FILIAL1
+- G0/0     172.21.2.1   255.255.254.0
+- S0/0/0   172.21.6.2   255.255.255.252   (link com Matriz)
+
+Roteador FILIAL2
+- G0/0     172.21.4.1   255.255.254.0
+- S0/0/0   172.21.6.6   255.255.255.252   (link com Matriz)
+
+3) GATEWAY PADRAO DOS CLIENTES
+- Matriz:  gateway 172.21.0.1
+- Filial1: gateway 172.21.2.1
+- Filial2: gateway 172.21.4.1
+
+4) EXEMPLO DE IP PARA UM PC EM CADA SITE
+- PC Matriz:  172.21.0.10   255.255.254.0   GW 172.21.0.1
+- PC Filial1: 172.21.2.10   255.255.254.0   GW 172.21.2.1
+- PC Filial2: 172.21.4.10   255.255.254.0   GW 172.21.4.1
+
+5) COMANDOS PRONTOS (CLI)
+
+MATRIZ
+enable
+conf t
+hostname MATRIZ
+interface g0/0
+ ip address 172.21.0.1 255.255.254.0
+ no shutdown
+exit
+interface s0/0/0
+ ip address 172.21.6.1 255.255.255.252
+ no shutdown
+exit
+interface s0/0/1
+ ip address 172.21.6.5 255.255.255.252
+ no shutdown
+exit
+ip route 172.21.2.0 255.255.254.0 172.21.6.2
+ip route 172.21.4.0 255.255.254.0 172.21.6.6
+end
+wr
+
+FILIAL1
+enable
+conf t
+hostname FILIAL1
+interface g0/0
+ ip address 172.21.2.1 255.255.254.0
+ no shutdown
+exit
+interface s0/0/0
+ ip address 172.21.6.2 255.255.255.252
+ no shutdown
+exit
+ip route 172.21.0.0 255.255.254.0 172.21.6.1
+ip route 172.21.4.0 255.255.254.0 172.21.6.1
+end
+wr
+
+FILIAL2
+enable
+conf t
+hostname FILIAL2
+interface g0/0
+ ip address 172.21.4.1 255.255.254.0
+ no shutdown
+exit
+interface s0/0/0
+ ip address 172.21.6.6 255.255.255.252
+ no shutdown
+exit
+ip route 172.21.0.0 255.255.254.0 172.21.6.5
+ip route 172.21.2.0 255.255.254.0 172.21.6.5
+end
+wr
+
+6) OBSERVACOES
+- Se interface serial estiver down/down e voce estiver no lado DCE, configurar:
+  clock rate 64000
+- Se o nome da interface mudar no seu roteador (ex.: g0/1, s0/1/0), ajuste apenas o nome.
+- Foi usado apenas formato decimal de mascara (sem CIDR), como solicitado.
