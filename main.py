@@ -730,6 +730,21 @@ def explicar_erro_didatico(erro):
     }
 
 
+def _motivo_analise(modo: str) -> str:
+    mapa = {
+        "cidr": "Usuário pediu cálculo de sub-rede CIDR para validar rede/hosts.",
+        "mask": "Usuário pediu decomposição didática de máscara decimal e barra.",
+        "wildcard": "Usuário pediu conversão wildcard para uso em ACL/OSPF.",
+        "autoip": "Usuário pediu descoberta automática de CIDR a partir do IP.",
+        "dominio": "Usuário pediu resolução DNS e decomposição técnica do destino.",
+        "ipv6": "Usuário pediu análise didática de endereço IPv6.",
+        "comparador": "Usuário pediu comparação lado a lado entre dois prefixos CIDR.",
+        "portas": "Usuário consultou catálogo de portas para estudo/auditoria.",
+        "protocolos": "Usuário consultou catálogo de protocolos para estudo/auditoria.",
+    }
+    return mapa.get(modo, "Usuário executou análise técnica no framework.")
+
+
 @app.route("/", methods=["GET", "POST"])
 def home():
     res, erro = None, None
@@ -817,6 +832,8 @@ def home():
             else:
                 erro = "Selecione um modo e preencha o campo correspondente."
                 invalid_fields.add("modo")
+        if erro is None:
+            log_event("info", "analysis_use", modo=modo, reason=_motivo_analise(modo))
 
         # Resolve DNS automático apenas quando o modo depende de IP de host.
         if (
@@ -1187,6 +1204,14 @@ def resolucao_problemas():
             if not name and not hosts:
                 continue
             locations.append({"name": name, "hosts": hosts})
+        log_event(
+            "info",
+            "problem_resolution_use",
+            action_type=action_type,
+            locations_count=len(locations),
+            topology_type=form_data["topology_type"],
+            reason="Usuário executou resolução de cenário VLSM/WAN para estudo ou laboratório.",
+        )
 
         try:
             scenario = solve_network_problem(
@@ -1195,6 +1220,12 @@ def resolucao_problemas():
                 topology_type=form_data["topology_type"],
             )
             if action_type == "export":
+                log_event(
+                    "info",
+                    "problem_resolution_export",
+                    export_type="txt",
+                    reason="Usuário exportou script consolidado para aplicar no Packet Tracer.",
+                )
                 content = generate_packet_tracer_script(scenario)
                 filename = "config_packet_tracer_consolidado.txt"
                 return app.response_class(
@@ -1203,6 +1234,12 @@ def resolucao_problemas():
                     headers={"Content-Disposition": f'attachment; filename="{filename}"'},
                 )
             if action_type == "export_zip":
+                log_event(
+                    "info",
+                    "problem_resolution_export",
+                    export_type="zip",
+                    reason="Usuário exportou pacote ZIP com configs para laboratório.",
+                )
                 zip_file = generate_packet_tracer_zip_buffer(scenario)
                 return send_file(
                     zip_file,

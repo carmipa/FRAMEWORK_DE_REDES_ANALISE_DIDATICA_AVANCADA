@@ -290,6 +290,5 @@ class AppTestCase(unittest.TestCase):
         readme = archive.read("README_LAB.txt").decode("utf-8")
         self.assertIn("INSTRUCOES DE USO DO LABORATORIO", readme)
 
-
 if __name__ == "__main__":
     unittest.main()

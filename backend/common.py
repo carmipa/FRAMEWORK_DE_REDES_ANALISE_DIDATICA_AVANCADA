@@ -1,5 +1,6 @@
 import logging
 import os
+import time
 from pathlib import Path
 
 from flask import g
@@ -11,6 +12,10 @@ logging.basicConfig(
     format="%(asctime)s | %(levelname)s | %(name)s | req=%(request_id)s | %(message)s",
 )
 _base_logger = logging.getLogger("cybernet")
+
+
+class UTCFormatter(logging.Formatter):
+    converter = time.gmtime
 
 
 class RequestIdFilter(logging.Filter):
@@ -25,6 +30,9 @@ class RequestIdFilter(logging.Filter):
 
 for handler in logging.getLogger().handlers:
     handler.addFilter(RequestIdFilter())
+    handler.setFormatter(
+        UTCFormatter("%(asctime)sZ | %(levelname)s | %(name)s | req=%(request_id)s | %(message)s")
+    )
 
 
 class RequestLoggerAdapter(logging.LoggerAdapter):
@@ -46,6 +54,15 @@ def log_event(level: str, evento: str, exc_info: bool = False, **fields):
     payload = " ".join(f"{k}={cleaned[k]}" for k in sorted(cleaned))
     message = f"evento={evento}" + (f" {payload}" if payload else "")
     getattr(logger, level.lower(), logger.info)(message, exc_info=exc_info)
+    try:
+        from backend.services.audit_log_service import register_audit_event
+
+        request_id = getattr(g, "request_id", "-")
+    except Exception:
+        register_audit_event = None
+        request_id = "-"
+    if register_audit_event is not None:
+        register_audit_event(level=level, evento=evento, fields=cleaned, request_id=request_id)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 HISTORY_FILE = BASE_DIR / "consulta_history.json"

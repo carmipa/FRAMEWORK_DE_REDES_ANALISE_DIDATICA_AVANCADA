@@ -3,7 +3,6 @@
 [![Python](https://img.shields.io/badge/Python-3.12+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![Flask](https://img.shields.io/badge/Flask-3.x-000000?logo=flask&logoColor=white)](https://flask.palletsprojects.com/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
-[![Compose](https://img.shields.io/badge/Docker%20Compose-Supported-1D63ED?logo=docker&logoColor=white)](https://docs.docker.com/compose/)
 [![Status](https://img.shields.io/badge/Status-Ativo-2ea043)](#)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 
@@ -11,214 +10,120 @@
   <img src="./icone.png" alt="Ícone do Framework de Redes" width="420" />
 </p>
 
-Aplicação didática para estudo de redes IPv4 com foco em **subnetting, bitwise AND, wildcard, CIDR, DNS/hostname e contexto de segurança/GRC**.
+Aplicação didática em Flask para análise de redes, com dois módulos principais:
 
-> Projeto pensado para execução local (máquina do usuário), com interface web no navegador.
->
-> 🔗 Endereço do projeto: [https://github.com/carmipa/FRAMEWORK_DE_REDES_ANALISE_DIDATICA_AVANCADA](https://github.com/carmipa/FRAMEWORK_DE_REDES_ANALISE_DIDATICA_AVANCADA)
+- `Análise Didática`: CIDR, máscara, wildcard, DNS, IPv6, comparador, portas e protocolos.
+- `Resolução de Problemas`: VLSM dinâmico para N localidades, topologia WAN (ring/mesh), CLI Cisco e exportação para laboratório.
 
-### 👨‍💻 Desenvolvedor
-
-**Desenvolvido por:** Paulo André Carminati | RM570877 | 1-TDCPV | CyberSegurança | FIAP/2026
-
-- 🎓 FIAP 2026
-- 🛡️ Cyber Defense
-- 💻 Python + Flask
+> Repositório: [https://github.com/carmipa/FRAMEWORK_DE_REDES_ANALISE_DIDATICA_AVANCADA](https://github.com/carmipa/FRAMEWORK_DE_REDES_ANALISE_DIDATICA_AVANCADA)
 
 ---
 
 ## 📚 Sumário
 
-- [Visão Geral](#-visão-geral)
-- [Navegação Rápida](#-navegação-rápida)
-- [Guia de Instalação e Execução](#-guia-de-instalação-e-execução)
-- [Principais Funcionalidades](#-principais-funcionalidades)
-- [Arquitetura](#-arquitetura)
-- [Estrutura do Projeto](#-estrutura-do-projeto)
-- [Como Executar](#-como-executar)
-  - [Executar com Docker (recomendado)](#executar-com-docker-recomendado)
-  - [Executar com Python local](#executar-com-python-local)
-- [Modos de Cálculo](#-modos-de-cálculo)
-- [Tema Dinâmico e Didática Visual](#-tema-dinâmico-e-didática-visual)
-- [Logs, Exceções e GRC](#-logs-exceções-e-grc)
-- [Variáveis de Ambiente](#-variáveis-de-ambiente)
-- [Exemplos de Uso](#-exemplos-de-uso)
-- [Roadmap](#-roadmap)
-- [Contribuição](#-contribuição)
-- [Licença](#-licença)
-
----
-
-## 🔗 Navegação Rápida
-
-> Acesse direto as áreas mais usadas deste README:
-
-- [▶️ Executar com Docker](#executar-com-docker-recomendado)
-- [💻 Executar com Python local](#executar-com-python-local)
-- [⚙️ Variáveis de Ambiente](#-variáveis-de-ambiente)
-- [🧪 Modos de Cálculo](#-modos-de-cálculo)
-- [📋 Logs, Exceções e GRC](#-logs-exceções-e-grc)
-- [🛣️ Roadmap](#-roadmap)
-
----
-
-## 🧰 Guia de Instalação e Execução
-
-### Pré-requisitos
-
-- Git instalado
-- Python `3.12+` (se for rodar local sem Docker)
-- Docker + Docker Compose (se for rodar via container)
-
-### 1) Clonar o projeto
-
-```bash
-git clone https://github.com/carmipa/FRAMEWORK_DE_REDES_ANALISE_DIDATICA_AVANCADA.git
-cd FRAMEWORK_DE_REDES_ANALISE_DIDATICA_AVANCADA
-```
-
-### 2) Escolher forma de execução
-
-#### Opção A — Docker (mais simples para usuários finais)
-
-```bash
-docker compose up --build
-```
-
-Abra no navegador: [http://127.0.0.1:5000](http://127.0.0.1:5000)
-
-Para parar:
-
-```bash
-docker compose down
-```
-
-#### Opção B — Python local (ambiente virtual)
-
-##### Windows (PowerShell)
-
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-python main.py
-```
-
-##### Linux/macOS (bash/zsh)
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-python main.py
-```
-
-Abra no navegador: [http://127.0.0.1:5000](http://127.0.0.1:5000)
-
-### 3) Rodar testes automatizados
-
-```bash
-python -m unittest tests/test_app.py
-```
-
-### 4) Solução rápida de problemas
-
-- **Porta 5000 em uso**: encerre processo da porta ou altere `APP_PORT`.
-- **Dependências falhando**: recrie `.venv` e reinstale `requirements.txt`.
-- **Docker não sobe**: valide se Docker Desktop está aberto e saudável.
+- Visão geral
+- Funcionalidades
+- Arquitetura
+- Execução local e Docker
+- Variáveis de ambiente
+- Logging e observabilidade (server-side)
+- Estrutura de pastas
+- Testes
+- Roadmap
 
 ---
 
 ## 🎯 Visão Geral
 
-O framework calcula e apresenta, de forma visual e explicativa:
+O framework cobre fluxo didático completo para aula, laboratório e revisão técnica:
 
-- máscara, wildcard e CIDR;
-- endereço de rede e broadcast;
-- intervalo de hosts úteis;
-- decomposição binária de 32 bits;
-- tabela de AND (`IP x Máscara`);
-- régua de sub-redes;
-- classificação didática por classe IPv4;
-- contexto de segurança para suporte a decisões GRC.
-
-Também suporta entrada por **domínio/hostname** (ex.: `google.com`), resolvendo DNS automaticamente para IPv4 antes do cálculo.
+- cálculo de rede/broadcast/hosts úteis;
+- decomposição binária e tabela AND por octeto;
+- conversão entre CIDR, máscara e wildcard;
+- resolução DNS com cache e timeout;
+- classificação e contexto de risco/GRC;
+- geração automática de cenário de laboratório com roteadores e links WAN.
 
 ---
 
-## 🚀 Principais Funcionalidades
+## 🚀 Funcionalidades
 
-- ✅ Cálculo por `CIDR`
-- ✅ Cálculo por `Máscara Decimal`
-- ✅ Engenharia reversa por `Wildcard`
-- ✅ Descoberta de CIDR por IP (lógica classful didática)
-- ✅ Decomposição de domínio/hostname para IPv4
-- ✅ Modo IPv6 básico com classificação e contexto GRC
-- ✅ Tabelas e blocos com comportamento dinâmico por cenário
-- ✅ Tema visual dinâmico por severidade de rede
-- ✅ Tooltips explicativos em campos e botões
-- ✅ Logs estruturados com `request_id`
-- ✅ Tratamento global de exceções com resposta segura ao usuário
+### Módulo 1 - Análise Didática
+
+- `CIDR`: IP + /barra.
+- `Máscara`: decomposição por máscara decimal.
+- `Wildcard`: engenharia reversa com base ACL/OSPF.
+- `Auto CIDR`: inferência didática por IP.
+- `Domínio`: hostname/URL -> DNS -> análise.
+- `IPv6`: visão básica com resumo técnico.
+- `Comparador`: comparação lado a lado entre dois prefixos.
+- `Portas` e `Protocolos`: catálogo didático com filtros.
+
+### Módulo 2 - Resolução de Problemas (VLSM + WAN)
+
+- entrada dinâmica com N localidades;
+- alocação VLSM automática por prioridade de hosts;
+- geração de links WAN `/30` em topologia `ring` ou `mesh`;
+- diagrama lógico automático (Mermaid);
+- blocos CLI Cisco por roteador;
+- exportação:
+  - consolidado `.txt`;
+  - pacote `.zip` com configs individuais, diagrama e README de laboratório.
 
 ---
 
 ## 🏗️ Arquitetura
 
+### Arquitetura geral da aplicação
+
+```mermaid
+flowchart LR
+    U[Usuario] --> W[Browser]
+    W --> A[Flask app main.py]
+    A --> R1[Rota /]
+    A --> R2[Rota /resolucao-problemas]
+    A --> R3[Rotas de exportacao e historico]
+    R1 --> S1[backend/services ipv4 ipv6 dns grc]
+    R2 --> S2[problem_resolution_service]
+    R3 --> S3[history_service e pdf_service]
+    S1 --> T[Jinja templates]
+    S2 --> T
+    S3 --> T
+    T --> W
+```
+
+### Fluxo do módulo de resolução VLSM/WAN
+
 ```mermaid
 flowchart TD
-    U[👤 Usuário] --> B[🌐 Navegador]
-    B --> F[⚙️ Flask App]
-    F --> V[🧠 Validação de Entrada]
-    V --> C[🧮 Motor de Cálculo IPv4]
-    V --> D[🌍 Resolução DNS]
-    C --> T[🎨 Tema Dinâmico]
-    C --> S[🛡️ Contexto de Segurança]
-    D --> C
-    C --> R[📊 Resultado Estruturado]
-    T --> R
-    S --> R
-    R --> H[📄 Template Jinja]
-    H --> B
-    F --> L[📝 Logs Estruturados + request_id]
+    I[Entrada base_network + localidades + topology_type] --> N[Normalizacao e validacao]
+    N --> L[VLSM LAN blocks]
+    L --> W[WAN /30 links]
+    W --> C[Geracao CLI Cisco]
+    C --> M[Geracao Mermaid]
+    M --> O[Render HTML]
+    C --> E1[Export TXT consolidado]
+    C --> E2[Export ZIP laboratorio]
+```
+
+### Fluxo de logging server-side (sem tela de logs)
+
+```mermaid
+flowchart LR
+    Req[HTTP request] --> B[before_request]
+    B --> Ctx[request_id + started_at]
+    Ctx --> Ev[log_event evento e campos]
+    Ev --> Std[stdout/stderr do servidor]
+    Ev --> Mem[audit_log_service buffer em memoria]
+    Std --> Obs[Docker logs / coletor / SIEM]
+    Mem --> Int[uso interno backend]
 ```
 
 ---
 
-## 🗂️ Estrutura do Projeto
+## ▶️ Execução
 
-```text
-FRAMEWORK_DE_REDES_ANALISE_DIDATICA_AVANCADA/
-├── icone.png
-├── main.py
-├── backend/
-│   ├── __init__.py
-│   ├── common.py
-│   └── services/
-│       ├── __init__.py
-│       ├── dns_service.py
-│       ├── grc_service.py
-│       ├── history_service.py
-│       ├── ipv4_service.py
-│       ├── ipv6_service.py
-│       └── pdf_service.py
-├── requirements.txt
-├── Dockerfile
-├── docker-compose.yml
-├── .dockerignore
-├── tests/
-│   └── test_app.py
-├── templates/
-│   └── index.html
-└── static/
-    └── css/
-        └── app.css
-```
-
----
-
-## ▶️ Como Executar
-
-### Executar com Docker (recomendado)
+### Docker (recomendado)
 
 ```bash
 docker compose up --build
@@ -232,132 +137,133 @@ Parar:
 docker compose down
 ```
 
-#### Alternativa sem Compose
+### Python local
 
-```bash
-docker build -t framework-redes-analise .
-docker run --rm -p 5000:5000 framework-redes-analise
-```
+Windows PowerShell:
 
----
-
-### Executar com Python local
-
-```bash
+```powershell
 python -m venv .venv
-.venv\Scripts\activate
+.\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 python main.py
 ```
 
-Acesse: [http://127.0.0.1:5000](http://127.0.0.1:5000)
+Linux/macOS:
 
----
-
-## 🧪 Modos de Cálculo
-
-1. **Pesquisar por CIDR**  
-   Entrada: IP + CIDR
-
-2. **Pesquisar por Máscara Decimal**  
-   Entrada: IP + máscara decimal (ex.: `255.255.255.240`)
-
-3. **Engenharia Reversa (Wildcard)**  
-   Entrada: **IP + wildcard obrigatórios** (ex.: `172.16.8.8` + `0.0.15.255`)  
-   Saída focada: wildcard, máscara equivalente, CIDR, rede/hosts/broadcast, validação por octeto e base ACL.
-
-4. **Descobrir CIDR do IP**  
-   Entrada: IP, com inferência classful didática
-
-5. **Decompor Domínio para IP**  
-   Entrada: domínio/hostname (ex.: `google.com`), com resolução DNS e cálculo completo
-
----
-
-## 🎨 Tema Dinâmico e Didática Visual
-
-A interface adapta cores conforme o tamanho da rede:
-
-- 🟢 `/24+` → Baixo risco operacional
-- 🔵 `/17–23` → Risco moderado
-- 🟠 `/9–16` → Risco elevado
-- 🔴 `/0–8` → Risco crítico
-
-Além disso, a aplicação identifica visualmente blocos:
-
-- **Dinâmico por cálculo**
-- **Misto (referência + cálculo atual)**
-- **Referência fixa**
-
----
-
-## 📋 Logs, Exceções e GRC
-
-Implementações atuais:
-
-- logs estruturados com timestamp, nível e `request_id`;
-- padrão de evento para filtros (`evento=... status=... modo=...`), incluindo erros com stack trace quando necessário;
-- ciclo completo de request (`before_request` / `after_request`);
-- logging de eventos críticos de validação e DNS (cache hit/miss, latência e timeout);
-- `handler` global para exceções inesperadas;
-- exceções tipadas para infraestrutura (`DnsResolucaoError`, `DnsResolucaoTimeoutError`, `HistoricoPersistenciaError`);
-- persistência de histórico com logs explícitos de sucesso/falha;
-- mensagens seguras ao usuário final sem exposição de stack trace.
-
-Isso melhora rastreabilidade, auditoria e governança operacional.
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python main.py
+```
 
 ---
 
 ## ⚙️ Variáveis de Ambiente
 
-| Variável | Padrão | Descrição |
-|---|---:|---|
-| `APP_HOST` | `127.0.0.1` | Host da aplicação (`0.0.0.0` no Docker) |
-| `APP_PORT` | `5000` | Porta HTTP |
-| `APP_DEBUG` | `true` | Ativa/desativa modo debug |
-| `APP_LOG_LEVEL` | `INFO` | Nível de log (`DEBUG`, `INFO`, `WARNING`, `ERROR`) |
-| `DNS_CACHE_TTL_SECONDS` | `180` | TTL do cache DNS local em segundos |
-| `DNS_RESOLVE_TIMEOUT_SECONDS` | `3.0` | Timeout de resolução DNS por consulta |
+- `APP_HOST` (padrão `127.0.0.1`)
+- `APP_PORT` (padrão `5000`)
+- `APP_DEBUG` (padrão `true`)
+- `APP_OPEN_BROWSER` (padrão `true`)
+- `APP_LOG_LEVEL` (padrão `INFO`)
+- `DNS_CACHE_TTL_SECONDS` (padrão `180`)
+- `DNS_RESOLVE_TIMEOUT_SECONDS` (padrão `3.0`)
+- `APP_AUDIT_LOG_LIMIT` (padrão `400`)
 
 Exemplo:
 
 ```bash
-APP_HOST=0.0.0.0 APP_PORT=5000 APP_DEBUG=false APP_LOG_LEVEL=INFO DNS_CACHE_TTL_SECONDS=180 DNS_RESOLVE_TIMEOUT_SECONDS=3.0 python main.py
+APP_HOST=0.0.0.0 APP_PORT=5000 APP_DEBUG=false APP_LOG_LEVEL=INFO APP_AUDIT_LOG_LIMIT=800 python main.py
 ```
 
 ---
 
-## 🧭 Exemplos de Uso
+## 📋 Logging e Observabilidade (Server-Side)
 
-- `172.16.8.8/16` → rede corporativa privada ampla
-- `192.168.1.10/24` → LAN tradicional
-- `200.10.10.10/30` → enlace ponto a ponto
-- `google.com` no modo domínio → resolução DNS + análise completa
+O logging é orientado a servidor e não possui tela dedicada na interface do usuário.
+
+Implementado:
+
+- timestamps em UTC (`Z`);
+- `request_id` por requisição;
+- eventos estruturados (`evento=...`, `status=...`, `modo=...`);
+- logs de uso com motivo (`reason`) para trilha operacional;
+- `before_request` e `after_request` para ciclo completo;
+- logs de erro com stack trace apenas no backend;
+- mensagens seguras no frontend sem exposição de detalhes internos.
+
+Coleta recomendada em produção:
+
+- `docker logs` / `compose logs`;
+- agregador central (ELK, Loki, Datadog, Splunk, SIEM).
+
+---
+
+## 🗂️ Estrutura de Pastas
+
+```text
+FRAMEWORK_DE_REDES_ANALISE_DIDATICA_AVANCADA/
+├── main.py
+├── backend/
+│   ├── common.py
+│   └── services/
+│       ├── audit_log_service.py
+│       ├── dns_service.py
+│       ├── grc_service.py
+│       ├── history_service.py
+│       ├── ipv4_service.py
+│       ├── ipv6_service.py
+│       ├── pdf_service.py
+│       └── problem_resolution_service.py
+├── templates/
+│   ├── index.html
+│   ├── resolucao_problemas.html
+│   └── partials/
+├── static/css/app.css
+├── tests/test_app.py
+├── Dockerfile
+├── docker-compose.yml
+└── requirements.txt
+```
+
+---
+
+## ✅ Testes
+
+Executar suíte:
+
+```bash
+python -m unittest discover -s tests -v
+```
+
+A suíte cobre:
+
+- validações dos modos principais;
+- resolução de problemas com múltiplas localidades;
+- topologias WAN ring e mesh;
+- exportações `.txt` e `.zip`;
+- regressões de comportamento e renderização crítica.
 
 ---
 
 ## 🛣️ Roadmap
 
-- [x] suíte de testes automatizados para cenários críticos
-- [x] exportação de relatório (PDF/JSON)
-- [x] modularização funcional do backend (`backend/services/`)
-- [x] cache local para consultas DNS frequentes
-- [ ] refinamento de acessibilidade e navegação por teclado
+- [x] VLSM dinâmico para N localidades
+- [x] topologia WAN ring/mesh
+- [x] geração CLI Cisco + export laboratório
+- [x] logging estruturado com `request_id` e UTC
+- [x] responsividade geral da interface
+- [ ] persistência externa de logs operacionais (arquivo/stack observabilidade)
+- [ ] filtros avançados de histórico por período e modo
 
 ---
 
-## 🤝 Contribuição
+## 👨‍💻 Autor
 
-Sugestões e melhorias são bem-vindas.
-
-1. Faça um fork
-2. Crie uma branch (`feature/minha-melhoria`)
-3. Commit suas mudanças
-4. Abra um Pull Request
+Paulo André Carminati | RM570877 | FIAP 2026 | CyberSegurança
 
 ---
 
 ## 📄 Licença
 
-Este projeto está licenciado sob a licença MIT.  
-Se necessário, adicione um arquivo `LICENSE` na raiz para formalização completa.
+MIT.
