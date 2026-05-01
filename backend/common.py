@@ -60,10 +60,11 @@ for handler in logging.getLogger().handlers:
     stream = getattr(handler, "stream", None)
     stream_is_tty = bool(getattr(stream, "isatty", lambda: False)())
     allow_color = os.getenv("APP_LOG_COLOR", "1") != "0"
+    force_color = os.getenv("APP_LOG_FORCE_COLOR", "1") != "0"
     handler.setFormatter(
         ConsoleUTCFormatter(
             "%(asctime)sZ | %(levelname)s | %(name)s | req=%(request_id)s | %(message)s",
-            use_color=allow_color and stream_is_tty,
+            use_color=allow_color and (stream_is_tty or force_color),
         )
     )
 

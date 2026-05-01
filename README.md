@@ -170,6 +170,7 @@ python main.py
 - `APP_OPEN_BROWSER` (padrão `true`)
 - `APP_LOG_LEVEL` (padrão `INFO`)
 - `APP_LOG_COLOR` (padrão `1`) ativa cor no console quando houver suporte a TTY
+- `APP_LOG_FORCE_COLOR` (padrão `1`) força cor mesmo sem TTY (útil em Docker/VPS)
 - `DNS_CACHE_TTL_SECONDS` (padrão `180`)
 - `DNS_RESOLVE_TIMEOUT_SECONDS` (padrão `3.0`)
 - `APP_AUDIT_LOG_LIMIT` (padrão `400`)
@@ -177,7 +178,7 @@ python main.py
 Exemplo:
 
 ```bash
-APP_HOST=0.0.0.0 APP_PORT=5000 APP_DEBUG=false APP_LOG_LEVEL=INFO APP_LOG_COLOR=1 APP_AUDIT_LOG_LIMIT=800 python main.py
+APP_HOST=0.0.0.0 APP_PORT=5000 APP_DEBUG=false APP_LOG_LEVEL=INFO APP_LOG_COLOR=1 APP_LOG_FORCE_COLOR=1 APP_AUDIT_LOG_LIMIT=800 python main.py
 ```
 
 ---
