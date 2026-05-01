@@ -78,13 +78,16 @@ O framework cobre fluxo didático completo para aula, laboratório e revisão t�
 
 ```mermaid
 flowchart LR
-    U[Usuario] --> W[Browser]
+    U[Usuário] --> W[Browser]
     W --> A[Flask app main.py]
     A --> R1[Rota /]
     A --> R2[Rota /resolucao-problemas]
     A --> R3[Rotas de exportacao e historico]
-    R1 --> S1[backend/services ipv4 ipv6 dns grc]
-    R2 --> S2[problem_resolution_service]
+    R1 --> S1[backend/services ipv4 ipv6 dns grc home_web_helpers]
+    R2 --> S2[problem_resolution_service facade]
+    S2 --> S2A[problem_resolution_normalization]
+    S2 --> S2B[problem_resolution_planning]
+    S2 --> S2C[problem_resolution_export]
     R3 --> S3[history_service e pdf_service]
     S1 --> T[Jinja templates]
     S2 --> T
@@ -103,7 +106,7 @@ flowchart TD
     C --> M[Geracao Mermaid]
     M --> O[Render HTML]
     C --> E1[Export TXT consolidado]
-    C --> E2[Export ZIP laboratorio]
+    C --> E2[Export ZIP laboratório]
 ```
 
 ### Fluxo de logging server-side (sem tela de logs)
@@ -211,9 +214,13 @@ FRAMEWORK_DE_REDES_ANALISE_DIDATICA_AVANCADA/
 │       ├── dns_service.py
 │       ├── grc_service.py
 │       ├── history_service.py
+│       ├── home_web_helpers.py
 │       ├── ipv4_service.py
 │       ├── ipv6_service.py
 │       ├── pdf_service.py
+│       ├── problem_resolution_normalization.py
+│       ├── problem_resolution_planning.py
+│       ├── problem_resolution_export.py
 │       └── problem_resolution_service.py
 ├── templates/
 │   ├── index.html
@@ -243,6 +250,22 @@ A suíte cobre:
 - topologias WAN ring e mesh;
 - exportações `.txt` e `.zip`;
 - regressões de comportamento e renderização crítica.
+
+---
+
+## 🧹 Clean Code Aplicado
+
+O projeto adota funções puras e módulos por responsabilidade (sem classes para regras de domínio).
+
+- `problem_resolution_service.py` atua como fachada/orquestrador.
+- Regras de resolução foram separadas em:
+  - `problem_resolution_normalization.py`
+  - `problem_resolution_planning.py`
+  - `problem_resolution_export.py`
+- Helpers da camada web da home foram extraídos para:
+  - `home_web_helpers.py`
+
+Esse desenho reduz acoplamento e facilita manutenção incremental.
 
 ---
 
