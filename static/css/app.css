@@ -97,6 +97,29 @@ body { background-color: #0d1117; color: #c9d1d9; font-family: 'Consolas', monos
             color: #fff;
             border-color: #388bfd;
         }
+        .main-menu-wrap {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 10px;
+            padding: 0.7rem;
+        }
+        .main-menu-title {
+            font-size: 0.78rem;
+            color: #8b949e;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.45rem;
+            font-weight: 700;
+        }
+        .main-menu-nav .btn {
+            min-height: 38px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .main-menu-nav {
+            align-items: stretch;
+        }
         .tab-nav {
             padding-bottom: 0.65rem;
             margin-bottom: 0.95rem !important;
@@ -756,4 +779,12 @@ body { background-color: #0d1117; color: #c9d1d9; font-family: 'Consolas', monos
             .resultados-table th, .resultados-table td,
             .conv-table th, .conv-table td { font-size: 0.78rem; padding: 0.42rem 0.45rem; }
             pre { font-size: 0.72rem; white-space: pre-wrap; word-break: break-word; }
+            .main-menu-nav .btn {
+                width: 100%;
+                justify-content: flex-start;
+                text-align: left;
+                white-space: normal;
+                line-height: 1.2;
+                padding: 0.5rem 0.7rem;
+            }
         }

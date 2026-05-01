@@ -1,0 +1,23 @@
+<div class="main-menu-wrap mb-3">
+    <div class="main-menu-title">Menu Principal</div>
+    <div class="main-menu-nav d-flex flex-wrap gap-2">
+        <a
+            href="/"
+            class="btn fw-bold {{ 'btn-warning text-dark' if active_main_menu == 'analise' else 'btn-outline-warning' }}"
+            data-bs-toggle="tooltip"
+            data-bs-placement="top"
+            title="Abre o módulo principal de análise didática de IPv4/IPv6, CIDR, wildcard, portas e protocolos."
+        >
+            🧠 Análise Didática
+        </a>
+        <a
+            href="/resolucao-problemas"
+            class="btn fw-bold {{ 'btn-warning text-dark' if active_main_menu == 'resolucao' else 'btn-outline-warning' }}"
+            data-bs-toggle="tooltip"
+            data-bs-placement="top"
+            title="Abre o módulo de resolução de cenários com VLSM, topologia WAN, CLI Cisco e exportação para laboratório."
+        >
+            🧩 Resolução de Problemas (VLSM + WAN)
+        </a>
+    </div>
+</div>

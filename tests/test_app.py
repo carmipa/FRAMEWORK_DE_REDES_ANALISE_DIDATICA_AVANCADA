@@ -1,4 +1,6 @@
 import unittest
+import zipfile
+from io import BytesIO
 from unittest.mock import patch
 
 import main
@@ -186,6 +188,107 @@ class AppTestCase(unittest.TestCase):
         self.assertIn("ÁREA DO COMPARADOR CIDR (mesmo IP)", html)
         self.assertIn("/20", html)
         self.assertIn("/24", html)
+
+    def test_pagina_resolucao_problemas_get(self):
+        res = self.client.get("/resolucao-problemas")
+        html = res.get_data(as_text=True)
+        self.assertEqual(res.status_code, 200)
+        self.assertIn("Resolução de Problemas de Redes", html)
+        self.assertIn("Cenário de entrada", html)
+
+    def test_pagina_resolucao_problemas_post(self):
+        res = self.client.post(
+            "/resolucao-problemas",
+            data={
+                "base_network": "172.21.0.0/16",
+                "topology_type": "ring",
+                "loc_name": ["Matriz", "Filial I", "Filial II"],
+                "loc_hosts": ["420", "400", "380"],
+            },
+        )
+        html = res.get_data(as_text=True)
+        self.assertEqual(res.status_code, 200)
+        self.assertIn("LANs (VLSM)", html)
+        self.assertIn("Links WAN /30", html)
+        self.assertIn("CLI MATRIZ", html)
+
+    def test_pagina_resolucao_problemas_post_com_4_localidades(self):
+        res = self.client.post(
+            "/resolucao-problemas",
+            data={
+                "base_network": "172.21.0.0/16",
+                "topology_type": "ring",
+                "loc_name": ["Matriz", "Filial I", "Filial II", "Filial III"],
+                "loc_hosts": ["420", "400", "380", "120"],
+            },
+        )
+        html = res.get_data(as_text=True)
+        self.assertEqual(res.status_code, 200)
+        self.assertIn("Filial III", html)
+        self.assertIn("Localidades:", html)
+        self.assertIn("CLI FILIAL III", html)
+
+    def test_pagina_resolucao_problemas_topologia_mesh(self):
+        res = self.client.post(
+            "/resolucao-problemas",
+            data={
+                "base_network": "172.21.0.0/16",
+                "topology_type": "mesh",
+                "loc_name": ["Matriz", "Filial I", "Filial II"],
+                "loc_hosts": ["420", "400", "380"],
+            },
+        )
+        html = res.get_data(as_text=True)
+        self.assertEqual(res.status_code, 200)
+        self.assertIn("Topologia WAN:", html)
+        self.assertIn("MESH", html)
+
+    def test_exportar_lab_packet_tracer_txt(self):
+        res = self.client.post(
+            "/resolucao-problemas",
+            data={
+                "action_type": "export",
+                "base_network": "172.21.0.0/16",
+                "topology_type": "ring",
+                "loc_name": ["Matriz", "Filial I", "Filial II"],
+                "loc_hosts": ["420", "400", "380"],
+            },
+        )
+        body = res.get_data(as_text=True)
+        self.assertEqual(res.status_code, 200)
+        self.assertIn("text/plain", res.content_type)
+        self.assertIn("attachment;", res.headers.get("Content-Disposition", ""))
+        self.assertIn("SCRIPT DE PROVISIONAMENTO", body)
+        self.assertIn("ROTEADOR: MATRIZ", body)
+        self.assertIn("enable", body)
+        self.assertIn("configure terminal", body)
+        self.assertIn("logging synchronous", body)
+        self.assertIn("description LAN_MATRIZ", body)
+        self.assertIn("description LINK_PARA_FILIAL_I", body)
+        self.assertIn("show ip route rip", body)
+
+    def test_exportar_lab_packet_tracer_zip(self):
+        res = self.client.post(
+            "/resolucao-problemas",
+            data={
+                "action_type": "export_zip",
+                "base_network": "172.21.0.0/16",
+                "topology_type": "ring",
+                "loc_name": ["Matriz", "Filial I", "Filial II"],
+                "loc_hosts": ["420", "400", "380"],
+            },
+        )
+        self.assertEqual(res.status_code, 200)
+        self.assertIn("application/zip", res.content_type)
+        self.assertIn("attachment;", res.headers.get("Content-Disposition", ""))
+        archive = zipfile.ZipFile(BytesIO(res.data))
+        names = set(archive.namelist())
+        self.assertIn("config_packet_tracer_consolidado.txt", names)
+        self.assertIn("LAB_TOPOLOGY.mermaid", names)
+        self.assertIn("README_LAB.txt", names)
+        self.assertIn("configs_individuais/R-MATRIZ.txt", names)
+        readme = archive.read("README_LAB.txt").decode("utf-8")
+        self.assertIn("INSTRUCOES DE USO DO LABORATORIO", readme)
 
 
 if __name__ == "__main__":

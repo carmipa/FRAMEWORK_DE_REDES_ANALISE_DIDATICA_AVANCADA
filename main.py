@@ -36,6 +36,12 @@ from backend.services.ipv4_service import (
 )
 from backend.services.ipv6_service import processar_ipv6
 from backend.services.pdf_service import gerar_pdf_simples
+from backend.services.problem_resolution_service import (
+    DEFAULT_LOCATIONS,
+    generate_packet_tracer_script,
+    generate_packet_tracer_zip_buffer,
+    solve_network_problem,
+)
 
 app = Flask(__name__)
 REGUA_COUNT_OPCOES = {5, 10, 15, 25, 50, 100}
@@ -1123,6 +1129,7 @@ def home():
     pag = paginate_history(history_limit_pre, history_page_pre)
     return render_template(
         "index.html",
+        active_main_menu="analise",
         res=res,
         ipv6_res=ipv6_res,
         erro=erro,
@@ -1153,6 +1160,73 @@ def home():
         history_page_items=pag["history_page_items"],
         portas_catalogo=montar_portas_catalogo_exibicao(),
         protocolos_catalogo=PROTOCOLOS_CATALOGO,
+    )
+
+
+@app.route("/resolucao-problemas", methods=["GET", "POST"])
+def resolucao_problemas():
+    erro = None
+    invalid_fields = set()
+    form_data = {"base_network": "172.21.0.0/16", "topology_type": "ring"}
+    locations = [dict(item) for item in DEFAULT_LOCATIONS]
+    scenario = None
+
+    if request.method == "POST":
+        action_type = request.form.get("action_type", "calculate").strip().lower()
+        form_data = {
+            "base_network": request.form.get("base_network", "").strip(),
+            "topology_type": request.form.get("topology_type", "ring").strip().lower() or "ring",
+        }
+        location_names = request.form.getlist("loc_name")
+        location_hosts = request.form.getlist("loc_hosts")
+        locations = []
+        total_rows = max(len(location_names), len(location_hosts))
+        for index in range(total_rows):
+            name = location_names[index].strip() if index < len(location_names) else ""
+            hosts = location_hosts[index].strip() if index < len(location_hosts) else ""
+            if not name and not hosts:
+                continue
+            locations.append({"name": name, "hosts": hosts})
+
+        try:
+            scenario = solve_network_problem(
+                form_data["base_network"],
+                locations,
+                topology_type=form_data["topology_type"],
+            )
+            if action_type == "export":
+                content = generate_packet_tracer_script(scenario)
+                filename = "config_packet_tracer_consolidado.txt"
+                return app.response_class(
+                    content,
+                    mimetype="text/plain; charset=utf-8",
+                    headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+                )
+            if action_type == "export_zip":
+                zip_file = generate_packet_tracer_zip_buffer(scenario)
+                return send_file(
+                    zip_file,
+                    mimetype="application/zip",
+                    as_attachment=True,
+                    download_name="laboratorio_packet_tracer.zip",
+                )
+        except EntradaInvalidaError as exc:
+            erro = str(exc)
+            if not form_data["base_network"]:
+                invalid_fields.add("base_network")
+            if not locations:
+                invalid_fields.add("loc_hosts")
+            if form_data["topology_type"] not in {"ring", "mesh"}:
+                invalid_fields.add("topology_type")
+
+    return render_template(
+        "resolucao_problemas.html",
+        active_main_menu="resolucao",
+        erro=erro,
+        invalid_fields=invalid_fields,
+        form_data=form_data,
+        locations=locations,
+        scenario=scenario,
     )
 
 

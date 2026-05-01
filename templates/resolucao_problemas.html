@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FrameworkNet | Resolução de Problemas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+    <style>
+        .problem-shell { max-width: 1300px; }
+        .problem-box { background: #161b22; border: 1px solid #30363d; border-radius: 10px; }
+        .problem-box pre { background: #0d1117; border: 1px solid #30363d; border-radius: 8px; padding: 0.8rem; color: #c9d1d9; }
+        .topology-wrap { background: #0f1724; border: 1px solid #30363d; border-radius: 8px; padding: 0.8rem; }
+        .topology-wrap .mermaid {
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: auto;
+            padding: 0.3rem;
+        }
+        .topology-wrap .mermaid svg {
+            margin: 0 auto !important;
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+        .problem-title {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+        }
+        .section-chip {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            border: 1px solid #30363d;
+            padding: 0.15rem 0.55rem;
+            font-size: 0.74rem;
+            font-weight: 700;
+            background: #0d1117;
+            color: #9ecbff;
+            margin-right: 0.35rem;
+            margin-bottom: 0.25rem;
+        }
+        .chip-info { color: #79c0ff; border-color: #1f6feb; background: rgba(31, 111, 235, 0.15); }
+        .chip-success { color: #7ee787; border-color: #238636; background: rgba(46, 160, 67, 0.18); }
+        .chip-warning { color: #f2cc60; border-color: #d29922; background: rgba(210, 153, 34, 0.15); }
+        .chip-danger { color: #ffb3ad; border-color: #f85149; background: rgba(248, 81, 73, 0.15); }
+        .result-strip {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.45rem;
+            margin-top: 0.45rem;
+        }
+        .topology-card {
+            border-left: 4px solid #1f6feb;
+            background: #0f1724;
+            border-radius: 8px;
+            padding: 0.6rem;
+        }
+        .cli-box {
+            border-left: 4px solid #d29922;
+        }
+        .cli-box pre {
+            max-height: 460px;
+            overflow: auto;
+        }
+        .export-actions {
+            row-gap: 0.55rem;
+        }
+        .export-actions .btn {
+            min-height: 40px;
+        }
+        @media (max-width: 992px) {
+            .problem-shell {
+                max-width: 100%;
+            }
+            .problem-box {
+                padding: 0.85rem !important;
+            }
+            .problem-title {
+                line-height: 1.2;
+                flex-wrap: wrap;
+            }
+        }
+        @media (max-width: 768px) {
+            .section-chip {
+                margin-right: 0;
+            }
+            .result-strip {
+                gap: 0.35rem;
+            }
+            .cli-box pre {
+                max-height: 330px;
+            }
+            .topology-wrap {
+                padding: 0.55rem;
+            }
+            .topology-wrap .mermaid {
+                padding: 0.15rem;
+            }
+        }
+        @media (max-width: 576px) {
+            .problem-shell.container {
+                padding-left: 0.75rem !important;
+                padding-right: 0.75rem !important;
+            }
+            .problem-box {
+                border-radius: 8px;
+            }
+            .problem-title {
+                font-size: 0.98rem;
+            }
+            .problem-box table th,
+            .problem-box table td {
+                font-size: 0.77rem;
+                white-space: nowrap;
+            }
+            .problem-box .table-responsive {
+                -webkit-overflow-scrolling: touch;
+            }
+            .export-actions {
+                flex-direction: column;
+                align-items: stretch !important;
+            }
+            .export-actions .btn {
+                width: 100%;
+            }
+            .export-actions .section-chip {
+                text-align: center;
+                justify-content: center;
+            }
+            #locations-container .location-row {
+                border: 1px solid #30363d;
+                border-radius: 8px;
+                padding: 0.55rem;
+                margin-bottom: 0.55rem !important;
+            }
+            #locations-container .location-row .col-md-2.d-grid {
+                margin-top: 0.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container py-4 problem-shell">
+    {% include "partials/main_menu.html" %}
+    {% include "partials/project_header.html" %}
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <h2 class="text-info mb-0">🧩 Resolução de Problemas de Redes</h2>
+    </div>
+
+    <p class="small text-secondary mb-2">
+        Página dedicada para cenários de prova/laboratório: cálculo VLSM, planejamento WAN /30,
+        comandos Cisco e desenho da topologia para Packet Tracer.
+    </p>
+    <div class="mb-3">
+        <span class="shield-badge"><span class="icon">🧠</span>VLSM Dinâmico</span>
+        <span class="shield-badge"><span class="icon">🌐</span>WAN /30</span>
+        <span class="shield-badge"><span class="icon">🛠️</span>Cisco CLI</span>
+        <span class="shield-badge"><span class="icon">🛰️</span>Topologia Mermaid</span>
+    </div>
+
+    <div class="problem-box p-3 mb-3">
+        <h5 class="text-light mb-3 problem-title"><span>📥</span><span>Cenário de entrada</span></h5>
+        <form method="POST" action="/resolucao-problemas">
+            <div class="row g-3">
+                <div class="col-lg-4 col-md-6">
+                    <label class="form-label text-secondary">Rede base (IPv4/CIDR)</label>
+                    <input
+                        type="text"
+                        class="form-control {{ 'is-invalid' if 'base_network' in invalid_fields else '' }}"
+                        name="base_network"
+                        value="{{ form_data.base_network }}"
+                        placeholder="Ex.: 172.21.0.0/16"
+                        data-bs-toggle="tooltip"
+                        data-bs-placement="top"
+                        title="Rede principal que sera subdividida para LANs e WANs."
+                        required
+                    >
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <label class="form-label text-secondary">Topologia WAN</label>
+                    <select
+                        name="topology_type"
+                        class="form-select {{ 'is-invalid' if 'topology_type' in invalid_fields else '' }}"
+                        data-bs-toggle="tooltip"
+                        data-bs-placement="top"
+                        title="Escolha como os roteadores serao interligados na WAN."
+                    >
+                        <option value="ring" {{ 'selected' if form_data.topology_type == 'ring' else '' }}>Anel (N links)</option>
+                        <option value="mesh" {{ 'selected' if form_data.topology_type == 'mesh' else '' }}>Malha completa (N*(N-1)/2)</option>
+                    </select>
+                </div>
+                <div class="col-lg-2 col-md-6 d-grid align-items-end">
+                    <button
+                        type="submit"
+                        name="action_type"
+                        value="calculate"
+                        class="btn btn-primary mt-4"
+                        data-bs-toggle="tooltip"
+                        data-bs-placement="top"
+                        title="Processa o cenario e monta LANs, WANs, CLI e topologia."
+                    >Calcular cenário</button>
+                </div>
+                <div class="col-lg-2 col-md-6 d-grid align-items-end">
+                    <a
+                        href="/resolucao-problemas"
+                        class="btn btn-danger mt-4"
+                        data-bs-toggle="tooltip"
+                        data-bs-placement="top"
+                        title="Limpa o formulario e remove os resultados exibidos."
+                    >🧹 Limpar tela</a>
+                </div>
+            </div>
+            <hr class="border-secondary">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                <h6 class="text-warning mb-0 problem-title"><span>🏢</span><span>Localidades dinâmicas (N cenários)</span></h6>
+                <button
+                    type="button"
+                    class="btn btn-info btn-sm text-dark fw-bold"
+                    id="btn-add-location"
+                    data-bs-toggle="tooltip"
+                    data-bs-placement="top"
+                    title="Adiciona uma nova linha de localidade com nome e quantidade de hosts."
+                >+ Adicionar localidade</button>
+            </div>
+            <div class="small text-secondary mb-2">
+                Dica: mantenha o nome da localidade e informe a quantidade de hosts. Voce pode adicionar quantas linhas precisar.
+            </div>
+            <div id="locations-container" class="{{ 'border border-danger rounded p-2' if 'loc_hosts' in invalid_fields else '' }}">
+                {% for loc in locations %}
+                <div class="row g-2 align-items-end location-row mb-2">
+                    <div class="col-lg-7 col-md-12">
+                        <label class="form-label text-secondary">Nome da localidade</label>
+                        <input
+                            type="text"
+                            name="loc_name"
+                            class="form-control"
+                            value="{{ loc.name }}"
+                            data-bs-toggle="tooltip"
+                            data-bs-placement="top"
+                            title="Nome da unidade (ex.: Matriz, Filial I, CPD)."
+                            required
+                        >
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <label class="form-label text-secondary">Hosts</label>
+                        <input
+                            type="number"
+                            name="loc_hosts"
+                            class="form-control"
+                            min="1"
+                            value="{{ loc.hosts }}"
+                            data-bs-toggle="tooltip"
+                            data-bs-placement="top"
+                            title="Quantidade de hosts necessaria para esta localidade."
+                            required
+                        >
+                    </div>
+                    <div class="col-lg-2 col-md-6 d-grid">
+                        <button
+                            type="button"
+                            class="btn btn-danger btn-remove-location"
+                            data-bs-toggle="tooltip"
+                            data-bs-placement="top"
+                            title="Remove esta localidade do cenario."
+                        >Remover</button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </form>
+    </div>
+
+    {% if erro %}
+    <div class="alert alert-danger bg-dark border-danger text-danger">{{ erro }}</div>
+    {% endif %}
+
+    {% if scenario %}
+    <div class="problem-box p-3 mb-3">
+        <h5 class="text-warning mb-2 problem-title"><span>🧭</span><span>Resumo do planejamento</span></h5>
+        <p class="mb-1 text-light">Rede base: <strong>{{ scenario.base_network }}</strong></p>
+        <p class="mb-1 text-light">Total de hosts solicitados: <strong>{{ scenario.total_hosts_requested }}</strong></p>
+        <p class="mb-0 text-light">Localidades: <strong>{{ scenario.total_locations }}</strong> | Topologia WAN: <strong>{{ scenario.topology_type|upper }}</strong></p>
+        <div class="result-strip">
+            <span class="section-chip chip-info">🧱 Base {{ scenario.base_network }}</span>
+            <span class="section-chip chip-success">👥 Hosts {{ scenario.total_hosts_requested }}</span>
+            <span class="section-chip chip-warning">🏢 Locais {{ scenario.total_locations }}</span>
+            {% if scenario.topology_type == "mesh" %}
+            <span class="section-chip chip-danger">🕸️ Topologia MESH</span>
+            {% else %}
+            <span class="section-chip chip-info">🔄 Topologia RING</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="problem-box p-3 mb-3">
+        <h5 class="text-info mb-3 problem-title"><span>📐</span><span>LANs (VLSM)</span></h5>
+        <div class="table-responsive">
+            <table class="table table-dark table-bordered table-sm mb-0">
+                <thead>
+                    <tr>
+                        <th>🏷️ Local</th>
+                        <th>🧭 Rede</th>
+                        <th>📏 Máscara</th>
+                        <th>🧩 Wildcard</th>
+                        <th>🚪 Gateway</th>
+                        <th>✅ Faixa de hosts</th>
+                        <th>📊 Necessário/Suportado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for lan in scenario.lan_blocks %}
+                    <tr>
+                        <td>{{ lan.location_name }}</td>
+                        <td>{{ lan.network }}/{{ lan.prefix }}</td>
+                        <td>{{ lan.netmask }}</td>
+                        <td>{{ lan.wildcard }}</td>
+                        <td>{{ lan.gateway }}</td>
+                        <td>{{ lan.host_range_start }} - {{ lan.host_range_end }}</td>
+                        <td>{{ lan.hosts_required }} / {{ lan.hosts_supported }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="problem-box p-3 mb-3">
+        <h5 class="text-info mb-3 problem-title"><span>🔗</span><span>Links WAN /30</span></h5>
+        <div class="table-responsive">
+            <table class="table table-dark table-bordered table-sm mb-0">
+                <thead>
+                    <tr>
+                        <th>🔌 Link</th>
+                        <th>🧭 Rede</th>
+                        <th>🅰️ Lado A</th>
+                        <th>🅱️ Lado B</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for link in scenario.wan_links %}
+                    <tr>
+                        <td>{{ link.name }}</td>
+                        <td>{{ link.network }}/{{ link.prefix }} ({{ link.netmask }})</td>
+                        <td>{{ link.endpoints[0] }} - {{ link.ips[link.endpoints[0]] }}</td>
+                        <td>{{ link.endpoints[1] }} - {{ link.ips[link.endpoints[1]] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="problem-box p-3 mb-3">
+        <h5 class="text-warning mb-2 problem-title"><span>🗺️</span><span>Desenho da arquitetura (WAN + LAN)</span></h5>
+        <div class="topology-card mb-2">
+            <div class="mb-2">
+                <span class="section-chip chip-info">📡 Diagrama lógico automático</span>
+                <span class="section-chip chip-success">🧪 Pronto para Packet Tracer</span>
+            </div>
+        </div>
+        <div class="topology-wrap mb-2">
+            <pre class="mermaid mb-0">{{ scenario.topology_mermaid }}</pre>
+        </div>
+        <p class="small text-secondary mb-0">Use esse desenho como referência de montagem no Cisco Packet Tracer.</p>
+    </div>
+
+    <div class="problem-box p-3 mb-3">
+        <h5 class="text-info mb-3 problem-title"><span>🧪</span><span>Sequência sugerida no Packet Tracer</span></h5>
+        <ol class="mb-0">
+            {% for step in scenario.packet_tracer_steps %}
+            <li class="mb-1">{{ step }}</li>
+            {% endfor %}
+        </ol>
+    </div>
+
+    <div class="row g-3 mb-3">
+        {% for key, commands in scenario.router_commands.items() %}
+        <div class="col-lg-4">
+            <div class="problem-box p-3 h-100 cli-box">
+                <h6 class="text-warning mb-2 problem-title"><span>💻</span><span>CLI {{ key|upper }}</span></h6>
+                <div class="mb-2">
+                    <span class="section-chip chip-warning">📋 Script pronto para copiar</span>
+                </div>
+                <pre class="small mb-0"><code>{{ commands }}</code></pre>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="problem-box p-3 mb-3">
+        <h5 class="text-success mb-2 problem-title"><span>📦</span><span>Área de Exportação do Laboratório</span></h5>
+        <p class="small text-secondary mb-3">
+            Gere o arquivo consolidado com todos os comandos dos roteadores para usar no Cisco Packet Tracer.
+        </p>
+        <form method="POST" action="/resolucao-problemas" class="d-flex flex-wrap align-items-center gap-2 export-actions">
+            <input type="hidden" name="base_network" value="{{ form_data.base_network }}">
+            <input type="hidden" name="topology_type" value="{{ form_data.topology_type }}">
+            {% for loc in locations %}
+            <input type="hidden" name="loc_name" value="{{ loc.name }}">
+            <input type="hidden" name="loc_hosts" value="{{ loc.hosts }}">
+            {% endfor %}
+            <button
+                type="submit"
+                name="action_type"
+                value="export"
+                class="btn btn-success fw-bold"
+                data-bs-toggle="tooltip"
+                data-bs-placement="top"
+                title="Baixa um arquivo .txt consolidado com os comandos para o Packet Tracer."
+            >⬇️ Exportar Lab (.txt)</button>
+            <button
+                type="submit"
+                name="action_type"
+                value="export_zip"
+                class="btn btn-primary fw-bold"
+                data-bs-toggle="tooltip"
+                data-bs-placement="top"
+                title="Baixa um .zip com consolidado, configs individuais, topologia e README."
+            >🗜️ Exportar Lab (.zip)</button>
+            <span class="section-chip chip-success">Pronto para colar no CLI dos roteadores</span>
+        </form>
+    </div>
+    {% include "partials/project_about.html" %}
+    {% endif %}
+</div>
+{% include "partials/site_footer.html" %}
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>
+    mermaid.initialize({ startOnLoad: true, theme: "dark" });
+
+    const container = document.getElementById("locations-container");
+    const addButton = document.getElementById("btn-add-location");
+
+    function updateRemoveButtonsState() {
+        const rows = [...container.querySelectorAll(".location-row")];
+        rows.forEach((row) => {
+            const removeButton = row.querySelector(".btn-remove-location");
+            removeButton.disabled = rows.length <= 1;
+        });
+    }
+
+    function createLocationRow(defaultName = "", defaultHosts = "") {
+        const row = document.createElement("div");
+        row.className = "row g-2 align-items-end location-row mb-2";
+        row.innerHTML = `
+            <div class="col-md-7">
+                <label class="form-label text-secondary">Nome da localidade</label>
+                <input type="text" name="loc_name" class="form-control" value="${defaultName}" data-bs-toggle="tooltip" data-bs-placement="top" title="Nome da unidade (ex.: Matriz, Filial I, CPD)." required>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label text-secondary">Hosts</label>
+                <input type="number" name="loc_hosts" class="form-control" min="1" value="${defaultHosts}" data-bs-toggle="tooltip" data-bs-placement="top" title="Quantidade de hosts necessaria para esta localidade." required>
+            </div>
+            <div class="col-md-2 d-grid">
+                <button type="button" class="btn btn-danger btn-remove-location" data-bs-toggle="tooltip" data-bs-placement="top" title="Remove esta localidade do cenario.">Remover</button>
+            </div>
+        `;
+        return row;
+    }
+
+    addButton.addEventListener("click", () => {
+        const total = container.querySelectorAll(".location-row").length;
+        const row = createLocationRow(`Filial ${total}`);
+        container.appendChild(row);
+        const tooltipTargets = row.querySelectorAll('[data-bs-toggle="tooltip"]');
+        [...tooltipTargets].forEach((el) => new bootstrap.Tooltip(el));
+        updateRemoveButtonsState();
+    });
+
+    container.addEventListener("click", (event) => {
+        const button = event.target.closest(".btn-remove-location");
+        if (!button) return;
+        const rows = container.querySelectorAll(".location-row");
+        if (rows.length <= 1) return;
+        button.closest(".location-row").remove();
+        updateRemoveButtonsState();
+    });
+
+    updateRemoveButtonsState();
+    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    [...tooltipTriggerList].forEach((tooltipTriggerEl) => new bootstrap.Tooltip(tooltipTriggerEl));
+</script>
+</body>
+</html>
