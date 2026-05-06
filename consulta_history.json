@@ -1,7 +1,7 @@
 [
   {
-    "id": "3201b5d8",
-    "timestamp": "2026-05-01T21:48:47.749388+00:00",
+    "id": "acca86a3",
+    "timestamp": "2026-05-06T01:39:18.859885+00:00",
     "modo": "cidr",
     "ip_entrada": "10.0.0.0",
     "ipv6_entrada": "",
@@ -15,8 +15,8 @@
     "tema": "Baixo risco operacional"
   },
   {
-    "id": "742f8151",
-    "timestamp": "2026-05-01T21:48:47.612035+00:00",
+    "id": "267ced25",
+    "timestamp": "2026-05-06T01:39:18.775271+00:00",
     "modo": "cidr",
     "ip_entrada": "172.19.0.10",
     "ipv6_entrada": "",
@@ -28,11 +28,11 @@
     "mask": "255.255.224.0",
     "cidr": 19,
     "tema": "Risco moderado",
-    "timestamp_utc": "2026-05-01 21:48:47 UTC"
+    "timestamp_utc": "2026-05-06 01:39:18 UTC"
   },
   {
-    "id": "fbf4af5a",
-    "timestamp": "2026-05-01T21:48:47.598206+00:00",
+    "id": "66bbf7e3",
+    "timestamp": "2026-05-06T01:39:18.764945+00:00",
     "modo": "mask",
     "ip_entrada": "255.255.192.0",
     "ipv6_entrada": "",
@@ -44,11 +44,11 @@
     "mask": "255.255.192.0",
     "cidr": 18,
     "tema": "Risco moderado",
-    "timestamp_utc": "2026-05-01 21:48:47 UTC"
+    "timestamp_utc": "2026-05-06 01:39:18 UTC"
   },
   {
-    "id": "1b161979",
-    "timestamp": "2026-05-01T21:48:47.583079+00:00",
+    "id": "00184b95",
+    "timestamp": "2026-05-06T01:39:18.753075+00:00",
     "modo": "mask",
     "ip_entrada": "",
     "ipv6_entrada": "",
@@ -60,11 +60,11 @@
     "mask": "255.255.192.0",
     "cidr": 18,
     "tema": "Risco moderado",
-    "timestamp_utc": "2026-05-01 21:48:47 UTC"
+    "timestamp_utc": "2026-05-06 01:39:18 UTC"
   },
   {
-    "id": "d0619582",
-    "timestamp": "2026-05-01T21:48:47.490824+00:00",
+    "id": "639e5e3a",
+    "timestamp": "2026-05-06T01:39:18.699846+00:00",
     "modo": "mask",
     "ip_entrada": "",
     "ipv6_entrada": "",
@@ -76,11 +76,11 @@
     "mask": "255.255.224.0",
     "cidr": 19,
     "tema": "Risco moderado",
-    "timestamp_utc": "2026-05-01 21:48:47 UTC"
+    "timestamp_utc": "2026-05-06 01:39:18 UTC"
   },
   {
-    "id": "0802a383",
-    "timestamp": "2026-05-01T21:48:47.476774+00:00",
+    "id": "39a29a3f",
+    "timestamp": "2026-05-06T01:39:18.686776+00:00",
     "modo": "dominio",
     "ip_entrada": "https://example.com/path?a=1",
     "ipv6_entrada": "",
@@ -92,11 +92,11 @@
     "mask": "255.255.255.0",
     "cidr": 24,
     "tema": "Baixo risco operacional",
-    "timestamp_utc": "2026-05-01 21:48:47 UTC"
+    "timestamp_utc": "2026-05-06 01:39:18 UTC"
   },
   {
-    "id": "dde07ca9",
-    "timestamp": "2026-05-01T21:48:47.441018+00:00",
+    "id": "d65cb9b1",
+    "timestamp": "2026-05-06T01:39:18.658124+00:00",
     "modo": "cidr",
     "ip_entrada": "200.1.1.1",
     "ipv6_entrada": "",
@@ -108,11 +108,11 @@
     "mask": "255.255.255.0",
     "cidr": 24,
     "tema": "Baixo risco operacional",
-    "timestamp_utc": "2026-05-01 21:48:47 UTC"
+    "timestamp_utc": "2026-05-06 01:39:18 UTC"
   },
   {
-    "id": "489a7c10",
-    "timestamp": "2026-05-01T21:48:47.425609+00:00",
+    "id": "42d1ec5f",
+    "timestamp": "2026-05-06T01:39:18.638382+00:00",
     "modo": "cidr",
     "ip_entrada": "10.5.5.5",
     "ipv6_entrada": "",
@@ -124,11 +124,11 @@
     "mask": "255.0.0.0",
     "cidr": 8,
     "tema": "Risco crítico",
-    "timestamp_utc": "2026-05-01 21:48:47 UTC"
+    "timestamp_utc": "2026-05-06 01:39:18 UTC"
   },
   {
-    "id": "c89d5b99",
-    "timestamp": "2026-05-01T21:48:47.408760+00:00",
+    "id": "6d2f1e9b",
+    "timestamp": "2026-05-06T01:39:18.624693+00:00",
     "modo": "cidr",
     "ip_entrada": "255.255.192.0",
     "ipv6_entrada": "",
@@ -140,11 +140,11 @@
     "mask": "255.255.192.0",
     "cidr": 18,
     "tema": "Risco moderado",
-    "timestamp_utc": "2026-05-01 21:48:47 UTC"
+    "timestamp_utc": "2026-05-06 01:39:18 UTC"
   },
   {
-    "id": "ca80d008",
-    "timestamp": "2026-05-01T21:48:47.394784+00:00",
+    "id": "6852fba8",
+    "timestamp": "2026-05-06T01:39:18.614045+00:00",
     "modo": "cidr",
     "ip_entrada": "10.0.0.1",
     "ipv6_entrada": "",
@@ -156,11 +156,11 @@
     "mask": "255.255.255.255",
     "cidr": 32,
     "tema": "Baixo risco operacional",
-    "timestamp_utc": "2026-05-01 21:48:47 UTC"
+    "timestamp_utc": "2026-05-06 01:39:18 UTC"
   },
   {
-    "id": "7d7521bc",
-    "timestamp": "2026-05-01T21:48:47.380768+00:00",
+    "id": "235f830f",
+    "timestamp": "2026-05-06T01:39:18.603498+00:00",
     "modo": "cidr",
     "ip_entrada": "10.0.0.0",
     "ipv6_entrada": "",
@@ -172,11 +172,11 @@
     "mask": "255.255.255.254",
     "cidr": 31,
     "tema": "Baixo risco operacional",
-    "timestamp_utc": "2026-05-01 21:48:47 UTC"
+    "timestamp_utc": "2026-05-06 01:39:18 UTC"
   },
   {
-    "id": "630fec64",
-    "timestamp": "2026-05-01T21:48:47.366570+00:00",
+    "id": "b8f0dfb1",
+    "timestamp": "2026-05-06T01:39:18.590732+00:00",
     "modo": "cidr",
     "ip_entrada": "192.168.1.255",
     "ipv6_entrada": "",
@@ -188,11 +188,11 @@
     "mask": "255.255.255.0",
     "cidr": 24,
     "tema": "Baixo risco operacional",
-    "timestamp_utc": "2026-05-01 21:48:47 UTC"
+    "timestamp_utc": "2026-05-06 01:39:18 UTC"
   },
   {
-    "id": "4ef2c94a",
-    "timestamp": "2026-05-01T21:48:47.276661+00:00",
+    "id": "f90f1f7a",
+    "timestamp": "2026-05-06T01:39:18.505797+00:00",
     "modo": "cidr",
     "ip_entrada": "172.19.0.0",
     "ipv6_entrada": "",
@@ -204,6 +204,6 @@
     "mask": "255.255.240.0",
     "cidr": 20,
     "tema": "Risco moderado",
-    "timestamp_utc": "2026-05-01 21:48:47 UTC"
+    "timestamp_utc": "2026-05-06 01:39:18 UTC"
   }
 ]

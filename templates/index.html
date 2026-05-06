@@ -38,7 +38,7 @@
     {% include "partials/main_menu.html" %}
     {% include "partials/project_header.html" %}
 
-    <div class="card-tech p-4 shadow">
+    <div class="card-tech p-4 shadow analise-didatica-wrap {% if active_tab_pre in ['portas', 'protocolos'] %}d-none{% endif %}">
         <div class="tab-nav d-flex flex-wrap gap-2 mb-3">
             <button type="button" class="btn btn-outline-info tab-trigger" data-tab="cidr" data-bs-toggle="tooltip" data-bs-placement="top" title="Calcula rede e hosts a partir de CIDR.">🧮 CIDR</button>
             <button type="button" class="btn btn-outline-info tab-trigger" data-tab="mask" data-bs-toggle="tooltip" data-bs-placement="top" title="Só máscara decimal: prefixo /, intervalos e tamanho de bloco (sem campo IP). Para host + máscara use CIDR.">📏 Máscara</button>
@@ -47,15 +47,11 @@
             <button type="button" class="btn btn-outline-info tab-trigger" data-tab="dominio" data-bs-toggle="tooltip" data-bs-placement="top" title="Resolve domínio para IPv4 e decompõe rede.">🌐 Domínio</button>
             <button type="button" class="btn btn-outline-info tab-trigger" data-tab="ipv6" data-bs-toggle="tooltip" data-bs-placement="top" title="Analisa endereço IPv6 em formato didático.">🛰️ IPv6</button>
             <button type="button" class="btn btn-outline-info tab-trigger" data-tab="comparador" data-bs-toggle="tooltip" data-bs-placement="top" title="Compara dois CIDRs para o mesmo IP.">🆚 Comparador</button>
-            <button type="button" class="btn btn-outline-info tab-trigger" data-tab="portas" data-bs-toggle="tooltip" data-bs-placement="top" title="Catálogo dinâmico de portas de comunicação.">🔌 Portas</button>
-            <button type="button" class="btn btn-outline-info tab-trigger" data-tab="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Catálogo dinâmico de protocolos de comunicação.">📡 Protocolos</button>
+            <a href="/informacoes" class="btn btn-outline-warning fw-bold" data-bs-toggle="tooltip" data-bs-placement="top" title="Informações do projeto, GeoIP e texto didático (página à parte).">📘 Informações</a>
         </div>
         <p class="small text-secondary mb-3 border-start border-info border-2 ps-2 py-1 rounded-1" style="background: rgba(88, 166, 255, 0.06);" role="note">
-            <strong class="text-info">Funções em separado:</strong> cada aba possui fluxo independente. Nas abas de cálculo, use <strong>Executar</strong>. Nas abas de consulta, como Portas e Protocolos, a busca e os filtros atualizam os resultados automaticamente.
+            <strong class="text-info">Funções em separado:</strong> cada aba possui fluxo independente. Use <strong>Executar</strong> nas abas de cálculo. Os catálogos <strong class="text-info">Portas</strong> e <strong class="text-primary">Protocolos</strong> estão no <strong>Menu Principal</strong> acima.
         </p>
-        {% if active_tab_pre in ['portas', 'protocolos'] %}
-        {% include "partials/history_box.html" %}
-        {% endif %}
 
         <div class="tab-panel" data-tab-panel="cidr">{% include "partials/tab_cidr.html" %}</div>
         <div class="tab-panel" data-tab-panel="mask">{% include "partials/tab_mask.html" %}</div>
@@ -64,8 +60,6 @@
         <div class="tab-panel" data-tab-panel="dominio">{% include "partials/tab_dominio.html" %}</div>
         <div class="tab-panel" data-tab-panel="ipv6">{% include "partials/tab_ipv6.html" %}</div>
         <div class="tab-panel" data-tab-panel="comparador">{% include "partials/tab_comparador.html" %}</div>
-        <div class="tab-panel" data-tab-panel="portas">{% include "partials/tab_portas.html" %}</div>
-        <div class="tab-panel" data-tab-panel="protocolos">{% include "partials/tab_protocolos.html" %}</div>
         <div class="action-buttons mt-3">
             <a href="/export/json" class="btn btn-info fw-bold text-dark" data-bs-toggle="tooltip" data-bs-placement="top" title="Exporta histórico e dados em JSON para auditoria.">📦 Exportar JSON</a>
             <a href="/export/pdf" class="btn btn-primary fw-bold" data-bs-toggle="tooltip" data-bs-placement="top" title="Exporta relatório PDF da última análise processada.">🧾 Exportar PDF</a>
@@ -85,7 +79,15 @@
             {% endif %}
             <a href="/?tab={{ active_tab_pre or 'cidr' }}" class="btn btn-danger fw-bold text-white" data-bs-toggle="tooltip" data-bs-placement="top" title="Limpa os dados e mantém a aba atual selecionada.">🧹 Limpar Tela</a>
         </div>
-        <div class="small text-secondary mt-2">Atalhos: Alt+1..9 troca abas | Enter executa a aba ativa.</div>
+        <div class="small text-secondary mt-2">Atalhos: Alt+1..7 abas de cálculo | Alt+8 Portas | Alt+9 Protocolos | Enter executa a aba ativa.</div>
+    </div>
+
+    <div class="card-tech p-4 shadow catalogos-wrap {% if active_tab_pre not in ['portas', 'protocolos'] %}d-none{% endif %}">
+        <div class="tab-panel" data-tab-panel="portas">{% include "partials/tab_portas.html" %}</div>
+        <div class="tab-panel" data-tab-panel="protocolos">{% include "partials/tab_protocolos.html" %}</div>
+        <p class="small text-secondary mt-3 mb-0 border-start border-secondary border-2 ps-2 py-1 rounded-1" style="background: rgba(110, 118, 129, 0.08);" role="note">
+            <strong class="text-secondary">Catálogo:</strong> filtros e exportações do DataGrid aplicam-se à tabela abaixo. Use o <strong>Menu Principal</strong> para voltar à <strong>Análise Didática</strong> ou à <strong>Resolução de Problemas</strong>.
+        </p>
     </div>
 
     {% if comparador_cards and comparador_cards|length == 2 %}
@@ -227,9 +229,27 @@
     {% endif %}
     {% if not res.somente_mascara %}
     <div class="card-tech p-4 shadow mb-3">
-        <h6 class="text-info mb-2">🛠️ ACL/Cisco (base wildcard)</h6>
+        <h6 class="text-info mb-2">🛠️ Interface Cisco (IP + máscara)</h6>
         <pre class="small bg-dark border border-secondary rounded p-2 mb-2 text-light">{{ res.cisco_cli }}</pre>
-        <div class="small text-secondary mb-0">Use a wildcard para ACL/OSPF: o bloco acima já está alinhado com máscara e CIDR calculados.</div>
+        <div class="small text-secondary mb-0">Exemplo de <code>ip address</code> na interface; máscara em decimal pontuada.</div>
+    </div>
+    <div class="card-tech p-4 shadow mb-3 border border-secondary" style="border-left: 4px solid #d29922 !important;">
+        <h6 class="text-warning mb-2">📡 EIGRP / OSPF — <code>network</code> com wildcard</h6>
+        <p class="small text-secondary mb-3">{{ res.cisco_roteamento_nota }}</p>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="small text-info mb-1 fw-bold">EIGRP (ex.: AS 100)</div>
+                <pre class="small bg-dark border border-secondary rounded p-2 mb-0 text-light">{{ res.cisco_eigrp_exemplo }}</pre>
+            </div>
+            <div class="col-md-6">
+                <div class="small text-info mb-1 fw-bold">OSPFv2 (ex.: processo 1, área 0)</div>
+                <pre class="small bg-dark border border-secondary rounded p-2 mb-0 text-light">{{ res.cisco_ospf_exemplo }}</pre>
+            </div>
+        </div>
+        <p class="small text-secondary mt-3 mb-0">
+            Substitua <strong>ASN</strong> / <strong>process-id</strong> / <strong>área</strong> pelos valores do teu laboratório.
+            O par <span class="text-warning">{{ res.rede }}</span> + <span class="text-warning">{{ res.wildcard }}</span> é o mesmo conceito de <code>network ... wildcard</code> no router.
+        </p>
     </div>
     {% endif %}
     {% else %}
@@ -1053,28 +1073,20 @@
     const tabButtons = document.querySelectorAll('.tab-trigger');
     const tabPanels = document.querySelectorAll('.tab-panel');
     let currentTab = activeTabFromServer || 'cidr';
-    const catalogHistorySent = new Set();
-    const registerCatalogHistory = async (tabId) => {
-        if (!["portas", "protocolos"].includes(tabId)) return;
-        if (catalogHistorySent.has(tabId)) return;
-        catalogHistorySent.add(tabId);
-        const searchInput = document.querySelector(`[data-grid-search="${tabId}"]`);
-        const entrada = searchInput ? (searchInput.value || "") : "";
-        try {
-            await fetch("/history/catalog", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ modo: tabId, entrada }),
-            });
-        } catch (error) {
-            console.warn("Falha ao registrar histórico de catálogo", error);
-        }
-    };
     const showTab = (tabId) => {
         currentTab = tabId;
-        tabButtons.forEach((btn) => btn.classList.toggle('active', btn.dataset.tab === tabId));
-        tabPanels.forEach((panel) => panel.classList.toggle('active', panel.dataset.tabPanel === tabId));
-        registerCatalogHistory(tabId);
+        const analiseWrap = document.querySelector(".analise-didatica-wrap");
+        const catalogWrap = document.querySelector(".catalogos-wrap");
+        const catalogIds = ["portas", "protocolos"];
+        if (catalogIds.includes(tabId)) {
+            analiseWrap?.classList.add("d-none");
+            catalogWrap?.classList.remove("d-none");
+        } else {
+            analiseWrap?.classList.remove("d-none");
+            catalogWrap?.classList.add("d-none");
+        }
+        tabButtons.forEach((btn) => btn.classList.toggle("active", btn.dataset.tab === tabId));
+        tabPanels.forEach((panel) => panel.classList.toggle("active", panel.dataset.tabPanel === tabId));
     };
     tabButtons.forEach((btn) => {
         btn.addEventListener('click', () => showTab(btn.dataset.tab));
@@ -1155,7 +1167,7 @@
         if (!popup) return;
         const lines = rows.map((r) => {
             if (gridId === "portas") return `${r.dataset.porta} | ${r.dataset.servico} | ${r.dataset.transporte} | ${r.dataset.risco}`;
-            return `${r.dataset.nome} | ${r.dataset.camada} | ${r.dataset.transporte} | ${r.dataset.nivel}`;
+            return `${r.dataset.nome} | ${r.dataset.camada} | ${r.dataset.alcance || "n/a"} | ${r.dataset.transporte} | ${r.dataset.nivel}`;
         });
         popup.document.write(`<pre>${gridId.toUpperCase()}\n\n${lines.join("\n")}</pre>`);
         popup.document.close();
@@ -1163,12 +1175,14 @@
     };
 
     const initGrid = (gridId) => {
-        const rows = [...document.querySelectorAll(`[data-grid-row="${gridId}"]`)];
-        if (!rows.length) return;
+        const gridRoot = document.querySelector(`[data-grid-id="${gridId}"]`);
+        if (!gridRoot) return;
+
         const search = document.querySelector(`[data-grid-search="${gridId}"]`);
         const category = document.querySelector(`[data-grid-category="${gridId}"]`);
         const transport = document.querySelector(`[data-grid-transport="${gridId}"]`);
         const risk = document.querySelector(`[data-grid-risk="${gridId}"]`);
+        const alcanceEl = document.querySelector(`[data-grid-alcance="${gridId}"]`);
         const clearBtn = document.querySelector(`[data-grid-clear="${gridId}"]`);
         const counter = document.querySelector(`[data-grid-counter="${gridId}"]`);
         const pageLabel = document.querySelector(`[data-grid-page-label="${gridId}"]`);
@@ -1177,30 +1191,63 @@
         const exportJsonBtn = document.querySelector(`[data-grid-export-json="${gridId}"]`);
         const exportPdfBtn = document.querySelector(`[data-grid-export-pdf="${gridId}"]`);
         const table = document.querySelector(`[data-grid-table="${gridId}"]`);
-        const tbody = document.querySelector(`[data-grid-body="${gridId}"]`);
+        const tbody = document.querySelector(`tbody[data-grid-body="${gridId}"]`);
+        const pageSizeSelect = document.querySelector(`[data-grid-page-size="${gridId}"]`);
+
+        const isMobileGrid = () => window.matchMedia("(max-width: 991.98px)").matches;
+
+        const getRows = () => {
+            if (isMobileGrid()) {
+                return [...document.querySelectorAll(`[data-grid-mobile="${gridId}"] [data-grid-mobile-row="${gridId}"]`)];
+            }
+            return [...document.querySelectorAll(`tbody[data-grid-body="${gridId}"] tr[data-grid-row="${gridId}"]`)];
+        };
+
+        const rowContainer = () => {
+            if (isMobileGrid()) {
+                const wrap = document.querySelector(`[data-grid-mobile="${gridId}"]`);
+                return wrap ? wrap.querySelector(".row") : null;
+            }
+            return tbody;
+        };
 
         let sortKey = "";
         let sortDir = 1;
         let page = 1;
-        const pageSize = 10;
 
-        const getFiltered = () => rows.filter((row) => {
-            const text = normalize(row.dataset.search);
-            const term = normalize(search && search.value);
-            const cat = normalize(category && category.value);
-            const trans = normalize(transport && transport.value);
-            const r = normalize(risk && risk.value);
-            const categoryValue = normalize(row.dataset.categoria || row.dataset.camada);
-            const transportValue = normalize(row.dataset.transporte || "");
-            const riskValue = normalize(row.dataset.risco || row.dataset.nivel || "");
-            const termOk = !term || text.includes(term);
-            const catOk = cat === "all" || categoryValue === cat;
-            const transOk = trans === "all" || transportValue.includes(trans);
-            const riskOk = r === "all" || riskValue.includes(r);
-            return termOk && catOk && transOk && riskOk;
-        });
+        const getPageLimit = () => {
+            if (!pageSizeSelect) return 10;
+            const v = pageSizeSelect.value;
+            if (v === "all") return null;
+            const n = parseInt(v, 10);
+            return Number.isFinite(n) && n > 0 ? n : 10;
+        };
+
+        const getFiltered = () => {
+            const rowEls = getRows();
+            return rowEls.filter((row) => {
+                const text = normalize(row.dataset.search);
+                const term = normalize(search && search.value);
+                const cat = normalize(category && category.value);
+                const trans = normalize(transport && transport.value);
+                const r = normalize(risk && risk.value);
+                const categoryValue = normalize(row.dataset.categoria || row.dataset.camada);
+                const transportValue = normalize(row.dataset.transporte || "");
+                const riskValue = normalize(row.dataset.risco || row.dataset.nivel || "");
+                const alcFilter = alcanceEl ? normalize(alcanceEl.value) : "all";
+                const rowAlc = normalize(row.dataset.alcance || "n/a");
+                const termOk = !term || text.includes(term);
+                const catOk = cat === "all" || categoryValue === cat;
+                const transOk = trans === "all" || transportValue.includes(trans);
+                const riskOk = r === "all" || riskValue.includes(r);
+                const alcOk = alcFilter === "all" || rowAlc === alcFilter;
+                return termOk && catOk && transOk && riskOk && alcOk;
+            });
+        };
 
         const apply = () => {
+            const rows = getRows();
+            if (!rows.length) return;
             let filtered = getFiltered();
             if (sortKey) {
                 filtered = [...filtered].sort((a, b) => {
@@ -1208,25 +1255,38 @@
                     let vb = normalize(b.dataset[sortKey]);
                     if (sortKey === "porta") return (parsePortValue(va) - parsePortValue(vb)) * sortDir;
                     if (sortKey === "risco" || sortKey === "nivel") return ((riskOrder[va.includes("crítico") ? "crítico" : va.includes("atenção") ? "atenção" : va.includes("seguro") ? "seguro" : "didático"] || 9) - (riskOrder[vb.includes("crítico") ? "crítico" : vb.includes("atenção") ? "atenção" : vb.includes("seguro") ? "seguro" : "didático"] || 9)) * sortDir;
+                    if (sortKey === "alcance") {
+                        const orderAlc = { igp: 1, egp: 2, "n/a": 3 };
+                        return ((orderAlc[va] || 9) - (orderAlc[vb] || 9)) * sortDir;
+                    }
                     return va.localeCompare(vb, "pt-BR") * sortDir;
                 });
             }
             rows.forEach((r) => r.classList.add("d-none"));
-            const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+            const limit = getPageLimit();
+            const len = filtered.length;
+            const totalPages = limit === null ? 1 : Math.max(1, Math.ceil(len / limit));
             if (page > totalPages) page = totalPages;
-            const start = (page - 1) * pageSize;
-            const current = filtered.slice(start, start + pageSize);
-            tbody.append(...current);
+            const start = limit === null ? 0 : (page - 1) * limit;
+            const sliceEnd = limit === null ? len : Math.min(start + limit, len);
+            const current = filtered.slice(start, sliceEnd);
+            const container = rowContainer();
+            if (container) container.append(...current);
             current.forEach((r) => r.classList.remove("d-none"));
             counter.textContent = `${filtered.length} registro(s)`;
-            pageLabel.textContent = `Página ${page}/${totalPages}`;
-            prevBtn.disabled = page <= 1;
-            nextBtn.disabled = page >= totalPages;
+            if (limit === null) {
+                pageLabel.textContent = len ? `Exibindo todos (${len})` : "—";
+            } else {
+                pageLabel.textContent = `Página ${page}/${totalPages}`;
+            }
+            const paginate = limit !== null;
+            prevBtn.disabled = !paginate || page <= 1;
+            nextBtn.disabled = !paginate || page >= totalPages;
             updateSummary(gridId, filtered);
             return filtered;
         };
 
-        table.querySelectorAll(".sortable").forEach((th) => th.addEventListener("click", () => {
+        table && table.querySelectorAll(".sortable").forEach((th) => th.addEventListener("click", () => {
             const key = th.dataset.sortKey;
             if (sortKey === key) sortDir *= -1;
             else {
@@ -1236,14 +1296,18 @@
             apply();
         }));
 
-        [search, category, transport, risk].forEach((el) => el && el.addEventListener("input", () => {
+        [search, category, transport, risk, alcanceEl].forEach((el) => el && el.addEventListener("input", () => {
             page = 1;
             apply();
         }));
-        [category, transport, risk].forEach((el) => el && el.addEventListener("change", () => {
+        [category, transport, risk, alcanceEl].forEach((el) => el && el.addEventListener("change", () => {
             page = 1;
             apply();
         }));
+        pageSizeSelect && pageSizeSelect.addEventListener("change", () => {
+            page = 1;
+            apply();
+        });
 
         prevBtn.addEventListener("click", () => {
             if (page > 1) {
@@ -1260,6 +1324,8 @@
             if (category) category.value = "all";
             if (transport) transport.value = "all";
             if (risk) risk.value = "all";
+            if (alcanceEl) alcanceEl.value = "all";
+            if (pageSizeSelect) pageSizeSelect.value = "10";
             sortKey = "";
             sortDir = 1;
             page = 1;
@@ -1268,10 +1334,10 @@
         exportJsonBtn.addEventListener("click", () => exportRowsJson(gridId, getFiltered()));
         exportPdfBtn.addEventListener("click", () => exportRowsPdf(gridId, getFiltered()));
 
-        tbody.addEventListener("click", async (ev) => {
+        gridRoot.addEventListener("click", async (ev) => {
             const copyBtn = ev.target.closest(`[data-grid-copy="${gridId}"]`);
             const detailsBtn = ev.target.closest(`[data-grid-details="${gridId}"]`);
-            const row = ev.target.closest(`[data-grid-row="${gridId}"]`);
+            const row = ev.target.closest(`[data-grid-row="${gridId}"], [data-grid-mobile-row="${gridId}"]`);
             if (!row) return;
             if (copyBtn) {
                 await navigator.clipboard.writeText(JSON.stringify({ ...row.dataset }, null, 2));
@@ -1287,9 +1353,16 @@
                         <p><strong>Alternativa segura:</strong> ${row.dataset.alternativa}</p>
                     `;
                 } else {
+                    const rawAlc = (row.dataset.alcance || "n/a").toLowerCase();
+                    const alcExplain = {
+                        igp: "IGP (Interior Gateway Protocol) — troca de rotas dentro do mesmo Sistema Autônomo.",
+                        egp: "EGP no sentido prático — BGP entre Sistemas Autônomos (roteamento exterior na Internet).",
+                        "n/a": "Fora da classificação IGP/EGP (ex.: aplicação, DNS, HTTP…).",
+                    }[rawAlc] || rawAlc;
                     detailsTitle.textContent = `Protocolo ${row.dataset.nome}`;
                     detailsBody.innerHTML = `
                         <p><strong>Camada:</strong> ${row.dataset.camada}</p>
+                        <p><strong>Alcance (IGP/EGP):</strong> ${alcExplain}</p>
                         <p><strong>Transporte:</strong> ${row.dataset.transporte}</p>
                         <p><strong>Porta comum:</strong> ${row.dataset.porta}</p>
                         <p><strong>Seguro:</strong> ${row.dataset.seguro}</p>
@@ -1299,6 +1372,15 @@
                 }
                 detailsModal.show();
             }
+        });
+
+        let gridResizeTimer;
+        window.addEventListener("resize", () => {
+            clearTimeout(gridResizeTimer);
+            gridResizeTimer = setTimeout(() => {
+                page = 1;
+                apply();
+            }, 200);
         });
 
         apply();

@@ -1,5 +1,15 @@
 <form method="POST" class="row g-3 calc-form" data-tab-form="wildcard">
     <input type="hidden" name="tab" value="wildcard">
+    <div class="col-12">
+        <div class="small text-secondary mb-3 border-start border-warning border-2 ps-3 py-2 rounded-1" style="background: rgba(210, 153, 34, 0.09);" role="note">
+            <strong class="text-warning">Wildcard na prática Cisco:</strong>
+            é a <strong>máscara invertida</strong> (onde a máscara tem bit 1, a wildcard tem 0 — “precisa casar”).
+            Em <strong>EIGRP</strong> e <strong>OSPF</strong>, o comando <code class="text-info">network</code> usa
+            <strong>endereço de rede</strong> + <strong>wildcard</strong> (não use máscara decimal aqui).
+            Em <strong>ACLs</strong>, o segundo valor também é wildcard.
+            Esta aba só aceita wildcards <strong>contíguas</strong> (equivalente a um único CIDR), como nos laboratórios típicos.
+        </div>
+    </div>
     <div class="col-lg-5">
         <label class="form-label small text-secondary">🌐 Endereço IPv4 (obrigatório)</label>
         <input type="text" name="ip" class="form-control bg-dark text-light border-secondary {{ 'is-invalid' if 'ip' in invalid_fields else '' }}"

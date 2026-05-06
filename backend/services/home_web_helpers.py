@@ -120,7 +120,7 @@ def motivo_analise(modo: str) -> str:
     mapa = {
         "cidr": "Usuário pediu cálculo de sub-rede CIDR para validar rede/hosts.",
         "mask": "Usuário pediu decomposição didática de máscara decimal e barra.",
-        "wildcard": "Usuário pediu conversão wildcard para uso em ACL/OSPF.",
+        "wildcard": "Usuário pediu análise wildcard (ACL, EIGRP, OSPF, redes Cisco).",
         "autoip": "Usuário pediu descoberta automática de CIDR a partir do IP.",
         "dominio": "Usuário pediu resolução DNS e decomposição técnica do destino.",
         "ipv6": "Usuário pediu análise didática de endereço IPv6.",

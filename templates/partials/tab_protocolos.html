@@ -1,20 +1,49 @@
 <div class="comm-catalog" data-grid-id="protocolos">
     <div class="small text-secondary mb-3 border-start border-info border-2 ps-2 py-1 rounded-1" style="background: rgba(88, 166, 255, 0.06);" role="note">
-        DataGrid didático de protocolos para comparar camada, transporte, segurança e função.
+        DataGrid didático de protocolos: camada, transporte, segurança, função e classificação <strong class="text-info">IGP</strong> / <strong class="text-primary">EGP</strong> para roteamento.
     </div>
     <div class="comm-summary mb-3" data-summary-target="protocolos"></div>
     <div class="d-flex flex-wrap gap-2 mb-2">
         <span class="shield-badge"><span class="icon">🔎</span>Busca por protocolo/camada</span>
         <span class="shield-badge"><span class="icon">🎚️</span>Filtros por camada, transporte e nível</span>
+        <span class="shield-badge"><span class="icon">🌍</span>IGP vs EGP (roteamento)</span>
         <span class="shield-badge"><span class="icon">↕️</span>Clique no cabeçalho para ordenar</span>
         <span class="shield-badge"><span class="icon">📋</span>Copie ou abra detalhes por linha</span>
+    </div>
+    <div class="row g-2 align-items-end mb-2">
+        <div class="col-md-6 col-lg-4">
+            <label class="form-label small text-secondary d-flex align-items-center gap-1">🌍 Alcance (IGP / EGP)
+                <button type="button" class="help-hint-btn" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-placement="top" title="IGP e EGP" data-bs-content="IGP (Interior Gateway Protocol): troca rotas dentro de um Sistema Autônomo (AS). EGP no sentido moderno refere-se a BGP entre AS. Protocolos que não são de gateway de roteamento ficam em N/A.">ℹ️</button>
+            </label>
+            <select class="form-select bg-dark text-light border-secondary" data-grid-alcance="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Filtra por alcance didático: interior (IGP), exterior (EGP) ou não aplicável.">
+                <option value="all">Todos</option>
+                <option value="igp">IGP (interior / dentro do AS)</option>
+                <option value="egp">EGP (exterior — ex.: BGP)</option>
+                <option value="n/a">N/A (não é classificação IGP/EGP)</option>
+            </select>
+        </div>
+        <div class="col-md-6 col-lg-8 small text-secondary d-flex align-items-end pb-1 border-start border-secondary border-opacity-25 ps-md-3">
+            <span><strong class="text-info">IGP</strong> = OSPF, RIP, EIGRP, IS-IS… <span class="text-secondary">|</span> <strong class="text-primary">EGP</strong> na prática = <strong>BGP</strong> entre sistemas autônomos. O restante do catálogo usa <strong>N/A</strong>.</span>
+        </div>
+    </div>
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-3 pb-2 border-bottom border-secondary border-opacity-25">
+        <label class="small text-secondary mb-0 d-flex align-items-center gap-2 flex-wrap">
+            <span>📄 Linhas por página</span>
+            <select class="form-select form-select-sm bg-dark text-light border-secondary" style="width: auto; min-width: 12rem;" data-grid-page-size="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Paginação da tabela: escolha quantos registros ver de cada vez ou exiba todos de uma vez.">
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+                <option value="all">Todos (sem paginar)</option>
+            </select>
+        </label>
     </div>
     <div class="row g-2 align-items-end mb-3">
         <div class="col-lg-3">
             <label class="form-label small text-secondary d-flex align-items-center gap-1">🔎 Busca geral
                 <button type="button" class="help-hint-btn" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-placement="top" title="Busca no DataGrid" data-bs-content="Digite protocolo, camada, função, transporte ou nível para filtrar a tabela em tempo real.">ℹ️</button>
             </label>
-            <input type="text" class="form-control bg-dark text-light border-secondary" data-grid-search="protocolos" placeholder="Protocolo, camada, função..." data-bs-toggle="tooltip" data-bs-placement="top" title="Busca geral: digite protocolo, camada, função, transporte ou nível.">
+            <input type="text" class="form-control bg-dark text-light border-secondary" data-grid-search="protocolos" placeholder="Protocolo, IGP, EGP, camada..." data-bs-toggle="tooltip" data-bs-placement="top" title="Busca geral: digite protocolo, camada, IGP/EGP, função, transporte ou nível.">
         </div>
         <div class="col-lg-2">
             <label class="form-label small text-secondary d-flex align-items-center gap-1">🧱 Camada
@@ -67,6 +96,7 @@
                 <tr>
                     <th class="sortable" data-sort-key="nome" title="Ordenar por nome do protocolo">Protocolo</th>
                     <th class="sortable" data-sort-key="camada" title="Ordenar por camada OSI/TCP-IP">Camada</th>
+                    <th class="sortable" data-sort-key="alcance" title="Ordenar por IGP / EGP / N/A">IGP/EGP</th>
                     <th class="sortable" data-sort-key="transporte" title="Ordenar por tipo de transporte">Transporte</th>
                     <th class="sortable" data-sort-key="porta" title="Ordenar por porta mais comum">Porta comum</th>
                     <th class="sortable" data-sort-key="seguro" title="Ordenar por status de segurança">Seguro</th>
@@ -77,11 +107,13 @@
             </thead>
             <tbody data-grid-body="protocolos">
                 {% for item in protocolos_catalogo %}
+                {% set alc_item = item.alcance | default('N/A') %}
                 <tr
                     data-grid-row="protocolos"
-                    data-search="{{ item.nome }} {{ item.camada }} {{ item.transporte }} {{ item.porta_comum }} {{ item.seguro }} {{ item.badge }} {{ item.funcao }}"
+                    data-search="{{ item.nome }} {{ item.camada }} {{ alc_item }} {{ item.transporte }} {{ item.porta_comum }} {{ item.seguro }} {{ item.badge }} {{ item.funcao }}"
                     data-nome="{{ item.nome }}"
                     data-camada="{{ item.camada }}"
+                    data-alcance="{{ alc_item | lower }}"
                     data-transporte="{{ item.transporte }}"
                     data-porta="{{ item.porta_comum }}"
                     data-seguro="{{ item.seguro }}"
@@ -89,6 +121,7 @@
                     data-funcao="{{ item.funcao }}">
                     <td class="fw-bold text-info">{{ item.nome }}</td>
                     <td>{{ item.camada }}</td>
+                    <td>{% if alc_item != 'N/A' %}<span class="badge bg-dark border {% if alc_item == 'IGP' %}border-success text-success{% elif alc_item == 'EGP' %}border-primary text-primary{% else %}border-secondary{% endif %}">{{ alc_item }}</span>{% else %}<span class="text-secondary">N/A</span>{% endif %}</td>
                     <td>{{ item.transporte }}</td>
                     <td>{{ item.porta_comum }}</td>
                     <td>{{ item.seguro }}</td>
@@ -107,15 +140,54 @@
     <div class="d-lg-none">
         <div class="row g-3" data-grid-mobile="protocolos">
             {% for item in protocolos_catalogo %}
-            <div class="col-12 card-tech p-3" data-grid-mobile-row="protocolos">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                    <h6 class="mb-0 text-info">📡 {{ item.nome }}</h6>
-                    <span class="badge bg-dark border border-{{ item.badge_color }} text-{{ item.badge_color }}">{{ item.badge }}</span>
+            {% set alc_item = item.alcance | default('N/A') %}
+            <div
+                class="col-12 card-tech p-3"
+                data-grid-mobile-row="protocolos"
+                data-search="{{ item.nome }} {{ item.camada }} {{ alc_item }} {{ item.transporte }} {{ item.porta_comum }} {{ item.seguro }} {{ item.badge }} {{ item.funcao }}"
+                data-nome="{{ item.nome }}"
+                data-camada="{{ item.camada }}"
+                data-alcance="{{ alc_item | lower }}"
+                data-transporte="{{ item.transporte }}"
+                data-porta="{{ item.porta_comum }}"
+                data-seguro="{{ item.seguro }}"
+                data-nivel="{{ item.badge }}"
+                data-funcao="{{ item.funcao }}"
+            >
+                <h6 class="mb-3 text-info">📡 {{ item.nome }}</h6>
+                <dl class="small mb-0 protocolo-mobile-dl">
+                    <div class="d-flex flex-wrap justify-content-between gap-2 border-bottom border-secondary border-opacity-25 py-1">
+                        <dt class="mb-0 text-secondary">Camada</dt><dd class="mb-0 text-light">{{ item.camada }}</dd>
+                    </div>
+                    <div class="d-flex flex-wrap justify-content-between gap-2 border-bottom border-secondary border-opacity-25 py-1">
+                        <dt class="mb-0 text-secondary">IGP/EGP</dt>
+                        <dd class="mb-0 text-end">
+                            {% if alc_item != 'N/A' %}
+                            <span class="badge bg-dark border {% if alc_item == 'IGP' %}border-success text-success{% elif alc_item == 'EGP' %}border-primary text-primary{% else %}border-secondary{% endif %}">{{ alc_item }}</span>
+                            {% else %}<span class="text-secondary">N/A</span>{% endif %}
+                        </dd>
+                    </div>
+                    <div class="d-flex flex-wrap justify-content-between gap-2 border-bottom border-secondary border-opacity-25 py-1">
+                        <dt class="mb-0 text-secondary">Transporte</dt><dd class="mb-0 text-light">{{ item.transporte }}</dd>
+                    </div>
+                    <div class="d-flex flex-wrap justify-content-between gap-2 border-bottom border-secondary border-opacity-25 py-1">
+                        <dt class="mb-0 text-secondary">Porta comum</dt><dd class="mb-0 text-light">{{ item.porta_comum }}</dd>
+                    </div>
+                    <div class="d-flex flex-wrap justify-content-between gap-2 border-bottom border-secondary border-opacity-25 py-1">
+                        <dt class="mb-0 text-secondary">Seguro</dt><dd class="mb-0 text-light">{{ item.seguro }}</dd>
+                    </div>
+                    <div class="d-flex flex-wrap justify-content-between gap-2 border-bottom border-secondary border-opacity-25 py-1">
+                        <dt class="mb-0 text-secondary">Nível</dt><dd class="mb-0"><span class="badge bg-dark border border-{{ item.badge_color }} text-{{ item.badge_color }}">{{ item.badge }}</span></dd>
+                    </div>
+                    <div class="pt-2">
+                        <dt class="small text-secondary mb-1">Função</dt>
+                        <dd class="small text-info mb-0">{{ item.funcao }}</dd>
+                    </div>
+                </dl>
+                <div class="mt-2 pt-2 border-top border-secondary border-opacity-25">
+                    <button type="button" class="btn btn-sm btn-info text-dark fw-bold me-1" data-grid-copy="protocolos" data-bs-toggle="tooltip" title="Copiar linha">📋</button>
+                    <button type="button" class="btn btn-sm btn-primary fw-bold" data-grid-details="protocolos" data-bs-toggle="tooltip" title="Detalhes">Detalhes</button>
                 </div>
-                <div class="small text-secondary">Camada: {{ item.camada }}</div>
-                <div class="small text-secondary">Transporte: {{ item.transporte }}</div>
-                <div class="small text-secondary">Porta: {{ item.porta_comum }}</div>
-                <div class="small text-info mt-1">{{ item.funcao }}</div>
             </div>
             {% endfor %}
         </div>

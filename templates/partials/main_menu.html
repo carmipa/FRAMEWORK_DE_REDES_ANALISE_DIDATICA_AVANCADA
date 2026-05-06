@@ -6,9 +6,27 @@
             class="btn fw-bold {{ 'btn-warning text-dark' if active_main_menu == 'analise' else 'btn-outline-warning' }}"
             data-bs-toggle="tooltip"
             data-bs-placement="top"
-            title="Abre o módulo principal de análise didática de IPv4/IPv6, CIDR, wildcard, portas e protocolos."
+            title="Análise didática de IPv4/IPv6, CIDR, máscara, wildcard, domínio e comparador."
         >
             🧠 Análise Didática
+        </a>
+        <a
+            href="/?tab=portas"
+            class="btn fw-bold {{ 'btn-warning text-dark' if active_main_menu == 'portas' else 'btn-outline-warning' }}"
+            data-bs-toggle="tooltip"
+            data-bs-placement="top"
+            title="Catálogo dinâmico de portas de comunicação (filtros, ordenação e exportação)."
+        >
+            🔌 Portas
+        </a>
+        <a
+            href="/?tab=protocolos"
+            class="btn fw-bold {{ 'btn-warning text-dark' if active_main_menu == 'protocolos' else 'btn-outline-warning' }}"
+            data-bs-toggle="tooltip"
+            data-bs-placement="top"
+            title="Catálogo dinâmico de protocolos de comunicação (filtros, ordenação e exportação)."
+        >
+            📡 Protocolos
         </a>
         <a
             href="/resolucao-problemas"

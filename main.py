@@ -17,6 +17,11 @@ from backend.common import (
     logger,
 )
 from backend.services.dns_service import resolver_dns_com_cache
+from backend.services.geo_lookup_service import (
+    cliente_ip_efetivo,
+    lookup_regiao_geografica,
+    normalizar_ip_digitado,
+)
 from backend.services.grc_service import grc_resumo
 from backend.services.history_service import (
     carregar_historico,
@@ -529,34 +534,304 @@ PROTOCOLOS_CATALOGO = [
         "badge_color": "success"
     },
     {
-        "nome": "BGP",
+        "nome": "BGP-4 / eBGP",
         "camada": "Aplicação",
         "transporte": "TCP",
         "porta_comum": "179",
-        "funcao": "Roteamento entre Sistemas Autônomos (Internet)",
-        "seguro": "Não inerentemente (usa RPKI)",
+        "funcao": "Entre Sistemas Autônomos (eBGP): políticas, AS-PATH, escolha de rotas na Internet",
+        "seguro": "TCP; no mundo real usar RPKI/ROV quando aplicável",
         "badge": "🔵 Didático",
-        "badge_color": "info"
+        "badge_color": "info",
+        "alcance": "EGP",
     },
     {
-        "nome": "OSPF",
-        "camada": "Rede/Transporte",
+        "nome": "OSPFv2",
+        "camada": "Rede",
         "transporte": "IP (Protocolo 89)",
         "porta_comum": "N/A",
-        "funcao": "Roteamento dinâmico interno baseado em Link-State",
-        "seguro": "Pode usar autenticação MD5/SHA",
+        "funcao": "IGP link-state IPv4: áreas OSPF, LSDB, SPF, Router-ID",
+        "seguro": "Autenticação MD5/SHA por área/interface",
         "badge": "🔵 Didático",
-        "badge_color": "info"
+        "badge_color": "info",
+        "alcance": "IGP",
     },
     {
-        "nome": "RIP",
+        "nome": "OSPFv3",
+        "camada": "Rede",
+        "transporte": "IP (Protocolo 89)",
+        "porta_comum": "N/A",
+        "funcao": "IGP link-state IPv6 (instâncias por link; suporte AF)",
+        "seguro": "Autenticação IPsec ou nativa por interface",
+        "badge": "🔵 Didático",
+        "badge_color": "info",
+        "alcance": "IGP",
+    },
+    {
+        "nome": "RIPv1",
         "camada": "Aplicação",
         "transporte": "UDP",
         "porta_comum": "520",
-        "funcao": "Roteamento baseado em vetor de distância",
-        "seguro": "Não (RIPv1) / Autenticado (RIPv2)",
+        "funcao": "IGP vetor de distância classful (redes por classe); broadcast; hop máx 15",
+        "seguro": "Sem autenticação forte",
         "badge": "🔵 Didático",
-        "badge_color": "info"
+        "badge_color": "info",
+        "alcance": "IGP",
+    },
+    {
+        "nome": "RIPv2",
+        "camada": "Aplicação",
+        "transporte": "UDP",
+        "porta_comum": "520",
+        "funcao": "IGP vetor de distância classless (VLSM), multicast 224.0.0.9, campo next-hop",
+        "seguro": "MD5 opcional",
+        "badge": "🔵 Didático",
+        "badge_color": "info",
+        "alcance": "IGP",
+    },
+    {
+        "nome": "EIGRP",
+        "camada": "Rede",
+        "transporte": "IP (Protocolo 88)",
+        "porta_comum": "N/A",
+        "funcao": "IGP híbrido Cisco (DUAL): métrica composta, convergência rápida",
+        "seguro": "Autenticação opcional",
+        "badge": "🔵 Didático",
+        "badge_color": "info",
+        "alcance": "IGP",
+    },
+    {
+        "nome": "IGRP",
+        "camada": "Rede",
+        "transporte": "IP (Protocolo 9)",
+        "porta_comum": "N/A",
+        "funcao": "IGP vetor de distância Cisco (legado); antecessor do EIGRP",
+        "seguro": "Autenticação simples",
+        "badge": "🔵 Didático",
+        "badge_color": "info",
+        "alcance": "IGP",
+    },
+    {
+        "nome": "IS-IS",
+        "camada": "Rede",
+        "transporte": "Enlace (L2) / PDU integrado",
+        "porta_comum": "N/A",
+        "funcao": "IGP link-state para IPv4 e IPv6 (NI); comum em ISP e backbone",
+        "seguro": "Autenticação em adjacências L1/L2",
+        "badge": "🔵 Didático",
+        "badge_color": "info",
+        "alcance": "IGP",
+    },
+    {
+        "nome": "iBGP",
+        "camada": "Aplicação",
+        "transporte": "TCP",
+        "porta_comum": "179",
+        "funcao": "Mesmo BGP-4, sessão dentro do mesmo AS: reflete prefixos aprendidos por eBGP",
+        "seguro": "Políticas de rota + TCP; não é OSPF/EIGRP — complementa IGP interno",
+        "badge": "🔵 Didático",
+        "badge_color": "info",
+        "alcance": "N/A",
+    },
+    # --- Extras didáticos (expansão do catálogo; revisão conjunta depois) ---
+    {
+        "nome": "ICMP",
+        "camada": "Rede",
+        "transporte": "IP (Protocolo 1)",
+        "porta_comum": "N/A",
+        "funcao": "Controle e diagnóstico IPv4: ping (echo), unreachable, TTL exceeded, MTU discovery",
+        "seguro": "Pode ser abusado para reconhecimento; filtrar na borda",
+        "badge": "🔵 Didático",
+        "badge_color": "info",
+    },
+    {
+        "nome": "ICMPv6",
+        "camada": "Rede",
+        "transporte": "IPv6 (Next Header 58)",
+        "porta_comum": "N/A",
+        "funcao": "Equivalente ICMP para IPv6 + vizinhança (NDP: RS/RA, NS/NA)",
+        "seguro": "Filtrar tipos sensíveis na borda; RA guard em switches",
+        "badge": "🔵 Didático",
+        "badge_color": "info",
+    },
+    {
+        "nome": "IPv4",
+        "camada": "Rede",
+        "transporte": "Enlace (encapsulamento)",
+        "porta_comum": "N/A",
+        "funcao": "Endereçamento e encaminhamento de pacotes na Internet (fragmentação, TTL, checksum cabeçalho)",
+        "seguro": "IPSec/VPN para confidencialidade",
+        "badge": "🔵 Didático",
+        "badge_color": "info",
+    },
+    {
+        "nome": "IPv6",
+        "camada": "Rede",
+        "transporte": "Enlace (encapsulamento)",
+        "porta_comum": "N/A",
+        "funcao": "Sucessor IPv4: endereços 128 bits, extensões de cabeçalho, sem checksum em camada de rede",
+        "seguro": "IPsec integrado ao modelo; firewall stateful obrigatório",
+        "badge": "🔵 Didático",
+        "badge_color": "info",
+    },
+    {
+        "nome": "DHCP",
+        "camada": "Aplicação",
+        "transporte": "UDP",
+        "porta_comum": "67/68 (servidor/cliente)",
+        "funcao": "Atribuição dinâmica de IPv4 (lease), máscara, gateway, DNS",
+        "seguro": "DHCP Snooping + reconhecimento de servidor autorizado",
+        "badge": "🔵 Didático",
+        "badge_color": "info",
+    },
+    {
+        "nome": "DHCPv6",
+        "camada": "Aplicação",
+        "transporte": "UDP",
+        "porta_comum": "546/547",
+        "funcao": "Stateful DHCPv6 ou combined com SLAAC (flags IA_NA / IA_PD)",
+        "seguro": "Autenticação de servidor + segmentação L2",
+        "badge": "🔵 Didático",
+        "badge_color": "info",
+    },
+    {
+        "nome": "SMTP",
+        "camada": "Aplicação",
+        "transporte": "TCP",
+        "porta_comum": "25",
+        "funcao": "Transferência de correio entre MTAs (relay)",
+        "seguro": "TLS opcional (STARTTLS); SPF/DKIM/DMARC no domínio",
+        "badge": "🟡 Atenção",
+        "badge_color": "warning",
+    },
+    {
+        "nome": "SMTP (Submission)",
+        "camada": "Aplicação",
+        "transporte": "TCP",
+        "porta_comum": "587",
+        "funcao": "Envio autenticado do cliente de e-mail para o servidor (RFC 6409)",
+        "seguro": "STARTTLS + credenciais",
+        "badge": "🟢 Seguro",
+        "badge_color": "success",
+    },
+    {
+        "nome": "SMTPS",
+        "camada": "Aplicação",
+        "transporte": "TCP",
+        "porta_comum": "465",
+        "funcao": "SMTP encapsulado em TLS desde o handshake (implicit TLS)",
+        "seguro": "Sim (TLS)",
+        "badge": "🟢 Seguro",
+        "badge_color": "success",
+    },
+    {
+        "nome": "SNMP",
+        "camada": "Aplicação",
+        "transporte": "UDP",
+        "porta_comum": "161/162",
+        "funcao": "Gestão de rede: polling de MIBs, traps de eventos",
+        "seguro": "Preferir SNMPv3 (authPriv); v2c comunidades só em mgmt plane",
+        "badge": "🟡 Atenção",
+        "badge_color": "warning",
+    },
+    {
+        "nome": "STP",
+        "camada": "Enlace",
+        "transporte": "Ethernet (BPDUs)",
+        "porta_comum": "N/A",
+        "funcao": "Spanning Tree IEEE 802.1D: previne loops em switches",
+        "seguro": "BPDU Guard / Root Guard em portas de acesso",
+        "badge": "🔵 Didático",
+        "badge_color": "info",
+    },
+    {
+        "nome": "RSTP",
+        "camada": "Enlace",
+        "transporte": "Ethernet (BPDUs)",
+        "porta_comum": "N/A",
+        "funcao": "Rapid Spanning Tree (802.1w): convergência mais rápida que STP clássico",
+        "seguro": "Mesmo endurecimento que STP",
+        "badge": "🔵 Didático",
+        "badge_color": "info",
+    },
+    {
+        "nome": "LACP",
+        "camada": "Enlace",
+        "transporte": "Ethernet (LACP PDUs)",
+        "porta_comum": "N/A",
+        "funcao": "802.3ad: agregação de links (port-channel) com negociação",
+        "seguro": "Static mode onde política exige previsibilidade",
+        "badge": "🔵 Didático",
+        "badge_color": "info",
+    },
+    {
+        "nome": "LLDP",
+        "camada": "Enlace",
+        "transporte": "Ethernet",
+        "porta_comum": "N/A",
+        "funcao": "Descoberta de vizinhos L2/L3 padrão IEEE 802.1AB (multi-vendor)",
+        "seguro": "Filtrar exposição em redes sensíveis",
+        "badge": "🔵 Didático",
+        "badge_color": "info",
+    },
+    {
+        "nome": "CDP",
+        "camada": "Enlace",
+        "transporte": "Ethernet (proprietário Cisco)",
+        "porta_comum": "N/A",
+        "funcao": "Descoberta de vizinhos Cisco; inventário de equipamentos",
+        "seguro": "Desativar em portas de cliente/DMZ",
+        "badge": "🔵 Didático",
+        "badge_color": "info",
+    },
+    {
+        "nome": "NAT",
+        "camada": "Rede",
+        "transporte": "N/A (função em router/firewall)",
+        "porta_comum": "N/A",
+        "funcao": "Tradução endereços privados↔públicos (SNAT/DNAT, PAT)",
+        "seguro": "Stateful firewall + logs",
+        "badge": "🔵 Didático",
+        "badge_color": "info",
+    },
+    {
+        "nome": "IPsec",
+        "camada": "Rede",
+        "transporte": "ESP/AH (IP prot 50/51)",
+        "porta_comum": "UDP 500/4500 (IKE)",
+        "funcao": "VPN site-to-site ou remote access: confidencialidade e integridade",
+        "seguro": "Sim (quando bem configurado IKE/esp)",
+        "badge": "🟢 Seguro",
+        "badge_color": "success",
+    },
+    {
+        "nome": "WireGuard",
+        "camada": "Rede",
+        "transporte": "UDP",
+        "porta_comum": "51820",
+        "funcao": "VPN moderna: crypto noise protocol, menos superfície que IPsec clássico",
+        "seguro": "Sim (design minimalista)",
+        "badge": "🟢 Seguro",
+        "badge_color": "success",
+    },
+    {
+        "nome": "MQTT",
+        "camada": "Aplicação",
+        "transporte": "TCP",
+        "porta_comum": "1883 / 8883",
+        "funcao": "Pub/sub IoT leve (broker); TLS tipicamente na 8883",
+        "seguro": "TLS + auth forte em ambientes produtivos",
+        "badge": "🟡 Atenção",
+        "badge_color": "warning",
+    },
+    {
+        "nome": "CoAP",
+        "camada": "Aplicação",
+        "transporte": "UDP",
+        "porta_comum": "5683/5684",
+        "funcao": "REST sobre UDP para dispositivos restritos (RFC 7252)",
+        "seguro": "DTLS (CoAPS)",
+        "badge": "🔵 Didático",
+        "badge_color": "info",
     },
     {
         "nome": "DNS",
@@ -566,8 +841,8 @@ PROTOCOLOS_CATALOGO = [
         "funcao": "Resolução de nomes",
         "seguro": "Não por padrão (usar DNSSEC/DoH)",
         "badge": "🟡 Atenção",
-        "badge_color": "warning"
-    }
+        "badge_color": "warning",
+    },
 ]
 
 
@@ -1023,9 +1298,10 @@ def home():
             erro_didatico = explicar_erro_didatico(erro)
 
     pag = paginate_history(history_limit_pre, history_page_pre)
+    active_main_menu = active_tab_pre if active_tab_pre in {"portas", "protocolos"} else "analise"
     return render_template(
         "index.html",
-        active_main_menu="analise",
+        active_main_menu=active_main_menu,
         res=res,
         ipv6_res=ipv6_res,
         erro=erro,
@@ -1205,6 +1481,89 @@ def resolucao_problemas():
         locations=locations,
         scenario=scenario,
     )
+
+
+@app.route("/informacoes", methods=["GET"])
+def informacoes():
+    cliente_ip = cliente_ip_efetivo(request)
+    raw_digitado = (request.args.get("ip") or "").strip()
+
+    if raw_digitado:
+        norm, err_msg = normalizar_ip_digitado(raw_digitado)
+        if err_msg:
+            geo = {
+                "ok": False,
+                "motivo": "invalid",
+                "mensagem": err_msg,
+                "ip": raw_digitado,
+            }
+            consultado = raw_digitado
+            modo_geo = "manual"
+        else:
+            geo = lookup_regiao_geografica(norm)
+            consultado = norm
+            modo_geo = "manual"
+    else:
+        geo = lookup_regiao_geografica(cliente_ip)
+        consultado = cliente_ip
+        modo_geo = "ligacao"
+
+    log_event(
+        "info",
+        "page_view",
+        page="informacoes",
+        reason="Página de informações didáticas com separador de região geográfica.",
+        cliente_ip=cliente_ip,
+        geo_ok=geo.get("ok"),
+        modo_geo=modo_geo,
+    )
+    return render_template(
+        "informacoes.html",
+        active_main_menu="informacoes",
+        cliente_ip=cliente_ip,
+        consultado=consultado,
+        modo_geo=modo_geo,
+        geo=geo,
+        ip_digitado_prefill=raw_digitado if raw_digitado else "",
+    )
+
+
+@app.route("/api/informacoes/geo", methods=["GET"])
+def api_informacoes_geo():
+    """JSON para atualizar o painel de região sem recarregar a página."""
+    cliente_ip = cliente_ip_efetivo(request)
+    raw_digitado = (request.args.get("ip") or "").strip()
+
+    if raw_digitado:
+        norm, err_msg = normalizar_ip_digitado(raw_digitado)
+        if err_msg:
+            return jsonify(
+                {
+                    "cliente_ip": cliente_ip,
+                    "consultado": raw_digitado,
+                    "modo": "manual",
+                    "ok": False,
+                    "motivo": "invalid",
+                    "mensagem": err_msg,
+                }
+            )
+        geo = lookup_regiao_geografica(norm)
+        payload = {
+            "cliente_ip": cliente_ip,
+            "consultado": norm,
+            "modo": "manual",
+            **geo,
+        }
+        return jsonify(payload)
+
+    geo = lookup_regiao_geografica(cliente_ip)
+    payload = {
+        "cliente_ip": cliente_ip,
+        "consultado": cliente_ip,
+        "modo": "ligacao",
+        **geo,
+    }
+    return jsonify(payload)
 
 
 @app.before_request

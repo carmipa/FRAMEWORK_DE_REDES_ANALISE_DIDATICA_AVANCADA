@@ -290,5 +290,52 @@ class AppTestCase(unittest.TestCase):
         readme = archive.read("README_LAB.txt").decode("utf-8")
         self.assertIn("INSTRUCOES DE USO DO LABORATORIO", readme)
 
+    def test_informacoes_pagina_e_submenu_geo(self):
+        res = self.client.get("/informacoes")
+        self.assertEqual(res.status_code, 200)
+        html = res.get_data(as_text=True)
+        self.assertIn("Região geográfica", html)
+        self.assertIn("pane-geo", html)
+        self.assertIn("Conteúdo didático", html)
+
+    def test_api_informacoes_geo_localhost_sem_chamada_externa(self):
+        res = self.client.get("/api/informacoes/geo")
+        self.assertEqual(res.status_code, 200)
+        data = res.get_json()
+        self.assertIsInstance(data, dict)
+        self.assertFalse(data.get("ok"))
+        self.assertEqual(data.get("motivo"), "private_or_local")
+        self.assertEqual(data.get("modo"), "ligacao")
+        self.assertIn("consultado", data)
+
+    def test_api_informacoes_geo_ip_invalido(self):
+        res = self.client.get("/api/informacoes/geo?ip=nao-e-ip")
+        self.assertEqual(res.status_code, 200)
+        data = res.get_json()
+        self.assertFalse(data.get("ok"))
+        self.assertEqual(data.get("motivo"), "invalid")
+
+    @patch("main.lookup_regiao_geografica")
+    def test_api_informacoes_geo_ip_manual_publico(self, mock_geo):
+        mock_geo.return_value = {
+            "ok": True,
+            "ip": "8.8.8.8",
+            "pais": "United States",
+            "codigo_pais": "US",
+            "regiao": "California",
+            "cidade": "Mountain View",
+            "lat": 37.0,
+            "lon": -122.0,
+            "isp": "Google",
+        }
+        res = self.client.get("/api/informacoes/geo?ip=8.8.8.8")
+        self.assertEqual(res.status_code, 200)
+        data = res.get_json()
+        self.assertTrue(data.get("ok"))
+        self.assertEqual(data.get("modo"), "manual")
+        self.assertEqual(data.get("consultado"), "8.8.8.8")
+        mock_geo.assert_called_once_with("8.8.8.8")
+
+
 if __name__ == "__main__":
     unittest.main()

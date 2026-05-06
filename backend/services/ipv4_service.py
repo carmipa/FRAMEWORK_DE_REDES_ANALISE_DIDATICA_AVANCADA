@@ -909,6 +909,21 @@ def processar(ip_s, cidr, regua_count=5):
                 f"ip address {primeiro_host} {c['mask']}\n"
                 "no shutdown"
             ),
+            "cisco_eigrp_exemplo": (
+                f"router eigrp 100\n"
+                f" network {fmt_ip(r_i)} {c['wildcard']}\n"
+                f" no auto-summary"
+            ),
+            "cisco_ospf_exemplo": (
+                f"router ospf 1\n"
+                f" network {fmt_ip(r_i)} {c['wildcard']} area 0"
+            ),
+            "cisco_roteamento_nota": (
+                "Em EIGRP e OSPFv2 (IOS), o comando network associa interfaces ao processo de roteamento usando "
+                "endereço de rede + wildcard (não a máscara decimal). O IOS verifica se o IP de cada interface casa "
+                "com esse par. Use o Network ID e a wildcard do mesmo prefixo que estás a estudar — os valores "
+                "abaixo coincidem com a rede e wildcard calculados nesta página."
+            ),
             "nota_cidr_cisco": nota_cidr_cisco(cidr),
             "banner_contexto": banner_contexto_analise_com_ip(
                 fmt_ip(ip_i),
@@ -931,7 +946,9 @@ def processar(ip_s, cidr, regua_count=5):
                 f"Broadcast: {fmt_ip(b_i)}\n"
                 f"Hosts válidos: {primeiro_host} até {ultimo_host}\n"
                 f"Total de hosts: {c['total']}\n"
-                f"RFC1918: {'Sim' if 'Privado' in ip_tipo_privacidade else 'Não'}"
+                f"RFC1918: {'Sim' if 'Privado' in ip_tipo_privacidade else 'Não'}\n"
+                f"\nReferência Cisco (EIGRP/OSPF):\n"
+                f"  network {fmt_ip(r_i)} {c['wildcard']}"
             ),
         }
     )
