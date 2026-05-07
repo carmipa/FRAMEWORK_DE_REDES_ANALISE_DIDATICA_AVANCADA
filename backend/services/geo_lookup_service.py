@@ -11,15 +11,57 @@ GEO_TIMEOUT_S = 4
 USER_AGENT = "CyberNetFramework/1.0"
 
 
+def _normalizar_ip_texto(raw: str) -> str:
+    """Normaliza texto de IP e converte IPv6-mapped IPv4 para formato IPv4."""
+    txt = (raw or "").strip()
+    if not txt:
+        return ""
+    try:
+        addr = ipaddress.ip_address(txt)
+    except ValueError:
+        return ""
+    if isinstance(addr, ipaddress.IPv6Address) and addr.ipv4_mapped is not None:
+        return str(addr.ipv4_mapped)
+    return str(addr)
+
+
 def cliente_ip_efetivo(request) -> str:
-    """IP aparente do cliente (proxy: X-Forwarded-For / X-Real-IP)."""
+    """
+    IP aparente do cliente com heurística robusta de proxy.
+    Regra: preferir IP global (prioridade para IPv4 global), senão primeiro válido.
+    """
+    candidatos_raw = []
     xff = (request.headers.get("X-Forwarded-For") or "").strip()
     if xff:
-        return xff.split(",")[0].strip()
+        candidatos_raw.extend([p.strip() for p in xff.split(",") if p.strip()])
     real = (request.headers.get("X-Real-IP") or "").strip()
     if real:
-        return real
-    return (request.remote_addr or "").strip()
+        candidatos_raw.append(real)
+    remote = (request.remote_addr or "").strip()
+    if remote:
+        candidatos_raw.append(remote)
+
+    candidatos = [_normalizar_ip_texto(v) for v in candidatos_raw]
+    candidatos = [v for v in candidatos if v]
+    if not candidatos:
+        return ""
+
+    for ip in candidatos:
+        try:
+            addr = ipaddress.ip_address(ip)
+            if addr.is_global and isinstance(addr, ipaddress.IPv4Address):
+                return ip
+        except ValueError:
+            continue
+
+    for ip in candidatos:
+        try:
+            if ipaddress.ip_address(ip).is_global:
+                return ip
+        except ValueError:
+            continue
+
+    return candidatos[0]
 
 
 def ip_e_publico_global(ip: str) -> bool:

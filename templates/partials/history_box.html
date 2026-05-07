@@ -4,6 +4,18 @@
         <h6 class="text-info mb-0">🕘 Histórico de Consultas (últimas {{ history|length }})</h6>
         <span class="shield-badge"><span class="icon">📚</span>Navegação por histórico</span>
     </div>
+    <form method="GET" action="/" class="history-inline-form d-flex flex-wrap align-items-center gap-2 mb-2">
+        <input type="hidden" name="tab" value="{{ active_tab_pre }}">
+        <input type="hidden" name="history_page" value="1">
+        <label for="history-limit-select" class="small text-secondary mb-0">Itens por página:</label>
+        <select id="history-limit-select" name="history_limit" class="form-select form-select-sm bg-dark text-light border-secondary w-auto" onchange="this.form.submit()">
+            {% for opt in [1, 5, 10, 20, 50, history_limit_max] %}
+            <option value="{{ opt }}" {% if history_limit == opt %}selected{% endif %}>
+                {% if opt == history_limit_max %}Todos ({{ history_limit_max }}){% else %}{{ opt }}{% endif %}
+            </option>
+            {% endfor %}
+        </select>
+    </form>
     <div class="mb-2">
         <span class="shield-badge"><span class="icon">♻️</span>Reutilize cenários em 1 clique</span>
         <span class="shield-badge"><span class="icon">🧠</span>Memória de laboratório local</span>

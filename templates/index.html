@@ -47,7 +47,7 @@
             <button type="button" class="btn btn-outline-info tab-trigger" data-tab="dominio" data-bs-toggle="tooltip" data-bs-placement="top" title="Resolve domínio para IPv4 e decompõe rede.">🌐 Domínio</button>
             <button type="button" class="btn btn-outline-info tab-trigger" data-tab="ipv6" data-bs-toggle="tooltip" data-bs-placement="top" title="Analisa endereço IPv6 em formato didático.">🛰️ IPv6</button>
             <button type="button" class="btn btn-outline-info tab-trigger" data-tab="comparador" data-bs-toggle="tooltip" data-bs-placement="top" title="Compara dois CIDRs para o mesmo IP.">🆚 Comparador</button>
-            <a href="/informacoes" class="btn btn-outline-warning fw-bold" data-bs-toggle="tooltip" data-bs-placement="top" title="Informações do projeto, GeoIP e texto didático (página à parte).">📘 Informações</a>
+            <button type="button" class="btn btn-outline-warning fw-bold tab-trigger" data-tab="geo" data-bs-toggle="tooltip" data-bs-placement="top" title="Painel de região geográfica (GeoIP) na mesma experiência de sub-abas.">🌍 Região Geográfica</button>
         </div>
         <p class="small text-secondary mb-3 border-start border-info border-2 ps-2 py-1 rounded-1" style="background: rgba(88, 166, 255, 0.06);" role="note">
             <strong class="text-info">Funções em separado:</strong> cada aba possui fluxo independente. Use <strong>Executar</strong> nas abas de cálculo. Os catálogos <strong class="text-info">Portas</strong> e <strong class="text-primary">Protocolos</strong> estão no <strong>Menu Principal</strong> acima.
@@ -60,6 +60,7 @@
         <div class="tab-panel" data-tab-panel="dominio">{% include "partials/tab_dominio.html" %}</div>
         <div class="tab-panel" data-tab-panel="ipv6">{% include "partials/tab_ipv6.html" %}</div>
         <div class="tab-panel" data-tab-panel="comparador">{% include "partials/tab_comparador.html" %}</div>
+        <div class="tab-panel" data-tab-panel="geo">{% include "partials/tab_geo.html" %}</div>
         <div class="action-buttons mt-3">
             <a href="/export/json" class="btn btn-info fw-bold text-dark" data-bs-toggle="tooltip" data-bs-placement="top" title="Exporta histórico e dados em JSON para auditoria.">📦 Exportar JSON</a>
             <a href="/export/pdf" class="btn btn-primary fw-bold" data-bs-toggle="tooltip" data-bs-placement="top" title="Exporta relatório PDF da última análise processada.">🧾 Exportar PDF</a>
@@ -79,7 +80,7 @@
             {% endif %}
             <a href="/?tab={{ active_tab_pre or 'cidr' }}" class="btn btn-danger fw-bold text-white" data-bs-toggle="tooltip" data-bs-placement="top" title="Limpa os dados e mantém a aba atual selecionada.">🧹 Limpar Tela</a>
         </div>
-        <div class="small text-secondary mt-2">Atalhos: Alt+1..7 abas de cálculo | Alt+8 Portas | Alt+9 Protocolos | Enter executa a aba ativa.</div>
+        <div class="small text-secondary mt-2">Atalhos: Alt+1..7 abas de cálculo | Alt+8 Região Geográfica | Alt+9 Portas | Alt+0 Protocolos | Enter executa a aba ativa.</div>
     </div>
 
     <div class="card-tech p-4 shadow catalogos-wrap {% if active_tab_pre not in ['portas', 'protocolos'] %}d-none{% endif %}">
@@ -91,7 +92,7 @@
     </div>
 
     {% if comparador_cards and comparador_cards|length == 2 %}
-    <div class="card-tech p-3 mb-3">
+    <div class="card-tech p-3 mb-3 contextual-block" data-visible-tabs="comparador">
         <h6 class="text-warning mb-2">🆚 ÁREA DO COMPARADOR CIDR (mesmo IP)</h6>
         <div class="small text-secondary mb-2">IP base usado na comparação: <span class="text-info">{{ comparador_ip or ip_pre }}</span></div>
         <div class="table-responsive">
@@ -116,12 +117,12 @@
     </div>
     {% endif %}
 
-    {% if active_tab_pre not in ['portas', 'protocolos'] %}
+    {% if active_tab_pre not in ['portas', 'protocolos', 'geo'] %}
     {% include "partials/history_box.html" %}
     {% endif %}
 
     {% if ipv6_res %}
-    <div class="card-tech p-4 shadow">
+    <div class="card-tech p-4 shadow contextual-block" data-visible-tabs="ipv6">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 border-bottom border-secondary pb-2 mb-3">
             <h6 class="text-info mb-0 icon-title">
                 <span>🌐 MODO IPV6 BÁSICO</span>
@@ -151,6 +152,7 @@
     {% endif %}
 
     {% if res %}
+    <div class="contextual-block" data-visible-tabs="cidr,mask,wildcard,autoip,dominio">
 
     {% if active_tab_pre == 'wildcard' %}
     <div class="card-tech p-4 shadow mb-3">
@@ -225,6 +227,7 @@
         <div class="small text-secondary mb-0">
             Regra chave do wildcard: em cada octeto, <strong>wildcard + máscara = 255</strong>. Essa validação confirma a equivalência com o CIDR calculado.
         </div>
+    </div>
     </div>
     {% endif %}
     {% if not res.somente_mascara %}
@@ -1073,10 +1076,178 @@
     const tabButtons = document.querySelectorAll('.tab-trigger');
     const tabPanels = document.querySelectorAll('.tab-panel');
     let currentTab = activeTabFromServer || 'cidr';
+    let geoInitialized = false;
+    const apiGeoBase = {{ url_for("api_informacoes_geo") | tojson }};
+    const historyApiBase = {{ url_for("history_api") | tojson }};
+
+    const initGeoPanel = () => {
+        if (geoInitialized) return;
+        const btnLigacao = document.getElementById('btn-geo-refresh');
+        const btnLocalizar = document.getElementById('btn-geo-localizar');
+        const inputIp = document.getElementById('geo-ip-digitar');
+        const loading = document.getElementById('geo-loading');
+        const okBox = document.getElementById('geo-sucesso');
+        const failBox = document.getElementById('geo-falha');
+        const elIp = document.getElementById('geo-ip');
+        const elMsg = document.getElementById('geo-msg');
+        const elFlag = document.getElementById('geo-flag');
+        const elPais = document.getElementById('geo-pais');
+        const elRegiao = document.getElementById('geo-regiao');
+        const refBox = document.getElementById('geo-ref-ligacao');
+        const refIpEl = document.getElementById('geo-ref-ip');
+        const geoHistoryBody = document.getElementById('geo-history-body');
+        const geoHistoryCounter = document.getElementById('geo-history-counter');
+        const geoHistoryPrev = document.getElementById('geo-history-prev');
+        const geoHistoryNext = document.getElementById('geo-history-next');
+        const geoHistoryPage = document.getElementById('geo-history-page');
+        if (!btnLigacao || !btnLocalizar || !inputIp) return;
+        let geoHistoryItems = [];
+        let geoHistoryPageIdx = 1;
+        const geoHistoryPageSize = 5;
+
+        const geoUrl = (ipOpcional) => {
+            const u = new URL(apiGeoBase, window.location.origin);
+            const v = (ipOpcional ?? inputIp.value ?? "").toString().trim();
+            if (v) u.searchParams.set('ip', v);
+            return u.toString();
+        };
+        const historyUrl = () => new URL(historyApiBase, window.location.origin).toString();
+        const setLoading = (on) => {
+            loading && loading.classList.toggle('d-none', !on);
+            btnLigacao.disabled = on;
+            btnLocalizar.disabled = on;
+            inputIp.disabled = on;
+        };
+        const formatTs = (ts) => {
+            if (!ts) return "—";
+            const d = new Date(ts);
+            if (Number.isNaN(d.getTime())) return ts;
+            return d.toLocaleString("pt-BR");
+        };
+        const parseGeoTema = (tema) => {
+            const txt = (tema || "").trim();
+            if (txt.startsWith("GeoIP: ")) {
+                const data = txt.replace("GeoIP: ", "");
+                const [regiao, pais] = data.split("/");
+                return { regiao: regiao || "—", pais: pais || "—" };
+            }
+            return { regiao: "—", pais: "—" };
+        };
+        const renderGeoHistory = () => {
+            if (!geoHistoryBody || !geoHistoryCounter || !geoHistoryPage || !geoHistoryPrev || !geoHistoryNext) return;
+            const total = geoHistoryItems.length;
+            const totalPages = Math.max(1, Math.ceil(total / geoHistoryPageSize));
+            if (geoHistoryPageIdx > totalPages) geoHistoryPageIdx = totalPages;
+            const start = (geoHistoryPageIdx - 1) * geoHistoryPageSize;
+            const pageItems = geoHistoryItems.slice(start, start + geoHistoryPageSize);
+            if (!pageItems.length) {
+                geoHistoryBody.innerHTML = '<tr><td colspan="4" class="text-secondary">Sem histórico GeoIP no momento.</td></tr>';
+            } else {
+                geoHistoryBody.innerHTML = pageItems.map((it) => {
+                    const geo = parseGeoTema(it.tema);
+                    return `
+                        <tr>
+                            <td>${formatTs(it.timestamp_utc || it.timestamp)}</td>
+                            <td>${it.ip_entrada || "—"}</td>
+                            <td>${geo.pais}</td>
+                            <td>${geo.regiao}</td>
+                        </tr>
+                    `;
+                }).join("");
+            }
+            geoHistoryCounter.textContent = `${total} registro(s)`;
+            geoHistoryPage.textContent = `Página ${geoHistoryPageIdx}/${totalPages}`;
+            geoHistoryPrev.disabled = geoHistoryPageIdx <= 1;
+            geoHistoryNext.disabled = geoHistoryPageIdx >= totalPages;
+        };
+        const refreshGeoHistory = async () => {
+            try {
+                const r = await fetch(historyUrl());
+                const j = await r.json();
+                const items = Array.isArray(j.items) ? j.items : [];
+                geoHistoryItems = items.filter((it) => (it.modo || "").toLowerCase() === "geo");
+                renderGeoHistory();
+            } catch {
+                geoHistoryItems = [];
+                renderGeoHistory();
+            }
+        };
+        const codigoPaisParaBandeira = (codigo) => {
+            const cc = (codigo || "").toUpperCase();
+            if (!/^[A-Z]{2}$/.test(cc)) return "";
+            return String.fromCodePoint(...[...cc].map((c) => 127397 + c.charCodeAt(0)));
+        };
+
+        const applyPayload = (j) => {
+            const analisado = j.consultado != null ? j.consultado : j.cliente_ip;
+            elIp && (elIp.textContent = analisado || '—');
+            if (refIpEl && j.cliente_ip) refIpEl.textContent = j.cliente_ip;
+            if (refBox) refBox.classList.toggle('d-none', j.modo !== 'manual');
+            if (j.ok) {
+                okBox && okBox.classList.remove('d-none');
+                failBox && failBox.classList.add('d-none');
+                if (elFlag) elFlag.textContent = codigoPaisParaBandeira(j.codigo_pais);
+                elPais && (elPais.textContent = j.pais || '—');
+                elRegiao && (elRegiao.textContent = j.regiao || '—');
+            } else {
+                okBox && okBox.classList.add('d-none');
+                failBox && failBox.classList.remove('d-none');
+                if (elFlag) elFlag.textContent = "";
+                elPais && (elPais.textContent = "");
+                elRegiao && (elRegiao.textContent = "");
+                elMsg && (elMsg.textContent = j.mensagem || 'Indisponível.');
+            }
+        };
+        const fetchGeo = async (ipForced) => {
+            setLoading(true);
+            try {
+                const r = await fetch(geoUrl(ipForced));
+                const j = await r.json();
+                applyPayload(j);
+                await refreshGeoHistory();
+            } catch (e) {
+                okBox && okBox.classList.add('d-none');
+                failBox && failBox.classList.remove('d-none');
+                elMsg && (elMsg.textContent = 'Erro ao consultar: ' + e);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        btnLocalizar.addEventListener('click', () => fetchGeo());
+        btnLigacao.addEventListener('click', () => {
+            inputIp.value = '';
+            fetchGeo('');
+        });
+        geoHistoryPrev && geoHistoryPrev.addEventListener('click', () => {
+            if (geoHistoryPageIdx > 1) {
+                geoHistoryPageIdx -= 1;
+                renderGeoHistory();
+            }
+        });
+        geoHistoryNext && geoHistoryNext.addEventListener('click', () => {
+            const totalPages = Math.max(1, Math.ceil(geoHistoryItems.length / geoHistoryPageSize));
+            if (geoHistoryPageIdx < totalPages) {
+                geoHistoryPageIdx += 1;
+                renderGeoHistory();
+            }
+        });
+        inputIp.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                fetchGeo();
+            }
+        });
+        fetchGeo('');
+        geoInitialized = true;
+    };
+
     const showTab = (tabId) => {
         currentTab = tabId;
         const analiseWrap = document.querySelector(".analise-didatica-wrap");
         const catalogWrap = document.querySelector(".catalogos-wrap");
+        const historyBoxes = document.querySelectorAll(".history-box");
+        const contextualBlocks = document.querySelectorAll(".contextual-block[data-visible-tabs]");
         const catalogIds = ["portas", "protocolos"];
         if (catalogIds.includes(tabId)) {
             analiseWrap?.classList.add("d-none");
@@ -1085,8 +1256,17 @@
             analiseWrap?.classList.remove("d-none");
             catalogWrap?.classList.add("d-none");
         }
+        const hideHistory = tabId === "geo" || catalogIds.includes(tabId);
+        historyBoxes.forEach((box) => box.classList.toggle("d-none", hideHistory));
+        contextualBlocks.forEach((block) => {
+            const tabsRaw = block.getAttribute("data-visible-tabs") || "";
+            const allowed = tabsRaw.split(",").map((v) => v.trim()).filter(Boolean);
+            const show = allowed.includes(tabId);
+            block.classList.toggle("d-none", !show);
+        });
         tabButtons.forEach((btn) => btn.classList.toggle("active", btn.dataset.tab === tabId));
         tabPanels.forEach((panel) => panel.classList.toggle("active", panel.dataset.tabPanel === tabId));
+        if (tabId === "geo") initGeoPanel();
     };
     tabButtons.forEach((btn) => {
         btn.addEventListener('click', () => showTab(btn.dataset.tab));
@@ -1112,8 +1292,9 @@
             '5': 'dominio',
             '6': 'ipv6',
             '7': 'comparador',
-            '8': 'portas',
-            '9': 'protocolos'
+            '8': 'geo',
+            '9': 'portas',
+            '0': 'protocolos'
         };
         const tab = keyMap[ev.key];
         if (!tab) return;
@@ -1206,7 +1387,7 @@
         const rowContainer = () => {
             if (isMobileGrid()) {
                 const wrap = document.querySelector(`[data-grid-mobile="${gridId}"]`);
-                return wrap ? wrap.querySelector(".row") : null;
+                return wrap || null;
             }
             return tbody;
         };
@@ -1316,6 +1497,11 @@
             }
         });
         nextBtn.addEventListener("click", () => {
+            const limit = getPageLimit();
+            if (limit !== null) {
+                const totalPages = Math.max(1, Math.ceil(getFiltered().length / limit));
+                if (page >= totalPages) return;
+            }
             page += 1;
             apply();
         });
@@ -1359,6 +1545,14 @@
                         egp: "EGP no sentido prático — BGP entre Sistemas Autônomos (roteamento exterior na Internet).",
                         "n/a": "Fora da classificação IGP/EGP (ex.: aplicação, DNS, HTTP…).",
                     }[rawAlc] || rawAlc;
+                    const extraTechRows = [
+                        row.dataset.algoritmo ? `<p><strong>Algoritmo:</strong> ${row.dataset.algoritmo}</p>` : "",
+                        row.dataset.metrica ? `<p><strong>Métrica:</strong> ${row.dataset.metrica}</p>` : "",
+                        row.dataset.ad ? `<p><strong>Distância administrativa:</strong> ${row.dataset.ad}</p>` : "",
+                        row.dataset.atualizacao ? `<p><strong>Atualização:</strong> ${row.dataset.atualizacao}</p>` : "",
+                        row.dataset.sintaxe ? `<p><strong>Sintaxe base (lab):</strong> <code>${row.dataset.sintaxe}</code></p>` : "",
+                        row.dataset.dica ? `<p><strong>Dica didática:</strong> ${row.dataset.dica}</p>` : "",
+                    ].join("");
                     detailsTitle.textContent = `Protocolo ${row.dataset.nome}`;
                     detailsBody.innerHTML = `
                         <p><strong>Camada:</strong> ${row.dataset.camada}</p>
@@ -1368,6 +1562,7 @@
                         <p><strong>Seguro:</strong> ${row.dataset.seguro}</p>
                         <p><strong>Nível:</strong> ${row.dataset.nivel}</p>
                         <p><strong>Função:</strong> ${row.dataset.funcao}</p>
+                        ${extraTechRows}
                     `;
                 }
                 detailsModal.show();

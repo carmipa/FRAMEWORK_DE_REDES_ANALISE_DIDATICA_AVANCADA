@@ -290,13 +290,12 @@ class AppTestCase(unittest.TestCase):
         readme = archive.read("README_LAB.txt").decode("utf-8")
         self.assertIn("INSTRUCOES DE USO DO LABORATORIO", readme)
 
-    def test_informacoes_pagina_e_submenu_geo(self):
+    def test_informacoes_pagina_apenas_geo(self):
         res = self.client.get("/informacoes")
         self.assertEqual(res.status_code, 200)
         html = res.get_data(as_text=True)
         self.assertIn("Região geográfica", html)
-        self.assertIn("pane-geo", html)
-        self.assertIn("Conteúdo didático", html)
+        self.assertNotIn("Conteúdo didático", html)
 
     def test_api_informacoes_geo_localhost_sem_chamada_externa(self):
         res = self.client.get("/api/informacoes/geo")
@@ -314,6 +313,50 @@ class AppTestCase(unittest.TestCase):
         data = res.get_json()
         self.assertFalse(data.get("ok"))
         self.assertEqual(data.get("motivo"), "invalid")
+
+    def test_historico_paginacao_renderiza_total_e_navegacao(self):
+        for i in range(5):
+            self.client.post("/", data={"modo": "cidr", "ip": f"10.77.{i}.10", "cidr": "24"})
+        res = self.client.get("/?tab=cidr&history_limit=2&history_page=1")
+        self.assertEqual(res.status_code, 200)
+        html = res.get_data(as_text=True)
+        self.assertIn("Histórico de Consultas", html)
+        self.assertIn("Página 1 de", html)
+        self.assertIn("Próxima", html)
+        self.assertIn("Itens por página", html)
+        res_p2 = self.client.get("/?tab=cidr&history_limit=2&history_page=2")
+        self.assertEqual(res_p2.status_code, 200)
+        self.assertIn("Página 2 de", res_p2.get_data(as_text=True))
+
+    def test_historico_nao_renderiza_nas_abas_geo_e_catalogos(self):
+        for tab in ("geo", "portas", "protocolos"):
+            res = self.client.get(f"/?tab={tab}&history_limit=2&history_page=1")
+            self.assertEqual(res.status_code, 200)
+            html = res.get_data(as_text=True)
+            self.assertNotIn("Histórico de Consultas", html)
+        geo_html = self.client.get("/?tab=geo").get_data(as_text=True)
+        self.assertIn("Histórico GeoIP", geo_html)
+        geo_html = self.client.get("/?tab=geo").get_data(as_text=True)
+        self.assertIn("Histórico GeoIP", geo_html)
+
+    @patch("main.lookup_regiao_geografica")
+    def test_api_informacoes_geo_prefere_ipv4_global_do_xff(self, mock_geo):
+        mock_geo.return_value = {
+            "ok": True,
+            "ip": "8.8.8.8",
+            "pais": "United States",
+            "codigo_pais": "US",
+            "regiao": "California",
+        }
+        res = self.client.get(
+            "/api/informacoes/geo",
+            headers={"X-Forwarded-For": "fd00::1, 2001:4860:4860::8888, 8.8.8.8"},
+        )
+        self.assertEqual(res.status_code, 200)
+        data = res.get_json()
+        self.assertEqual(data.get("consultado"), "8.8.8.8")
+        self.assertEqual(data.get("cliente_ip"), "8.8.8.8")
+        mock_geo.assert_called_once_with("8.8.8.8")
 
     @patch("main.lookup_regiao_geografica")
     def test_api_informacoes_geo_ip_manual_publico(self, mock_geo):
@@ -335,6 +378,38 @@ class AppTestCase(unittest.TestCase):
         self.assertEqual(data.get("modo"), "manual")
         self.assertEqual(data.get("consultado"), "8.8.8.8")
         mock_geo.assert_called_once_with("8.8.8.8")
+
+    @patch("main.lookup_regiao_geografica")
+    def test_api_informacoes_geo_registra_em_historico_geo(self, mock_geo):
+        mock_geo.return_value = {
+            "ok": True,
+            "ip": "1.1.1.1",
+            "pais": "Australia",
+            "codigo_pais": "AU",
+            "regiao": "Queensland",
+        }
+        res = self.client.get("/api/informacoes/geo?ip=1.1.1.1")
+        self.assertEqual(res.status_code, 200)
+        hist = self.client.get("/history").get_json()
+        self.assertIsInstance(hist, dict)
+        items = hist.get("items", [])
+        self.assertTrue(any((it.get("modo") == "geo" and it.get("ip_entrada") == "1.1.1.1") for it in items))
+
+    @patch("main.lookup_regiao_geografica")
+    def test_api_informacoes_geo_registra_em_historico_geo(self, mock_geo):
+        mock_geo.return_value = {
+            "ok": True,
+            "ip": "1.1.1.1",
+            "pais": "Australia",
+            "codigo_pais": "AU",
+            "regiao": "Queensland",
+        }
+        res = self.client.get("/api/informacoes/geo?ip=1.1.1.1")
+        self.assertEqual(res.status_code, 200)
+        hist = self.client.get("/history").get_json()
+        self.assertIsInstance(hist, dict)
+        items = hist.get("items", [])
+        self.assertTrue(any((it.get("modo") == "geo" and it.get("ip_entrada") == "1.1.1.1") for it in items))
 
 
 if __name__ == "__main__":

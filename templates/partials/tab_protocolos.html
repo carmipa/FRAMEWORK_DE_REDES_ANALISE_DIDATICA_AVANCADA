@@ -2,6 +2,10 @@
     <div class="small text-secondary mb-3 border-start border-info border-2 ps-2 py-1 rounded-1" style="background: rgba(88, 166, 255, 0.06);" role="note">
         DataGrid didático de protocolos: camada, transporte, segurança, função e classificação <strong class="text-info">IGP</strong> / <strong class="text-primary">EGP</strong> para roteamento.
     </div>
+    <div class="small text-light mb-3 border-start border-warning border-2 ps-2 py-2 rounded-1" style="background: rgba(210, 153, 34, 0.10);" role="note">
+        <strong class="text-warning">Resumo rápido do módulo de roteamento (PPT):</strong>
+        RIP usa <em>Distance Vector</em> (métrica por hops), OSPF/IS-IS usam <em>Link-State</em> (SPF), e BGP usa <em>Path Vector</em> (políticas entre AS). Em laboratório Cisco, destaque para sintaxe com <code>network</code> e uso de <strong>wildcard mask</strong> no OSPF.
+    </div>
     <div class="comm-summary mb-3" data-summary-target="protocolos"></div>
     <div class="d-flex flex-wrap gap-2 mb-2">
         <span class="shield-badge"><span class="icon">🔎</span>Busca por protocolo/camada</span>
@@ -110,7 +114,7 @@
                 {% set alc_item = item.alcance | default('N/A') %}
                 <tr
                     data-grid-row="protocolos"
-                    data-search="{{ item.nome }} {{ item.camada }} {{ alc_item }} {{ item.transporte }} {{ item.porta_comum }} {{ item.seguro }} {{ item.badge }} {{ item.funcao }}"
+                    data-search="{{ item.nome }} {{ item.camada }} {{ alc_item }} {{ item.transporte }} {{ item.porta_comum }} {{ item.seguro }} {{ item.badge }} {{ item.funcao }} {{ item.algoritmo | default('') }} {{ item.metrica | default('') }} {{ item.distancia_administrativa | default('') }} {{ item.sintaxe_base | default('') }} {{ item.dica_didatica | default('') }}"
                     data-nome="{{ item.nome }}"
                     data-camada="{{ item.camada }}"
                     data-alcance="{{ alc_item | lower }}"
@@ -118,7 +122,13 @@
                     data-porta="{{ item.porta_comum }}"
                     data-seguro="{{ item.seguro }}"
                     data-nivel="{{ item.badge }}"
-                    data-funcao="{{ item.funcao }}">
+                    data-funcao="{{ item.funcao }}"
+                    data-algoritmo="{{ item.algoritmo | default('') }}"
+                    data-metrica="{{ item.metrica | default('') }}"
+                    data-ad="{{ item.distancia_administrativa | default('') }}"
+                    data-atualizacao="{{ item.atualizacao | default('') }}"
+                    data-sintaxe="{{ item.sintaxe_base | default('') }}"
+                    data-dica="{{ item.dica_didatica | default('') }}">
                     <td class="fw-bold text-info">{{ item.nome }}</td>
                     <td>{{ item.camada }}</td>
                     <td>{% if alc_item != 'N/A' %}<span class="badge bg-dark border {% if alc_item == 'IGP' %}border-success text-success{% elif alc_item == 'EGP' %}border-primary text-primary{% else %}border-secondary{% endif %}">{{ alc_item }}</span>{% else %}<span class="text-secondary">N/A</span>{% endif %}</td>
@@ -144,7 +154,7 @@
             <div
                 class="col-12 card-tech p-3"
                 data-grid-mobile-row="protocolos"
-                data-search="{{ item.nome }} {{ item.camada }} {{ alc_item }} {{ item.transporte }} {{ item.porta_comum }} {{ item.seguro }} {{ item.badge }} {{ item.funcao }}"
+                data-search="{{ item.nome }} {{ item.camada }} {{ alc_item }} {{ item.transporte }} {{ item.porta_comum }} {{ item.seguro }} {{ item.badge }} {{ item.funcao }} {{ item.algoritmo | default('') }} {{ item.metrica | default('') }} {{ item.distancia_administrativa | default('') }} {{ item.sintaxe_base | default('') }} {{ item.dica_didatica | default('') }}"
                 data-nome="{{ item.nome }}"
                 data-camada="{{ item.camada }}"
                 data-alcance="{{ alc_item | lower }}"
@@ -153,6 +163,12 @@
                 data-seguro="{{ item.seguro }}"
                 data-nivel="{{ item.badge }}"
                 data-funcao="{{ item.funcao }}"
+                data-algoritmo="{{ item.algoritmo | default('') }}"
+                data-metrica="{{ item.metrica | default('') }}"
+                data-ad="{{ item.distancia_administrativa | default('') }}"
+                data-atualizacao="{{ item.atualizacao | default('') }}"
+                data-sintaxe="{{ item.sintaxe_base | default('') }}"
+                data-dica="{{ item.dica_didatica | default('') }}"
             >
                 <h6 class="mb-3 text-info">📡 {{ item.nome }}</h6>
                 <dl class="small mb-0 protocolo-mobile-dl">

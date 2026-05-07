@@ -1,21 +1,39 @@
 <form method="POST" class="row g-3 calc-form" data-tab-form="comparador">
     <input type="hidden" name="tab" value="comparador">
     <div class="col-lg-4">
-        <label class="form-label small text-secondary">🌐 Endereço IPv4</label>
+        <label class="form-label small text-secondary d-flex align-items-center gap-1">
+            🌐 Endereço IPv4
+            <button type="button" class="help-hint-btn" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-placement="top"
+                    title="IP base da comparação"
+                    data-bs-content="Informe o mesmo IP para comparar como ele se comporta em dois prefixos diferentes (CIDR A e CIDR B).">ℹ️</button>
+        </label>
         <input type="text" name="ip" class="form-control bg-dark text-light border-secondary {{ 'is-invalid' if 'ip' in invalid_fields else '' }}"
                placeholder="Ex.: 172.19.0.10" value="{{ ip_pre }}"
                data-bs-toggle="tooltip" data-bs-placement="top"
                title="IP base usado para comparar os dois CIDRs lado a lado.">
+        <div class="form-text text-secondary small">Exemplo didático: use um IP de host da rede que está estudando.</div>
     </div>
     <div class="col-lg-3">
-        <label class="form-label small text-secondary">🆚 Comparador CIDR A</label>
+        <label class="form-label small text-secondary d-flex align-items-center gap-1">
+            🆚 Comparador CIDR A
+            <button type="button" class="help-hint-btn" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-placement="top"
+                    title="Primeiro prefixo"
+                    data-bs-content="Primeiro /barra da comparação. Ex.: 20 para /20.">ℹ️</button>
+        </label>
         <input type="number" name="comparador_cidr_a" min="0" max="32" class="form-control bg-dark text-light border-secondary"
-               value="{{ comparador_cidr_a_pre }}">
+               value="{{ comparador_cidr_a_pre }}" placeholder="Ex.: 20">
+        <div class="form-text text-secondary small">Valor entre 0 e 32.</div>
     </div>
     <div class="col-lg-3">
-        <label class="form-label small text-secondary">🆚 Comparador CIDR B</label>
+        <label class="form-label small text-secondary d-flex align-items-center gap-1">
+            🆚 Comparador CIDR B
+            <button type="button" class="help-hint-btn" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-placement="top"
+                    title="Segundo prefixo"
+                    data-bs-content="Segundo /barra da comparação. Ex.: 24 para /24.">ℹ️</button>
+        </label>
         <input type="number" name="comparador_cidr_b" min="0" max="32" class="form-control bg-dark text-light border-secondary"
-               value="{{ comparador_cidr_b_pre }}">
+               value="{{ comparador_cidr_b_pre }}" placeholder="Ex.: 24">
+        <div class="form-text text-secondary small">Valor entre 0 e 32.</div>
     </div>
     <div class="col-lg-2 tab-actions d-grid gap-2">
         <button type="submit" name="modo" value="comparador" class="btn btn-warning fw-bold text-dark btn-sm w-100"

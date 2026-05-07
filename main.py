@@ -543,6 +543,12 @@ PROTOCOLOS_CATALOGO = [
         "badge": "🔵 Didático",
         "badge_color": "info",
         "alcance": "EGP",
+        "algoritmo": "Path Vector",
+        "metrica": "AS-PATH, LOCAL_PREF, MED, Weight (vendor)",
+        "distancia_administrativa": "20 (eBGP)",
+        "atualizacao": "Incremental por evento (sessão TCP 179)",
+        "sintaxe_base": "router bgp <AS_LOCAL> | neighbor <IP_VIZINHO> remote-as <AS_REMOTO> | network <REDE> mask <MASCARA>",
+        "dica_didatica": "EGP moderno na prática = BGP entre AS; orientado a política, não menor custo interno.",
     },
     {
         "nome": "OSPFv2",
@@ -554,6 +560,12 @@ PROTOCOLOS_CATALOGO = [
         "badge": "🔵 Didático",
         "badge_color": "info",
         "alcance": "IGP",
+        "algoritmo": "Link-State (SPF / Dijkstra)",
+        "metrica": "Cost (baseado em banda)",
+        "distancia_administrativa": "110",
+        "atualizacao": "LSA por evento + hellos periódicos",
+        "sintaxe_base": "router ospf <PROCESS_ID> | network <REDE> <WILDCARD> area <AREA_ID>",
+        "dica_didatica": "No OSPF usa-se wildcard na instrução network; backbone é a área 0.",
     },
     {
         "nome": "OSPFv3",
@@ -565,6 +577,12 @@ PROTOCOLOS_CATALOGO = [
         "badge": "🔵 Didático",
         "badge_color": "info",
         "alcance": "IGP",
+        "algoritmo": "Link-State (SPF / Dijkstra)",
+        "metrica": "Cost",
+        "distancia_administrativa": "110",
+        "atualizacao": "LSA por evento + hellos periódicos",
+        "sintaxe_base": "ipv6 router ospf <PROCESS_ID> | interface <IF> | ipv6 ospf <PROCESS_ID> area <AREA_ID>",
+        "dica_didatica": "No OSPFv3 a ativação costuma ser por interface no IPv6.",
     },
     {
         "nome": "RIPv1",
@@ -576,6 +594,12 @@ PROTOCOLOS_CATALOGO = [
         "badge": "🔵 Didático",
         "badge_color": "info",
         "alcance": "IGP",
+        "algoritmo": "Distance Vector",
+        "metrica": "Hop count (máximo 15)",
+        "distancia_administrativa": "120",
+        "atualizacao": "Periódica (30s)",
+        "sintaxe_base": "router rip | network <REDE_CLASSFUL>",
+        "dica_didatica": "Classful: não envia máscara, limitado para redes sem VLSM.",
     },
     {
         "nome": "RIPv2",
@@ -587,6 +611,12 @@ PROTOCOLOS_CATALOGO = [
         "badge": "🔵 Didático",
         "badge_color": "info",
         "alcance": "IGP",
+        "algoritmo": "Distance Vector",
+        "metrica": "Hop count (máximo 15)",
+        "distancia_administrativa": "120",
+        "atualizacao": "Periódica (30s) + triggered updates",
+        "sintaxe_base": "router rip | version 2 | network <REDE> | no auto-summary",
+        "dica_didatica": "Do PPT: RIP v2 + no auto-summary para cenários classless com VLSM.",
     },
     {
         "nome": "EIGRP",
@@ -598,6 +628,12 @@ PROTOCOLOS_CATALOGO = [
         "badge": "🔵 Didático",
         "badge_color": "info",
         "alcance": "IGP",
+        "algoritmo": "DUAL (híbrido avançado)",
+        "metrica": "Composta (bandwidth + delay; opcional load/reliability)",
+        "distancia_administrativa": "90 (interna) / 170 (externa)",
+        "atualizacao": "Parcial e por evento",
+        "sintaxe_base": "router eigrp <AS> | network <REDE> <WILDCARD> | no auto-summary",
+        "dica_didatica": "Convergência rápida via sucessor e feasible successor.",
     },
     {
         "nome": "IGRP",
@@ -609,6 +645,12 @@ PROTOCOLOS_CATALOGO = [
         "badge": "🔵 Didático",
         "badge_color": "info",
         "alcance": "IGP",
+        "algoritmo": "Distance Vector",
+        "metrica": "Composta (bandwidth, delay, load, reliability)",
+        "distancia_administrativa": "100",
+        "atualizacao": "Periódica (90s)",
+        "sintaxe_base": "router igrp <AS> | network <REDE_CLASSFUL>",
+        "dica_didatica": "Legado Cisco; substituído por EIGRP em projetos modernos.",
     },
     {
         "nome": "IS-IS",
@@ -620,6 +662,12 @@ PROTOCOLOS_CATALOGO = [
         "badge": "🔵 Didático",
         "badge_color": "info",
         "alcance": "IGP",
+        "algoritmo": "Link-State (SPF)",
+        "metrica": "Cost",
+        "distancia_administrativa": "115",
+        "atualizacao": "LSP por evento + hellos",
+        "sintaxe_base": "router isis <TAG> | net <NSAP> | interface <IF> | ip router isis",
+        "dica_didatica": "Muito usado em backbone/ISP por robustez e escala.",
     },
     {
         "nome": "iBGP",
@@ -631,6 +679,12 @@ PROTOCOLOS_CATALOGO = [
         "badge": "🔵 Didático",
         "badge_color": "info",
         "alcance": "N/A",
+        "algoritmo": "Path Vector",
+        "metrica": "Políticas BGP (LOCAL_PREF, MED, communities)",
+        "distancia_administrativa": "200",
+        "atualizacao": "Incremental por evento",
+        "sintaxe_base": "router bgp <AS> | neighbor <IP> remote-as <MESMO_AS> | next-hop-self (quando necessário)",
+        "dica_didatica": "Dentro do mesmo AS, iBGP normalmente roda junto de um IGP (OSPF/IS-IS/EIGRP).",
     },
     # --- Extras didáticos (expansão do catálogo; revisão conjunta depois) ---
     {
@@ -930,7 +984,7 @@ def home():
         selected = next((item for item in list_history() if item.get("id") == replay_id), None)
         if selected:
             modo_replay = (selected.get("modo") or "").strip().lower()
-            if modo_replay in {"cidr", "mask", "wildcard", "autoip", "dominio", "ipv6", "comparador", "portas", "protocolos"}:
+            if modo_replay in {"cidr", "mask", "wildcard", "autoip", "dominio", "ipv6", "comparador", "geo", "portas", "protocolos"}:
                 active_tab_pre = modo_replay
             if selected.get("modo") == "ipv6":
                 ipv6_p = selected.get("ipv6_entrada") or selected.get("ip_entrada", "")
@@ -972,7 +1026,7 @@ def home():
 
         cidr_val = None
         forcar_somente_mascara = False
-        if modo not in {"cidr", "mask", "wildcard", "autoip", "dominio", "ipv6", "comparador", "portas", "protocolos"}:
+        if modo not in {"cidr", "mask", "wildcard", "autoip", "dominio", "ipv6", "comparador", "geo", "portas", "protocolos"}:
             if cidr_raw:
                 modo = "cidr"
             elif mask_dec_p:
@@ -1300,7 +1354,7 @@ def home():
     pag = paginate_history(history_limit_pre, history_page_pre)
     active_main_menu = active_tab_pre if active_tab_pre in {"portas", "protocolos"} else "analise"
     return render_template(
-        "index.html",
+        "analise/index.html",
         active_main_menu=active_main_menu,
         res=res,
         ipv6_res=ipv6_res,
@@ -1473,7 +1527,7 @@ def resolucao_problemas():
             erro = "Erro interno ao processar a resolução de problemas. Tente novamente."
 
     return render_template(
-        "resolucao_problemas.html",
+        "resolucao/resolucao_problemas.html",
         active_main_menu="resolucao",
         erro=erro,
         invalid_fields=invalid_fields,
@@ -1518,7 +1572,7 @@ def informacoes():
         modo_geo=modo_geo,
     )
     return render_template(
-        "informacoes.html",
+        "geo/informacoes.html",
         active_main_menu="informacoes",
         cliente_ip=cliente_ip,
         consultado=consultado,
@@ -1531,6 +1585,38 @@ def informacoes():
 @app.route("/api/informacoes/geo", methods=["GET"])
 def api_informacoes_geo():
     """JSON para atualizar o painel de região sem recarregar a página."""
+    def _registrar_historico_geo(payload_geo: dict):
+        consultado = (payload_geo.get("consultado") or "").strip()
+        if not consultado:
+            return
+        ok_geo = bool(payload_geo.get("ok"))
+        pais = payload_geo.get("pais") or "N/A"
+        regiao = payload_geo.get("regiao") or "N/A"
+        motivo = payload_geo.get("motivo") or ""
+        nivel = (
+            f"GeoIP: {regiao}/{pais}" if ok_geo else f"GeoIP indisponível ({motivo or 'sem detalhe'})"
+        )
+        try:
+            registrar_consulta(
+                {
+                    "modo": "geo",
+                    "ip": consultado,
+                    "ipv6": "",
+                    "cidr": "",
+                    "mask_decimal": "",
+                    "wildcard_mask": "",
+                },
+                {
+                    "rede": regiao,
+                    "broad": pais,
+                    "mask": "N/A",
+                    "cidr": "",
+                    "nivel_tema": nivel,
+                },
+            )
+        except HistoricoPersistenciaError as exc:
+            logger.warning("evento=history_geo status=warn erro=%s", exc)
+
     cliente_ip = cliente_ip_efetivo(request)
     raw_digitado = (request.args.get("ip") or "").strip()
 
@@ -1554,6 +1640,7 @@ def api_informacoes_geo():
             "modo": "manual",
             **geo,
         }
+        _registrar_historico_geo(payload)
         return jsonify(payload)
 
     geo = lookup_regiao_geografica(cliente_ip)
@@ -1563,6 +1650,7 @@ def api_informacoes_geo():
         "modo": "ligacao",
         **geo,
     }
+    _registrar_historico_geo(payload)
     return jsonify(payload)
 
 
@@ -1587,7 +1675,7 @@ def _handle_unexpected_error(exc):
     logger.exception("evento=global_exception status=error tipo=%s", exc.__class__.__name__)
     return (
         render_template(
-            "index.html",
+            "analise/index.html",
             res=None,
             erro="Erro interno inesperado. O evento foi registrado em log para auditoria.",
             ip_pre="",
