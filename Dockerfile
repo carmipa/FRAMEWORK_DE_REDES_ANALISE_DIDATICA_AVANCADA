@@ -19,4 +19,4 @@ ENV APP_HOST=0.0.0.0 \
 
 EXPOSE 5000
 
-CMD ["python", "main.py"]
+CMD ["python", "app.py"]

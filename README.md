@@ -83,16 +83,16 @@ O framework cobre fluxo didático completo para aula, laboratório e revisão t�
 ```mermaid
 flowchart LR
     U[Usuário] --> W[Browser]
-    W --> A[Flask app main.py]
-    A --> R1[Rota /]
-    A --> R2[Rota /resolucao-problemas]
-    A --> R3[Rotas de exportacao e historico]
-    R1 --> S1[backend/services ipv4 ipv6 dns grc home_web_helpers]
-    R2 --> S2[problem_resolution_service facade]
-    S2 --> S2A[problem_resolution_normalization]
-    S2 --> S2B[problem_resolution_planning]
-    S2 --> S2C[problem_resolution_export]
-    R3 --> S3[history_service e pdf_service]
+    W --> A[Flask app.py — create_app]
+    A --> R1[Blueprints analise CIDR mascara dominio ipv6 etc]
+    A --> R2[Blueprint resolucao VLSM]
+    A --> R3[Blueprints export e historico]
+    R1 --> S1[backend/analise — ipv4 geo dominio helpers web]
+    R2 --> S2[backend/resolucao/vlsm + export]
+    S2 --> S2A[vlsm_normalization]
+    S2 --> S2B[vlsm_planning]
+    S2 --> S2C[export_txt / export_zip]
+    R3 --> S3[suporte/historico + PDF export]
     S1 --> T[Jinja templates]
     S2 --> T
     S3 --> T
@@ -122,7 +122,7 @@ flowchart LR
     B --> Ctx[request_id + started_at]
     Ctx --> Ev[log_event evento e campos]
     Ev --> Std[stdout/stderr do servidor]
-    Ev --> Mem[audit_log_service buffer em memoria]
+    Ev --> Mem[suporte/audit buffer em memoria]
     Std --> Obs[Docker logs / coletor / SIEM]
     Mem --> Int[uso interno backend]
 ```
@@ -153,7 +153,7 @@ Windows PowerShell:
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-python main.py
+python app.py
 ```
 
 Linux/macOS:
@@ -162,7 +162,7 @@ Linux/macOS:
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-python main.py
+python app.py
 ```
 
 ---
@@ -183,7 +183,7 @@ python main.py
 Exemplo:
 
 ```bash
-APP_HOST=0.0.0.0 APP_PORT=5000 APP_DEBUG=false APP_LOG_LEVEL=INFO APP_LOG_COLOR=1 APP_LOG_FORCE_COLOR=1 APP_AUDIT_LOG_LIMIT=800 python main.py
+APP_HOST=0.0.0.0 APP_PORT=5000 APP_DEBUG=false APP_LOG_LEVEL=INFO APP_LOG_COLOR=1 APP_LOG_FORCE_COLOR=1 APP_AUDIT_LOG_LIMIT=800 python app.py
 ```
 
 ---
@@ -213,26 +213,15 @@ Coleta recomendada em produção:
 
 ```text
 FRAMEWORK_DE_REDES_ANALISE_DIDATICA_AVANCADA/
-├── main.py
+├── app.py                 # create_app() e run_dev()
 ├── backend/
-│   ├── common.py
-│   └── services/
-│       ├── audit_log_service.py
-│       ├── dns_service.py
-│       ├── grc_service.py
-│       ├── history_service.py
-│       ├── home_web_helpers.py
-│       ├── ipv4_service.py
-│       ├── ipv6_service.py
-│       ├── pdf_service.py
-│       ├── problem_resolution_normalization.py
-│       ├── problem_resolution_planning.py
-│       ├── problem_resolution_export.py
-│       └── problem_resolution_service.py
+│   ├── config.py
+│   ├── core/              # exceções, logging, helpers
+│   ├── web/               # rotas da home, ícone, páginas estáticas
+│   ├── analise/           # CIDR, máscara, domínio, IPv6, geo, portas, protocolos…
+│   ├── resolucao/         # VLSM/WAN, exportação TXT/ZIP/PDF
+│   └── suporte/           # histórico, GRC, auditoria em memória
 ├── templates/
-│   ├── index.html
-│   ├── resolucao_problemas.html
-│   └── partials/
 ├── static/css/app.css
 ├── tests/test_app.py
 ├── Dockerfile
@@ -247,7 +236,7 @@ FRAMEWORK_DE_REDES_ANALISE_DIDATICA_AVANCADA/
 Executar suíte:
 
 ```bash
-python -m unittest discover -s tests -v
+python -m pytest -q
 ```
 
 A suíte cobre:
@@ -266,13 +255,9 @@ A suíte cobre:
 
 O projeto adota funções puras e módulos por responsabilidade (sem classes para regras de domínio).
 
-- `problem_resolution_service.py` atua como fachada/orquestrador.
-- Regras de resolução foram separadas em:
-  - `problem_resolution_normalization.py`
-  - `problem_resolution_planning.py`
-  - `problem_resolution_export.py`
-- Helpers da camada web da home foram extraídos para:
-  - `home_web_helpers.py`
+- `backend/resolucao/vlsm/vlsm_service.py` orquestra o fluxo VLSM/WAN.
+- Normalização, planeamento e exportação ficam em `vlsm_normalization.py`, `vlsm_planning.py` e `backend/resolucao/export/`.
+- Helpers da camada web da página inicial: `backend/analise/home_web_helpers.py` (reexportados por `helpers_web.py` onde aplicável).
 
 Esse desenho reduz acoplamento e facilita manutenção incremental.
 

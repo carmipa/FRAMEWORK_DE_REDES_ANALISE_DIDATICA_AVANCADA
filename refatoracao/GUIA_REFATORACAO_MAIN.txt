@@ -1,0 +1,725 @@
+================================================================================
+  GUIA COMPLETO DE REFATORAÇÃO — main.py → estrutura modular
+  Projeto: Framework de Redes — Análise Didática Avançada
+  Autor: Paulo André Carminati | RM570877 | FIAP 2026
+================================================================================
+
+REGRA DE OURO ANTES DE COMEÇAR
+================================
+Nunca pedir para o agente refatorar tudo de uma vez.
+Um passo por sessão de chat. Testar antes de avançar.
+O agente não sabe o que quebrou se você não rodar os testes.
+
+COMO USAR ESTE ARQUIVO
+========================
+1. Abra o agente de IA (Claude, Cursor, ChatGPT, Copilot, etc.)
+2. Cole o contexto inicial (seção abaixo)
+3. Cole o prompt do PASSO 1
+4. Rode o teste de sucesso do Passo 1
+5. Se passou → cole o prompt do PASSO 2
+6. Repita até o Passo 8
+
+CONTEXTO INICIAL — cole isso ANTES de qualquer prompt
+=======================================================
+Cole este bloco no início de cada nova sessão com o agente:
+
+"""
+Projeto: Framework de Redes — Análise Didática Avançada
+Linguagem: Python 3.12 + Flask 3.x
+Estrutura atual: main.py com ~1820 linhas (monolito)
+Estrutura alvo: modular por responsabilidade (ver abaixo)
+
+ESTRUTURA ALVO:
+  app.py                          ← entry point apenas
+  config.py                       ← todas as constantes
+  core/
+    logging.py                    ← log_event, logger
+    exceptions.py                 ← exceções de domínio
+    helpers.py                    ← utilitários genéricos
+  analise/
+    cidr/       → cidr_routes.py + cidr_service.py
+    mascara/    → mascara_routes.py + mascara_service.py
+    wildcard/   → wildcard_routes.py + wildcard_service.py
+    auto_cidr/  → auto_cidr_routes.py + auto_cidr_service.py
+    dominio/    → dominio_routes.py + dominio_service.py
+    ipv6/       → ipv6_routes.py + ipv6_service.py
+    comparador/ → comparador_routes.py + comparador_service.py
+    geo/        → geo_routes.py + geo_service.py
+    portas/     → portas_routes.py + portas_service.py + portas_catalog.py
+    protocolos/ → protocolos_routes.py + protocolos_service.py + protocolos_catalog.py
+  resolucao/
+    vlsm/       → vlsm_routes.py + vlsm_service.py + vlsm_normalization.py + vlsm_planning.py
+    export/     → export_routes.py + export_*_service.py + pdf_service.py
+  suporte/
+    historico/  → historico_routes.py + historico_service.py
+    grc/        → grc_service.py
+    audit/      → audit_service.py
+  templates/
+    base.html   ← layout master
+    index.html  ← extends base.html
+
+ANALOGIA JAVA:
+  *_routes.py   → @Controller
+  *_service.py  → @Service
+  *_catalog.py  → enum / classe de constantes
+  core/         → pacote transversal (AOP / @Component)
+  config.py     → @Configuration + application.properties
+"""
+
+================================================================================
+PASSO 1 — Criar core/
+Objetivo: logging · exceptions · helpers
+================================================================================
+
+REGRAS PARA O AGENTE:
+  - NÃO apagar backend/common.py ainda — só copiar o conteúdo
+  - Manter imports antigos funcionando com re-exports no common.py
+  - Criar core/__init__.py vazio
+  - Confirmar que nenhum service quebrou após o passo
+
+TESTE DE SUCESSO:
+  python -m pytest tests/ → tudo verde sem tocar em nada
+  python app.py → sobe normalmente
+
+----------------------------------------
+PROMPT DO PASSO 1 — copie e cole no agente:
+----------------------------------------
+
+Você é um engenheiro Python sênior refatorando o projeto Framework de Redes.
+
+TAREFA DESTE PASSO: criar o pacote core/ com 3 arquivos.
+
+CONTEXTO:
+- O arquivo backend/common.py contém: log_event(), logger, e as exceções do projeto
+- NÃO apague backend/common.py ainda
+- NÃO altere nenhum import existente ainda
+
+EXECUTE EXATAMENTE:
+
+1. Crie core/__init__.py (vazio)
+
+2. Crie core/logging.py movendo de backend/common.py:
+   - A instância logger
+   - A função log_event(level, evento, **kwargs)
+   - Mantenha colorama se estiver lá
+
+3. Crie core/exceptions.py movendo de backend/common.py:
+   - Todas as classes que herdam de Exception
+   - Se não houver nenhuma, crie: EntradaInvalidaError, DnsResolucaoError
+
+4. Crie core/helpers.py com funções genéricas de backend/common.py:
+   - Se não houver, crie vazia com pass
+
+5. No final de backend/common.py adicione re-exports para manter compatibilidade:
+   from core.logging import log_event, logger
+   from core.exceptions import EntradaInvalidaError, DnsResolucaoError
+
+NÃO FAÇA:
+- Não mova PORTAS_CATALOGO nem PROTOCOLOS_CATALOGO
+- Não crie routes/ ainda
+- Não altere main.py
+
+CRITÉRIO DE SUCESSO: python app.py sobe sem erro e python -m pytest passa.
+
+================================================================================
+PASSO 2 — Criar config.py
+Objetivo: todas as constantes e variáveis de ambiente
+================================================================================
+
+REGRAS PARA O AGENTE:
+  - Buscar no topo do main.py tudo que for MAIÚSCULO ou os.environ.get()
+  - Mover REGUA_COUNT_OPCOES, COMPARADOR_CIDR_PADRAO_*, MAX_HISTORY, etc.
+  - No main.py substituir cada constante por: from config import NOME
+  - Não inventar constantes novas — só mover o que já existe
+  - ATENÇÃO: se uma constante tiver valor computado (ex: set calculado),
+    mover o cálculo também
+
+TESTE DE SUCESSO:
+  python app.py → sobe igual
+  Todas as abas funcionam
+
+----------------------------------------
+PROMPT DO PASSO 2 — copie e cole no agente:
+----------------------------------------
+
+Você é um engenheiro Python sênior refatorando o projeto Framework de Redes.
+
+TAREFA DESTE PASSO: extrair todas as constantes do main.py para config.py.
+
+EXECUTE EXATAMENTE:
+
+1. Leia as primeiras 80 linhas do main.py
+2. Identifique TUDO que for:
+   - Variável em MAIÚSCULO (ex: REGUA_COUNT_OPCOES, MAX_HISTORY)
+   - Chamada os.environ.get() (ex: APP_HOST, APP_PORT, APP_DEBUG)
+   - Constante de configuração (ex: COMPARADOR_CIDR_PADRAO_A = "20")
+
+3. Crie config.py com todos esses valores, organizados em seções:
+   # Flask
+   APP_HOST = os.environ.get("APP_HOST", "127.0.0.1")
+   APP_PORT = int(os.environ.get("APP_PORT", "5000"))
+   APP_DEBUG = os.environ.get("APP_DEBUG", "true").lower() == "true"
+
+   # Histórico
+   MAX_HISTORY = int(os.environ.get("MAX_HISTORY", "400"))
+
+   # DNS
+   DNS_CACHE_TTL_SECONDS = int(os.environ.get("DNS_CACHE_TTL_SECONDS", "180"))
+
+   # GeoIP
+   GEO_TIMEOUT_SECONDS = float(os.environ.get("GEO_TIMEOUT_SECONDS", "4.0"))
+   GEO_CACHE_TTL_SECONDS = int(os.environ.get("GEO_CACHE_TTL_SECONDS", "600"))
+
+   # UI
+   REGUA_COUNT_OPCOES = {5, 10, 15, 25, 50, 100}
+   COMPARADOR_CIDR_PADRAO_A = "20"
+   COMPARADOR_CIDR_PADRAO_B = "24"
+
+4. No main.py substitua cada constante por import:
+   from config import APP_HOST, APP_PORT, REGUA_COUNT_OPCOES, ...
+
+NÃO FAÇA:
+- Não mova PORTAS_CATALOGO nem PROTOCOLOS_CATALOGO (dado, não config)
+- Não mova funções, só constantes e variáveis de configuração
+- Não crie constantes que não existiam
+
+CRITÉRIO DE SUCESSO: python app.py sobe. As abas CIDR, Geo, Portas e
+Protocolos funcionam normalmente.
+
+================================================================================
+PASSO 3 — analise/portas/ e analise/protocolos/
+Objetivo: mover os dois catálogos de dados (~1300 linhas)
+================================================================================
+
+REGRAS PARA O AGENTE:
+  - portas_catalog.py → APENAS a lista PORTAS_CATALOGO, sem imports de serviço
+  - protocolos_catalog.py → APENAS a lista PROTOCOLOS_CATALOGO, sem imports de serviço
+  - portas_service.py → as funções _alternativa_segura_porta() e
+    montar_portas_catalogo_exibicao()
+  - protocolos_service.py → funções de filtro e agrupamento se existirem
+  - No main.py substituir pelos imports novos
+  - ATENÇÃO: Os catálogos têm ~1300 linhas de dados.
+    Mover completo sem cortar nada.
+
+TESTE DE SUCESSO:
+  Abrir as abas Portas e Protocolos no browser. Visual idêntico ao original.
+
+----------------------------------------
+PROMPT DO PASSO 3 — copie e cole no agente:
+----------------------------------------
+
+Você é um engenheiro Python sênior refatorando o projeto Framework de Redes.
+
+TAREFA DESTE PASSO: mover os catálogos de Portas e Protocolos para subpastas.
+
+ESTRUTURA A CRIAR:
+analise/
+  __init__.py
+  portas/
+    __init__.py
+    portas_catalog.py   ← só dados (PORTAS_CATALOGO)
+    portas_service.py   ← lógica (_alternativa_segura_porta, montar_catalogo_exibicao)
+  protocolos/
+    __init__.py
+    protocolos_catalog.py   ← só dados (PROTOCOLOS_CATALOGO)
+    protocolos_service.py   ← lógica de filtro e agrupamento
+
+EXECUTE EXATAMENTE:
+
+1. No main.py localize PORTAS_CATALOGO (lista que começa com porta "20/21")
+   → Mova a lista inteira para analise/portas/portas_catalog.py
+   → PORTAS_CATALOGO: list[dict] = [ ... todo o conteúdo ... ]
+
+2. No main.py localize as funções:
+   _alternativa_segura_porta()
+   montar_portas_catalogo_exibicao()
+   → Mova para analise/portas/portas_service.py
+   → Adicione no topo: from analise.portas.portas_catalog import PORTAS_CATALOGO
+
+3. No main.py localize PROTOCOLOS_CATALOGO
+   → Mova a lista inteira para analise/protocolos/protocolos_catalog.py
+
+4. Crie analise/protocolos/protocolos_service.py com:
+   from analise.protocolos.protocolos_catalog import PROTOCOLOS_CATALOGO
+
+   def filtrar_protocolos(query: str) -> list:
+       q = query.strip().lower()
+       if not q:
+           return PROTOCOLOS_CATALOGO
+       return [p for p in PROTOCOLOS_CATALOGO
+               if q in p.get('nome','').lower()
+               or q in p.get('funcao','').lower()]
+
+   def agrupar_por_camada() -> dict:
+       grupos = {}
+       for p in PROTOCOLOS_CATALOGO:
+           camada = p.get('camada', 'Outros')
+           grupos.setdefault(camada, []).append(p)
+       return grupos
+
+5. No main.py substitua por imports:
+   from analise.portas.portas_service import montar_portas_catalogo_exibicao
+   from analise.protocolos.protocolos_catalog import PROTOCOLOS_CATALOGO
+
+NÃO FAÇA:
+- Não mova as rotas Flask ainda (@app.route)
+- Não altere os templates HTML
+- Não invente campos nos catálogos
+
+CRITÉRIO DE SUCESSO: abas Portas e Protocolos renderizam igual ao original.
+
+================================================================================
+PASSO 4 — analise/ — UMA ABA POR VEZ
+Objetivo: cidr → mascara → wildcard → auto_cidr → dominio → ipv6 → comparador → geo
+================================================================================
+
+REGRAS PARA O AGENTE:
+  - Mover UMA aba por prompt. NUNCA pedir duas de uma vez.
+  - Padrão: <aba>_routes.py (Blueprint) + <aba>_service.py (lógica pura)
+  - O Blueprint: bp = Blueprint('nome', __name__) — sem url_prefix
+  - No main.py: remover a lógica da aba e importar do novo módulo
+  - Repetir o mesmo prompt trocando só o [NOME_DA_ABA]
+  - Testar a aba no browser imediatamente após cada uma
+
+ABAS NESTA ORDEM:
+  4a. cidr
+  4b. mascara
+  4c. wildcard
+  4d. auto_cidr
+  4e. dominio
+  4f. ipv6
+  4g. comparador
+  4h. geo
+
+TESTE DE SUCESSO (repetir para cada aba):
+  A aba [NOME] funciona identicamente. As outras abas não foram afetadas.
+
+----------------------------------------
+PROMPT DO PASSO 4 — substitua [NOME_DA_ABA] e repita para cada aba:
+----------------------------------------
+
+Você é um engenheiro Python sênior refatorando o projeto Framework de Redes.
+
+TAREFA DESTE PASSO: mover a aba [NOME_DA_ABA] para analise/[NOME_DA_ABA]/.
+
+Substitua [NOME_DA_ABA] por uma de:
+  cidr | mascara | wildcard | auto_cidr | dominio | ipv6 | comparador | geo
+
+ESTRUTURA A CRIAR:
+analise/[NOME_DA_ABA]/
+  __init__.py
+  [NOME_DA_ABA]_routes.py   ← Blueprint Flask
+  [NOME_DA_ABA]_service.py  ← lógica de negócio pura (sem Flask, sem request)
+
+EXECUTE EXATAMENTE:
+
+1. No main.py localize o bloco:
+   elif modo == "[NOME_DA_ABA]":
+   → Identifique qual service é chamado (ex: ipv4_service.processar())
+   → Identifique os campos do formulário (ex: request.form.get('ip'))
+   → Identifique o que vai para o contexto do template (ex: ctx['res'] = resultado)
+
+2. Crie analise/[NOME_DA_ABA]/[NOME_DA_ABA]_service.py:
+   → Mova a lógica pura (sem Flask, sem request, sem render_template)
+   → from core.logging import log_event
+   → Função principal: def processar(campo1, campo2, ...) -> dict
+
+3. Crie analise/[NOME_DA_ABA]/[NOME_DA_ABA]_routes.py:
+   from flask import Blueprint
+   from analise.[NOME_DA_ABA].[NOME_DA_ABA]_service import processar
+
+   [NOME_DA_ABA]_bp = Blueprint('[NOME_DA_ABA]', __name__)
+   → Não renderiza template aqui — só chama o service e retorna o dict
+
+4. No main.py:
+   → Adicione: from analise.[NOME_DA_ABA].[NOME_DA_ABA]_service import processar as processar_[NOME_DA_ABA]
+   → Substitua o bloco elif pelo import
+   → Mantenha o render_template('index.html', ...) na home por enquanto
+
+NÃO FAÇA:
+- Não mova o render_template ainda (index.html fica intacto)
+- Não mova outras abas juntas neste prompt
+- Não altere o template HTML
+
+CRITÉRIO DE SUCESSO: a aba [NOME_DA_ABA] funciona identicamente no browser.
+As outras abas não foram afetadas.
+
+================================================================================
+PASSO 5 — resolucao/
+Objetivo: vlsm/ · export/
+================================================================================
+
+REGRAS PARA O AGENTE:
+  - Os 4 arquivos problem_resolution_*.py viram resolucao/vlsm/vlsm_*.py
+  - As rotas /export-lab-txt, /export-lab-zip, /export-entrega, /pdf
+    viram resolucao/export/export_routes.py
+  - pdf_service.py vira resolucao/export/pdf_service.py
+  - Manter os nomes das funções idênticos — só muda o pacote
+  - ATENÇÃO: vlsm_planning.py pode ter acoplamento com o export.
+    Checar dependências antes de mover.
+
+TESTE DE SUCESSO:
+  Resolver um problema VLSM completo e exportar TXT + ZIP.
+  Gerar PDF. Tudo funciona.
+
+----------------------------------------
+PROMPT DO PASSO 5 — copie e cole no agente:
+----------------------------------------
+
+Você é um engenheiro Python sênior refatorando o projeto Framework de Redes.
+
+TAREFA DESTE PASSO: mover o módulo de Resolução de Problemas para resolucao/.
+
+ESTRUTURA A CRIAR:
+resolucao/
+  __init__.py
+  vlsm/
+    __init__.py
+    vlsm_service.py          ← era problem_resolution_service.py
+    vlsm_normalization.py    ← era problem_resolution_normalization.py
+    vlsm_planning.py         ← era problem_resolution_planning.py
+  export/
+    __init__.py
+    export_routes.py         ← Blueprint com todas as rotas de export
+    export_zip_service.py    ← geração de ZIP
+    export_txt_service.py    ← geração de TXT
+    pdf_service.py           ← era pdf_service.py
+
+EXECUTE EXATAMENTE:
+
+1. Renomeie e mova:
+   backend/services/problem_resolution_service.py
+     → resolucao/vlsm/vlsm_service.py
+   backend/services/problem_resolution_normalization.py
+     → resolucao/vlsm/vlsm_normalization.py
+   backend/services/problem_resolution_planning.py
+     → resolucao/vlsm/vlsm_planning.py
+
+2. Atualize os imports internos entre eles:
+   de: from backend.services.problem_resolution_planning import ...
+   para: from resolucao.vlsm.vlsm_planning import ...
+
+3. No main.py localize as rotas:
+   @app.route('/resolucao-problemas')
+   @app.route('/export-lab-txt')
+   @app.route('/export-lab-zip')
+   @app.route('/export-entrega')
+   @app.route('/pdf')
+   → Mova todas para resolucao/export/export_routes.py como Blueprint:
+     export_bp = Blueprint('export', __name__)
+
+4. No main.py substitua por:
+   from resolucao.export.export_routes import export_bp
+   app.register_blueprint(export_bp)
+
+5. Mova backend/services/pdf_service.py → resolucao/export/pdf_service.py
+   → Atualize imports internos
+
+NÃO FAÇA:
+- Não altere a lógica interna das funções
+- Não mude os nomes das funções exportadas
+- Não altere templates HTML
+
+CRITÉRIO DE SUCESSO: VLSM completo funciona. Export TXT, ZIP e PDF funcionam.
+
+================================================================================
+PASSO 6 — suporte/
+Objetivo: historico/ · grc/ · audit/
+================================================================================
+
+REGRAS PARA O AGENTE:
+  - history_service.py → suporte/historico/historico_service.py
+  - grc_service.py → suporte/grc/grc_service.py
+  - audit_log_service.py → suporte/audit/audit_service.py
+  - A rota /historico vira suporte/historico/historico_routes.py
+  - Atualizar imports de backend.common → core.logging em cada arquivo movido
+
+TESTE DE SUCESSO:
+  Histórico registra consultas normalmente.
+  GRC classifica risco corretamente.
+
+----------------------------------------
+PROMPT DO PASSO 6 — copie e cole no agente:
+----------------------------------------
+
+Você é um engenheiro Python sênior refatorando o projeto Framework de Redes.
+
+TAREFA DESTE PASSO: organizar os services de suporte em suporte/.
+
+ESTRUTURA A CRIAR:
+suporte/
+  __init__.py
+  historico/
+    __init__.py
+    historico_routes.py   ← Blueprint: GET+POST /historico
+    historico_service.py  ← era backend/services/history_service.py
+  grc/
+    __init__.py
+    grc_service.py        ← era backend/services/grc_service.py
+  audit/
+    __init__.py
+    audit_service.py      ← era backend/services/audit_log_service.py
+
+EXECUTE EXATAMENTE:
+
+1. Mova backend/services/history_service.py
+     → suporte/historico/historico_service.py
+   → Atualize: from backend.common import log_event
+              → from core.logging import log_event
+
+2. No main.py localize @app.route('/historico')
+   → Mova para suporte/historico/historico_routes.py:
+     historico_bp = Blueprint('historico', __name__)
+   → No main.py:
+     from suporte.historico.historico_routes import historico_bp
+     app.register_blueprint(historico_bp)
+
+3. Mova backend/services/grc_service.py
+     → suporte/grc/grc_service.py
+   → Atualize imports internos
+
+4. Mova backend/services/audit_log_service.py
+     → suporte/audit/audit_service.py
+   → Atualize imports internos
+
+5. No main.py substitua todos os imports antigos pelos novos:
+   from suporte.historico.historico_service import registrar_consulta, list_history
+   from suporte.grc.grc_service import grc_resumo
+   from suporte.audit.audit_service import registrar_evento
+
+NÃO FAÇA:
+- Não altere a lógica das funções
+- Não altere o template historico.html
+
+CRITÉRIO DE SUCESSO: /historico funciona. Consultas são registradas.
+GRC classifica corretamente.
+
+================================================================================
+PASSO 7 — app.py + templates/base.html
+Objetivo: entry point limpo · layout master Jinja2
+================================================================================
+
+REGRAS PARA O AGENTE:
+  - app.py só faz: create_app(), registrar todos os Blueprints, app.run()
+  - base.html contém: <head>, navbar, Bootstrap CSS/JS, footer
+  - index.html passa a usar: {% extends 'base.html' %}
+  - main.py vira apenas: from app import create_app (ou fica vazio)
+  - ATENÇÃO: Não extrair as abas para partials ainda — só o base.html
+
+TESTE DE SUCESSO:
+  python app.py sobe. Visual 100% idêntico ao original em todas as abas.
+
+----------------------------------------
+PROMPT DO PASSO 7 — copie e cole no agente:
+----------------------------------------
+
+Você é um engenheiro Python sênior refatorando o projeto Framework de Redes.
+
+TAREFA DESTE PASSO: criar app.py limpo e templates/base.html.
+
+PARTE 1 — app.py:
+
+Crie app.py com exatamente este padrão:
+
+  from flask import Flask
+  from werkzeug.exceptions import HTTPException
+
+  from core.logging import log_event
+  from config import APP_HOST, APP_PORT, APP_DEBUG
+
+  from analise.cidr.cidr_routes          import cidr_bp
+  from analise.mascara.mascara_routes    import mascara_bp
+  from analise.wildcard.wildcard_routes  import wildcard_bp
+  from analise.auto_cidr.auto_cidr_routes import auto_cidr_bp
+  from analise.dominio.dominio_routes    import dominio_bp
+  from analise.ipv6.ipv6_routes          import ipv6_bp
+  from analise.comparador.comparador_routes import comparador_bp
+  from analise.geo.geo_routes            import geo_bp
+  from analise.portas.portas_routes      import portas_bp
+  from analise.protocolos.protocolos_routes import protocolos_bp
+  from resolucao.export.export_routes    import export_bp
+  from suporte.historico.historico_routes import historico_bp
+
+  def create_app() -> Flask:
+      app = Flask(
+          __name__,
+          template_folder='templates',
+          static_folder='static'
+      )
+      blueprints = [
+          cidr_bp, mascara_bp, wildcard_bp, auto_cidr_bp,
+          dominio_bp, ipv6_bp, comparador_bp, geo_bp,
+          portas_bp, protocolos_bp, export_bp, historico_bp,
+      ]
+      for bp in blueprints:
+          app.register_blueprint(bp)
+
+      @app.errorhandler(404)
+      def not_found(e):
+          return {"erro": "Não encontrado"}, 404
+
+      @app.errorhandler(500)
+      def server_error(e):
+          log_event("error", "erro_interno", erro=str(e)[:200])
+          return {"erro": "Erro interno"}, 500
+
+      return app
+
+  if __name__ == '__main__':
+      app = create_app()
+      log_event("info", "app_start", host=APP_HOST, port=APP_PORT)
+      app.run(host=APP_HOST, port=APP_PORT, debug=APP_DEBUG)
+
+PARTE 2 — templates/base.html:
+
+1. Abra o index.html atual
+2. Extraia o bloco que REPETE em todas as páginas:
+   - Todo o <head> com meta tags, Bootstrap CSS, app.css, favicon
+   - A navbar / header do projeto
+   - Os <script> do final (Bootstrap JS, outros scripts globais)
+   - O footer se houver
+
+3. Crie templates/base.html com:
+   <!DOCTYPE html>
+   <html lang="pt-BR">
+   <head>
+     ... (todo o head extraído) ...
+   </head>
+   <body>
+     ... (navbar extraída) ...
+
+     {% block content %}{% endblock %}
+
+     ... (scripts do rodapé extraídos) ...
+   </body>
+   </html>
+
+4. No index.html substitua o <head> e navbar por:
+   {% extends 'base.html' %}
+   {% block content %}
+   ... (conteúdo específico da home) ...
+   {% endblock %}
+
+5. Em resolucao_problemas.html faça o mesmo (se ainda não usa extends)
+
+NÃO FAÇA:
+- Não extraia as abas para partials ainda
+- Não altere nenhuma lógica Python neste passo
+
+CRITÉRIO DE SUCESSO: python app.py sobe. Todas as abas funcionam.
+Visual idêntico ao original. main.py pode ser deletado ou esvaziado.
+
+================================================================================
+PASSO 8 — Deletar main.py e backend/ antigo
+Objetivo: projeto 100% na nova estrutura
+================================================================================
+
+REGRAS PARA O AGENTE:
+  - OBRIGATÓRIO: rodar python -m pytest antes de deletar qualquer coisa
+  - Deletar main.py (agora vazio ou com só imports)
+  - Deletar backend/services/*.py que foram movidos (conferir um por um)
+  - Deletar backend/common.py (substituído por core/)
+  - Manter backend/__init__.py só se algum import ainda precisar
+  - ATENÇÃO: SÓ executar este passo se os 7 anteriores passaram nos testes.
+
+TESTE DE SUCESSO FINAL:
+  python -m pytest → 100% verde
+  python app.py → todas as abas funcionam
+  Nenhum arquivo em backend/services/ referenciado por imports ativos
+  Nenhum import aponta para main.py
+
+----------------------------------------
+PROMPT DO PASSO 8 — copie e cole no agente:
+----------------------------------------
+
+Você é um engenheiro Python sênior na etapa final da refatoração do
+projeto Framework de Redes.
+
+PRÉ-CONDIÇÃO OBRIGATÓRIA: confirme que python -m pytest passa 100%
+antes de continuar. Se qualquer teste falhar, PARE e corrija primeiro.
+
+TAREFA DESTE PASSO: remover todos os arquivos legados.
+
+EXECUTE EXATAMENTE:
+
+1. Rode: python -m pytest -v
+   → Se qualquer teste falhar: PARE. Mostre o erro. Não delete nada.
+
+2. Rode: python app.py
+   → Acesse manualmente cada aba no browser
+   → Se qualquer aba falhar: PARE. Mostre o erro. Não delete nada.
+
+3. Busque no projeto inteiro por imports que ainda referenciam:
+   grep -r "from main import" .
+   grep -r "from backend.services" .
+   grep -r "from backend.common" .
+   → Corrija qualquer import encontrado antes de deletar
+
+4. Se tudo passou, delete nesta ordem:
+
+   a. main.py
+
+   b. Cada arquivo em backend/services/ (um por um):
+      → Só delete se o arquivo foi movido (confirme que o novo existe)
+      → Ex: backend/services/history_service.py
+            → suporte/historico/historico_service.py existe? → deleta
+
+   c. backend/common.py
+      → Só se todos os imports já apontam para core/
+
+   d. backend/ inteiro se estiver completamente vazio
+
+5. Rode novamente: python -m pytest -v
+   → Deve passar 100%
+
+6. Atualize README.md com a nova estrutura de pastas
+
+NÃO FAÇA:
+- Não delete nenhum arquivo sem confirmar que o substituto existe
+- Não delete se os testes estiverem falhando
+
+CRITÉRIO DE SUCESSO FINAL:
+  python app.py sobe sem warnings de import
+  Todas as abas funcionam
+  python -m pytest passa 100%
+  Não existe mais main.py nem backend/services/
+
+================================================================================
+REFERÊNCIA RÁPIDA — analogia Java / ordem de execução
+================================================================================
+
+  PASSO  ARQUIVO CRIADO              ANALOGIA JAVA
+  ------+---------------------------+--------------------------------
+    1    core/logging.py             @Aspect LoggingAspect (AOP)
+    1    core/exceptions.py          pacote exception/ de domínio
+    1    core/helpers.py             @Component UtilHelper
+    2    config.py                   @Configuration + .properties
+    3    analise/portas/catalog.py   enum PortasCatalog
+    3    analise/protocolos/cat.py   enum ProtocolosCatalog
+    3    */portas_service.py         @Service PortasService
+    4    analise/*/aba_service.py    @Service CidrService, GeoService...
+    4    analise/*/aba_routes.py     @Controller CidrController...
+    5    resolucao/vlsm/             @Service VlsmService + VlsmPlanning
+    5    resolucao/export/           @Controller ExportController
+    6    suporte/historico/          @Service HistoricoService
+    6    suporte/grc/                @Service GrcService
+    7    app.py                      Main.java + SpringApplication.run()
+    7    templates/base.html         layout.html (Thymeleaf master)
+    8    (deleta legado)             —
+
+RESULTADO FINAL — estrutura de pastas:
+  app.py
+  config.py
+  core/         logging · exceptions · helpers
+  analise/      cidr · mascara · wildcard · auto_cidr · dominio
+                ipv6 · comparador · geo · portas · protocolos
+  resolucao/    vlsm · export
+  suporte/      historico · grc · audit
+  templates/    base.html · index.html · resolucao_problemas.html
+  static/       css/app.css
+  tests/        test_app.py · analise/ · resolucao/ · suporte/
+
+================================================================================
+FIM DO GUIA
+Framework de Redes — Análise Didática Avançada | FIAP 2026
+================================================================================

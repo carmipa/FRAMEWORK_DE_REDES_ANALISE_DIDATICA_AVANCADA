@@ -3,13 +3,14 @@ import zipfile
 from io import BytesIO
 from unittest.mock import patch
 
-import main
-from backend.services.ipv4_service import core_mascara, enunciado_prova_intervalos, tabela_referencia_subredes
+from app import create_app
+from backend.analise.ipv4_service import core_mascara, enunciado_prova_intervalos, tabela_referencia_subredes
 
 
 class AppTestCase(unittest.TestCase):
     def setUp(self):
-        self.client = main.app.test_client()
+        self.app = create_app()
+        self.client = self.app.test_client()
 
     def test_cidr_31(self):
         res = self.client.post("/", data={"modo": "cidr", "ip": "10.0.0.0", "cidr": "31"})
@@ -62,7 +63,10 @@ class AppTestCase(unittest.TestCase):
         self.assertEqual(res.status_code, 200)
         self.assertIn("Domínio/hostname inválido", html)
 
-    @patch("main.resolver_dns_com_cache", return_value="93.184.216.34")
+    @patch(
+        "backend.analise.dominio.dominio_service.resolver_dns_com_cache",
+        return_value="93.184.216.34",
+    )
     def test_dominio_url_completa(self, dns_mock):
         res = self.client.post("/", data={"modo": "dominio", "ip": "https://example.com/path?a=1", "cidr": "24"})
         html = res.get_data(as_text=True)
@@ -339,7 +343,7 @@ class AppTestCase(unittest.TestCase):
         geo_html = self.client.get("/?tab=geo").get_data(as_text=True)
         self.assertIn("Histórico GeoIP", geo_html)
 
-    @patch("main.lookup_regiao_geografica")
+    @patch("backend.analise.geo.geo_service.lookup_regiao_geografica")
     def test_api_informacoes_geo_prefere_ipv4_global_do_xff(self, mock_geo):
         mock_geo.return_value = {
             "ok": True,
@@ -358,7 +362,7 @@ class AppTestCase(unittest.TestCase):
         self.assertEqual(data.get("cliente_ip"), "8.8.8.8")
         mock_geo.assert_called_once_with("8.8.8.8")
 
-    @patch("main.lookup_regiao_geografica")
+    @patch("backend.analise.geo.geo_service.lookup_regiao_geografica")
     def test_api_informacoes_geo_ip_manual_publico(self, mock_geo):
         mock_geo.return_value = {
             "ok": True,
@@ -379,23 +383,7 @@ class AppTestCase(unittest.TestCase):
         self.assertEqual(data.get("consultado"), "8.8.8.8")
         mock_geo.assert_called_once_with("8.8.8.8")
 
-    @patch("main.lookup_regiao_geografica")
-    def test_api_informacoes_geo_registra_em_historico_geo(self, mock_geo):
-        mock_geo.return_value = {
-            "ok": True,
-            "ip": "1.1.1.1",
-            "pais": "Australia",
-            "codigo_pais": "AU",
-            "regiao": "Queensland",
-        }
-        res = self.client.get("/api/informacoes/geo?ip=1.1.1.1")
-        self.assertEqual(res.status_code, 200)
-        hist = self.client.get("/history").get_json()
-        self.assertIsInstance(hist, dict)
-        items = hist.get("items", [])
-        self.assertTrue(any((it.get("modo") == "geo" and it.get("ip_entrada") == "1.1.1.1") for it in items))
-
-    @patch("main.lookup_regiao_geografica")
+    @patch("backend.analise.geo.geo_service.lookup_regiao_geografica")
     def test_api_informacoes_geo_registra_em_historico_geo(self, mock_geo):
         mock_geo.return_value = {
             "ok": True,

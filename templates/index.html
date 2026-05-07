@@ -1,12 +1,9 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CyberNet Framework | FIAP - Paulo André</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
-    <style>
+{% extends "base.html" %}
+
+{% block title %}CyberNet Framework | FIAP - Paulo André{% endblock %}
+
+{% block extra_head %}
+<style>
         .table-dark-header th {
             background-color: #161b22 !important;
             color: #58a6ff !important;
@@ -32,11 +29,12 @@
         }
         .x-small { font-size: 0.7rem; }
     </style>
-</head>
-<body>
+{% endblock %}
+
+{% block content %}
 <div class="container py-5">
-    {% include "partials/main_menu.html" %}
-    {% include "partials/project_header.html" %}
+    {% include "shared/partials/main_menu.html" %}
+    {% include "shared/partials/project_header.html" %}
 
     <div class="card-tech p-4 shadow analise-didatica-wrap {% if active_tab_pre in ['portas', 'protocolos'] %}d-none{% endif %}">
         <div class="tab-nav d-flex flex-wrap gap-2 mb-3">
@@ -53,14 +51,14 @@
             <strong class="text-info">Funções em separado:</strong> cada aba possui fluxo independente. Use <strong>Executar</strong> nas abas de cálculo. Os catálogos <strong class="text-info">Portas</strong> e <strong class="text-primary">Protocolos</strong> estão no <strong>Menu Principal</strong> acima.
         </p>
 
-        <div class="tab-panel" data-tab-panel="cidr">{% include "partials/tab_cidr.html" %}</div>
-        <div class="tab-panel" data-tab-panel="mask">{% include "partials/tab_mask.html" %}</div>
-        <div class="tab-panel" data-tab-panel="wildcard">{% include "partials/tab_wildcard.html" %}</div>
-        <div class="tab-panel" data-tab-panel="autoip">{% include "partials/tab_autoip.html" %}</div>
-        <div class="tab-panel" data-tab-panel="dominio">{% include "partials/tab_dominio.html" %}</div>
-        <div class="tab-panel" data-tab-panel="ipv6">{% include "partials/tab_ipv6.html" %}</div>
-        <div class="tab-panel" data-tab-panel="comparador">{% include "partials/tab_comparador.html" %}</div>
-        <div class="tab-panel" data-tab-panel="geo">{% include "partials/tab_geo.html" %}</div>
+        <div class="tab-panel" data-tab-panel="cidr">{% include "analise/partials/tab_cidr.html" %}</div>
+        <div class="tab-panel" data-tab-panel="mask">{% include "analise/partials/tab_mask.html" %}</div>
+        <div class="tab-panel" data-tab-panel="wildcard">{% include "analise/partials/tab_wildcard.html" %}</div>
+        <div class="tab-panel" data-tab-panel="autoip">{% include "analise/partials/tab_autoip.html" %}</div>
+        <div class="tab-panel" data-tab-panel="dominio">{% include "analise/partials/tab_dominio.html" %}</div>
+        <div class="tab-panel" data-tab-panel="ipv6">{% include "analise/partials/tab_ipv6.html" %}</div>
+        <div class="tab-panel" data-tab-panel="comparador">{% include "analise/partials/tab_comparador.html" %}</div>
+        <div class="tab-panel" data-tab-panel="geo">{% include "analise/partials/tab_geo.html" %}</div>
         <div class="action-buttons mt-3">
             <a href="/export/json" class="btn btn-info fw-bold text-dark" data-bs-toggle="tooltip" data-bs-placement="top" title="Exporta histórico e dados em JSON para auditoria.">📦 Exportar JSON</a>
             <a href="/export/pdf" class="btn btn-primary fw-bold" data-bs-toggle="tooltip" data-bs-placement="top" title="Exporta relatório PDF da última análise processada.">🧾 Exportar PDF</a>
@@ -84,8 +82,8 @@
     </div>
 
     <div class="card-tech p-4 shadow catalogos-wrap {% if active_tab_pre not in ['portas', 'protocolos'] %}d-none{% endif %}">
-        <div class="tab-panel" data-tab-panel="portas">{% include "partials/tab_portas.html" %}</div>
-        <div class="tab-panel" data-tab-panel="protocolos">{% include "partials/tab_protocolos.html" %}</div>
+        <div class="tab-panel" data-tab-panel="portas">{% include "analise/partials/tab_portas.html" %}</div>
+        <div class="tab-panel" data-tab-panel="protocolos">{% include "analise/partials/tab_protocolos.html" %}</div>
         <p class="small text-secondary mt-3 mb-0 border-start border-secondary border-2 ps-2 py-1 rounded-1" style="background: rgba(110, 118, 129, 0.08);" role="note">
             <strong class="text-secondary">Catálogo:</strong> filtros e exportações do DataGrid aplicam-se à tabela abaixo. Use o <strong>Menu Principal</strong> para voltar à <strong>Análise Didática</strong> ou à <strong>Resolução de Problemas</strong>.
         </p>
@@ -118,7 +116,7 @@
     {% endif %}
 
     {% if active_tab_pre not in ['portas', 'protocolos', 'geo'] %}
-    {% include "partials/history_box.html" %}
+    {% include "analise/partials/history_box.html" %}
     {% endif %}
 
     {% if ipv6_res %}
@@ -1052,8 +1050,8 @@
     </div>
     {% endif %}
     {% endif %}
-    {% include "partials/project_about.html" %}
-</div>
+    {% include "shared/partials/project_about.html" %}
+ </div>
 <div class="modal fade" id="commDetailsModal" tabindex="-1" aria-labelledby="commDetailsModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content bg-dark text-light border border-secondary">
@@ -1065,8 +1063,9 @@
         </div>
     </div>
 </div>
-{% include "partials/site_footer.html" %}
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+{% endblock %}
+
+{% block extra_scripts %}
 <script>
     const activeTabFromServer = "{{ active_tab_pre }}";
     const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
@@ -1078,7 +1077,7 @@
     let currentTab = activeTabFromServer || 'cidr';
     let geoInitialized = false;
     const apiGeoBase = {{ url_for("api_informacoes_geo") | tojson }};
-    const historyApiBase = {{ url_for("history_api") | tojson }};
+    const historyApiBase = {{ url_for("historico.history_api") | tojson }};
     const btnLimparTelaGlobal = document.getElementById("btn-limpar-tela");
 
     const initGeoPanel = () => {
@@ -1623,5 +1622,4 @@
     initGrid("portas");
     initGrid("protocolos");
 </script>
-</body>
-</html>
+{% endblock %}
