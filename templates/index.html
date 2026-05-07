@@ -78,7 +78,7 @@
                 }
             </script>
             {% endif %}
-            <a href="/?tab={{ active_tab_pre or 'cidr' }}" class="btn btn-danger fw-bold text-white" data-bs-toggle="tooltip" data-bs-placement="top" title="Limpa os dados e mantém a aba atual selecionada.">🧹 Limpar Tela</a>
+            <a id="btn-limpar-tela" href="/?tab={{ active_tab_pre or 'cidr' }}" class="btn btn-danger fw-bold text-white" data-bs-toggle="tooltip" data-bs-placement="top" title="Limpa os dados e mantém a aba atual selecionada.">🧹 Limpar Tela</a>
         </div>
         <div class="small text-secondary mt-2">Atalhos: Alt+1..7 abas de cálculo | Alt+8 Região Geográfica | Alt+9 Portas | Alt+0 Protocolos | Enter executa a aba ativa.</div>
     </div>
@@ -1079,6 +1079,7 @@
     let geoInitialized = false;
     const apiGeoBase = {{ url_for("api_informacoes_geo") | tojson }};
     const historyApiBase = {{ url_for("history_api") | tojson }};
+    const btnLimparTelaGlobal = document.getElementById("btn-limpar-tela");
 
     const initGeoPanel = () => {
         if (geoInitialized) return;
@@ -1095,6 +1096,7 @@
         const elRegiao = document.getElementById('geo-regiao');
         const refBox = document.getElementById('geo-ref-ligacao');
         const refIpEl = document.getElementById('geo-ref-ip');
+        const elFlagImg = document.getElementById('geo-flag-img');
         const geoHistoryBody = document.getElementById('geo-history-body');
         const geoHistoryCounter = document.getElementById('geo-history-counter');
         const geoHistoryPrev = document.getElementById('geo-history-prev');
@@ -1145,11 +1147,17 @@
             } else {
                 geoHistoryBody.innerHTML = pageItems.map((it) => {
                     const geo = parseGeoTema(it.tema);
+                    const cc = (it.mask_entrada || "").toUpperCase();
+                    const flagEmoji = codigoPaisParaBandeira(cc);
+                    const flagUrl = flagImageUrl(cc.toLowerCase());
+                    const flagHtml = (cc && cc !== "LOCAL")
+                        ? `${flagEmoji ? `<span class="me-1">${flagEmoji}</span>` : ""}<img src="${flagUrl}" alt="Bandeira ${cc}" width="20" height="14" class="me-1" loading="lazy">`
+                        : (cc === "LOCAL" ? `<span class="me-1">🏠</span>` : "");
                     return `
                         <tr>
                             <td>${formatTs(it.timestamp_utc || it.timestamp)}</td>
                             <td>${it.ip_entrada || "—"}</td>
-                            <td>${geo.pais}</td>
+                            <td>${flagHtml}${geo.pais}</td>
                             <td>${geo.regiao}</td>
                         </tr>
                     `;
@@ -1174,8 +1182,14 @@
         };
         const codigoPaisParaBandeira = (codigo) => {
             const cc = (codigo || "").toUpperCase();
+            if (cc === "LOCAL") return "🏠";
             if (!/^[A-Z]{2}$/.test(cc)) return "";
             return String.fromCodePoint(...[...cc].map((c) => 127397 + c.charCodeAt(0)));
+        };
+        const flagImageUrl = (codigo) => {
+            const cc = (codigo || "").toLowerCase();
+            if (!/^[a-z]{2}$/.test(cc)) return "";
+            return `https://flagcdn.com/24x18/${cc}.png`;
         };
 
         const applyPayload = (j) => {
@@ -1187,12 +1201,26 @@
                 okBox && okBox.classList.remove('d-none');
                 failBox && failBox.classList.add('d-none');
                 if (elFlag) elFlag.textContent = codigoPaisParaBandeira(j.codigo_pais);
+                if (elFlagImg) {
+                    const url = flagImageUrl(j.codigo_pais);
+                    if (url) {
+                        elFlagImg.src = url;
+                        elFlagImg.classList.remove("d-none");
+                    } else {
+                        elFlagImg.src = "";
+                        elFlagImg.classList.add("d-none");
+                    }
+                }
                 elPais && (elPais.textContent = j.pais || '—');
                 elRegiao && (elRegiao.textContent = j.regiao || '—');
             } else {
                 okBox && okBox.classList.add('d-none');
                 failBox && failBox.classList.remove('d-none');
                 if (elFlag) elFlag.textContent = "";
+                if (elFlagImg) {
+                    elFlagImg.src = "";
+                    elFlagImg.classList.add("d-none");
+                }
                 elPais && (elPais.textContent = "");
                 elRegiao && (elRegiao.textContent = "");
                 elMsg && (elMsg.textContent = j.mensagem || 'Indisponível.');
@@ -1258,6 +1286,9 @@
         }
         const hideHistory = tabId === "geo" || catalogIds.includes(tabId);
         historyBoxes.forEach((box) => box.classList.toggle("d-none", hideHistory));
+        if (btnLimparTelaGlobal) {
+            btnLimparTelaGlobal.setAttribute("href", `/?tab=${encodeURIComponent(tabId)}`);
+        }
         contextualBlocks.forEach((block) => {
             const tabsRaw = block.getAttribute("data-visible-tabs") || "";
             const allowed = tabsRaw.split(",").map((v) => v.trim()).filter(Boolean);
@@ -1268,6 +1299,14 @@
         tabPanels.forEach((panel) => panel.classList.toggle("active", panel.dataset.tabPanel === tabId));
         if (tabId === "geo") initGeoPanel();
     };
+
+    if (btnLimparTelaGlobal) {
+        btnLimparTelaGlobal.addEventListener("click", (ev) => {
+            ev.preventDefault();
+            const targetTab = currentTab || activeTabFromServer || "cidr";
+            window.location.assign(`/?tab=${encodeURIComponent(targetTab)}`);
+        });
+    }
     tabButtons.forEach((btn) => {
         btn.addEventListener('click', () => showTab(btn.dataset.tab));
     });

@@ -4,11 +4,46 @@ from __future__ import annotations
 
 import ipaddress
 import json
+import os
+import threading
+import time
 import urllib.error
 import urllib.request
 
 GEO_TIMEOUT_S = 4
 USER_AGENT = "CyberNetFramework/1.0"
+GEO_PROVIDER_BASE_URL = os.getenv("GEO_PROVIDER_BASE_URL", "http://ip-api.com/json")
+GEO_CACHE_TTL_SECONDS = int(os.getenv("GEO_CACHE_TTL_SECONDS", "300"))
+GEO_CACHE_MAX_ITEMS = int(os.getenv("GEO_CACHE_MAX_ITEMS", "500"))
+_geo_cache_lock = threading.Lock()
+_geo_cache: dict[str, tuple[float, dict]] = {}
+
+
+def _cache_get(ip: str) -> dict | None:
+    now = time.time()
+    with _geo_cache_lock:
+        item = _geo_cache.get(ip)
+        if not item:
+            return None
+        expires_at, payload = item
+        if expires_at < now:
+            _geo_cache.pop(ip, None)
+            return None
+        return dict(payload)
+
+
+def _cache_set(ip: str, payload: dict) -> None:
+    if GEO_CACHE_MAX_ITEMS <= 0 or GEO_CACHE_TTL_SECONDS <= 0:
+        return
+    now = time.time()
+    with _geo_cache_lock:
+        if len(_geo_cache) >= GEO_CACHE_MAX_ITEMS:
+            expired_keys = [k for k, (exp, _) in _geo_cache.items() if exp < now]
+            for k in expired_keys:
+                _geo_cache.pop(k, None)
+            if len(_geo_cache) >= GEO_CACHE_MAX_ITEMS:
+                _geo_cache.pop(next(iter(_geo_cache)), None)
+        _geo_cache[ip] = (now + GEO_CACHE_TTL_SECONDS, dict(payload))
 
 
 def _normalizar_ip_texto(raw: str) -> str:
@@ -104,8 +139,14 @@ def lookup_regiao_geografica(ip: str) -> dict:
             ),
             "ip": ip,
         }
+    cached = _cache_get(ip)
+    if cached is not None:
+        cached["cache"] = "hit"
+        return cached
+
+    base = GEO_PROVIDER_BASE_URL.rstrip("/")
     url = (
-        f"http://ip-api.com/json/{ip}"
+        f"{base}/{ip}"
         "?fields=status,message,country,countryCode,regionName,city,lat,lon,isp,query"
     )
     try:
@@ -121,20 +162,17 @@ def lookup_regiao_geografica(ip: str) -> dict:
         return {
             "ok": False,
             "motivo": "network",
-            "mensagem": (
-                "Consulta externa indisponível ou timeout "
-                f"({exc.__class__.__name__})."
-            ),
+            "mensagem": "Não foi possível conectar ao provedor de localização no momento. Tente novamente.",
             "ip": ip,
         }
     if data.get("status") != "success":
         return {
             "ok": False,
             "motivo": "api",
-            "mensagem": data.get("message") or "Resposta da API inválida.",
+            "mensagem": "O provedor de localização não conseguiu processar este IP agora.",
             "ip": ip,
         }
-    return {
+    payload = {
         "ok": True,
         "ip": data.get("query") or ip,
         "pais": data.get("country") or "—",
@@ -144,4 +182,7 @@ def lookup_regiao_geografica(ip: str) -> dict:
         "lat": data.get("lat"),
         "lon": data.get("lon"),
         "isp": data.get("isp") or "—",
+        "cache": "miss",
     }
+    _cache_set(ip, payload)
+    return payload

@@ -1590,12 +1590,25 @@ def api_informacoes_geo():
         if not consultado:
             return
         ok_geo = bool(payload_geo.get("ok"))
-        pais = payload_geo.get("pais") or "N/A"
-        regiao = payload_geo.get("regiao") or "N/A"
         motivo = payload_geo.get("motivo") or ""
-        nivel = (
-            f"GeoIP: {regiao}/{pais}" if ok_geo else f"GeoIP indisponível ({motivo or 'sem detalhe'})"
-        )
+
+        # Se for IP local ou falha, definimos valores amigáveis para o histórico
+        if not ok_geo and motivo == "private_or_local":
+            pais = "Local"
+            regiao = "Privado"
+            codigo_pais = "LOCAL"
+            nivel = f"GeoIP: {regiao}/{pais}"
+        elif ok_geo:
+            pais = payload_geo.get("pais") or "N/A"
+            regiao = payload_geo.get("regiao") or "N/A"
+            codigo_pais = payload_geo.get("codigo_pais") or ""
+            nivel = f"GeoIP: {regiao}/{pais}"
+        else:
+            pais = "N/A"
+            regiao = "Erro"
+            codigo_pais = ""
+            nivel = f"GeoIP indisponível ({motivo or 'sem detalhe'})"
+
         try:
             registrar_consulta(
                 {
@@ -1603,7 +1616,7 @@ def api_informacoes_geo():
                     "ip": consultado,
                     "ipv6": "",
                     "cidr": "",
-                    "mask_decimal": "",
+                    "mask_decimal": codigo_pais,
                     "wildcard_mask": "",
                 },
                 {
@@ -1634,6 +1647,9 @@ def api_informacoes_geo():
                 }
             )
         geo = lookup_regiao_geografica(norm)
+        if not geo.get("ok") and geo.get("motivo") == "private_or_local":
+            geo.update({"ok": True, "pais": "Local", "regiao": "Privado", "codigo_pais": "LOCAL"})
+
         payload = {
             "cliente_ip": cliente_ip,
             "consultado": norm,
@@ -1644,6 +1660,9 @@ def api_informacoes_geo():
         return jsonify(payload)
 
     geo = lookup_regiao_geografica(cliente_ip)
+    if not geo.get("ok") and geo.get("motivo") == "private_or_local":
+        geo.update({"ok": True, "pais": "Local", "regiao": "Privado", "codigo_pais": "LOCAL"})
+
     payload = {
         "cliente_ip": cliente_ip,
         "consultado": cliente_ip,
