@@ -1,0 +1,464 @@
+Protocolos de Comunicação
+
+Prof. Fabio Maçoli
+profmazola@fiap.com.br
+
+PROTOCOLOS DE COMUNICAÇÃO
+ Conjunto de regras e padrões necessários para
+estabelecer a comunicação entre dois ou mais
+equipamentos;
+
+Os protocolos são componentes de software e
+devem
+ser
+instalados
+sempre
+que
+os
+componentes de rede necessitam dos mesmos;
+
+Há uma série de protocolos no mercado, no
+entanto nem todo protocolo é compatível com
+todos os sistemas operacionais;
+2
+
+PRINCIPAIS TIPOS DE PROTOCOLOS
+ PROTOCOLOS ROTEÁVEIS
+ São protocolos que permitem a criação de caminhos, rotas e
+interligação de segmentos diferentes. (IP, IPX);
+
+ PROTOCOLOS NÃO ROTEÁVEIS
+ São protocolos que não permitem a criação de caminhos e
+rotas, interligam somente um mesmo segmento. (Netbeui);
+
+ PROTOCOLOS DE ROTEAMENTO
+ Com base em algoritmos, trocam tabelas de roteamento,
+estabelecem caminhos e rotas;
+
+ PROTOCOLOS DE WAN
+ São protocolos que estabelecem comunicação entre redes de
+comunicação distantes geograficamente;
+
+3
+
+CLASSIFICAÇÃO ROTAS
+ ROTAS ESTÁTICAS
+Conhecidas como rotas (caminhos) diretos, onde
+as informações são inseridas de maneira direta e
+uma vez traçado não há mudança de caminho.
+
+ ROTAS DINÂMICAS
+
+ São elaboradas dinamicamente pelos protocolos
+
+de roteamento, são atualizadas constantemente e
+possibilitam a criação de vários caminhos para um
+mesmo destino automaticamente.
+
+4
+
+EXEMPLO DE ROTA ESTÁTICA E SINTAXE
+
+ROTA ESTÁTICA DO ROUTER R1 PARA R7
+(Passando pelo R3 e R5)
+IP ROUTE (ENDEREÇO DA REDE QUE DESEJA ALCANÇAR) (MASCARA DA REDE A
+SER ALCANÇADA) (INTERFACE DIRETAMENTE LIGADA OU ENDEREÇO IP DO
+PRÓXIMO SALTO)
+R1(CONFIG) IP ROUTE 172.16.48.0 255.255.248.0 S1/0
+
+ Rota de ida
+
+R3(CONFIG) IP ROUTE 172.16.48.0 255.255.248.0 S1/1  Rota de ida
+R3(CONFIG) IP ROUTE 172.16.8.0 255.255.248.0 S1/0  Rota de retorno
+R5(CONFIG) IP ROUTE 172.16.48.0 255.255.248.0 S1/3  Rota de ida
+R5(CONFIG) IP ROUTE 172.16.8.0 255.255.248.0 S1/0  Rota de retorno
+R7(CONFIG) IP ROUTE 172.16.8.0 255.255.248.0 s1/0  Rota de retorno
+
+5
+
+ROTA DINÂMICA
+
+1. Escolha do protocolo de roteamento que melhor atenda a
+demanda;
+2. Declaração das redes existentes (cada roteador irá apresentar à
+topologia as redes que estão diretamente ligadas);
+3. Troca de tabelas pelo protocolo de roteamento;
+4. Convergência das rotas;
+5. Criação dos caminhos;
+
+6
+
+TIPOS DE PROTOCOLOS DE
+ROTEAMENTO
+
+• DISTANCE VECTOR
+
+ Distância vetorial
+ Menor quantidade de saltos (hops)
+ Utiliza-se do algoritmo de Bellman-Ford
+ Troca de tabelas periodicamente
+ Reconhece somente os vizinhos diretamente
+ligados
+ Busca do menor caminho entre origem e
+destino
+
+LINK STATE
+
+ Estado do Link
+ Reconhece toda a árvore de roteamento
+ Utiliza-se do algoritmo de Dijsktra
+ Estabelece enlace e apenas anuncia mudanças
+ Possui vários caminhos para um mesmo
+destino
+ Busca dos melhores caminhos
+
+Exemplo
+
+RIP
+RIP VII
+IGRP
+
+EXEMPLO
+
+OSPF
+7
+
+TIPOS DE PROTOCOLOS DE ROTEAMENTO II
+
+ HIBRIDOS
+ Buscam utilizar-se dos recursos do
+Distance Vector e Link State;
+ Buscam o melhor menor caminho;
+ Proprietário Cisco
+
+EXEMPLO
+
+EIGRP
+
+8
+
+PROTOCOLOS CLASSFULL X
+CLASSLESS
+
+ PROTOCOLOS DE ROTEAMENTO CLASSFULL
+Protocolos de roteamento que não trabalham com
+mascaras de rede de tamanho variável e subnets,
+operam apenas com mascaras de classe cheia
+(classe A, B, C);
+Exemplo RIP, IGRP
+
+ PROTOCOLOS DE ROTEAMENTO CLASSLESS
+Protocolos de roteamento que operam com
+mascaras de rede de tamanho variável e sub nets.
+Exemplo EIGRP, OSPF
+9
+
+CLASSIFICAÇÃO QUANTO À ABRANGÊNCIA
+ IGP  Interior Gateway Protocol = São Protocolos
+utilizados
+para
+comunicação
+de
+Redes
+pertencentes ao mesmo sistema autônomo. EX:
+RIP, IGRP, OSPF, EIGRP.
+ EGP  Exterior Gateway Protocol = São utilizados
+para comunicação de sistemas autônomos, onde
+encontram-se os roteadores de Borda. EX: BGP.
+
+SA.  Sistema Autônomo = Conjunto de redes sob
+a mesma administração.
+
+10
+
+EXEMPLO IGP X EGP
+
+11
+
+MASCARA CORINGA (WILD CARD
+MASK)
+
+ Também denominada mascara inversa
+ Consiste na inversão da mascara de rede tradicional onde:
+O que é 255
+
+Passa a ser 0
+
+O que é 0
+
+Passar a ser
+255
+
+Sub Net
+255 – (Sub Net)
+MASCARAS
+TRADICIONAIS/CLASSES
+CHEIAS
+Mascara de sub
+Mascara
+rede
+
+coringa
+
+255.0.0.0
+
+0.255.255.255
+
+255.255.0.0
+
+0.0.255.255
+
+255.255.255.0
+0.0.0.255
+MASCARAS SUB NETS
+Mascara de sub
+rede
+
+Mascara coringa
+
+255.240.0.0
+
+0.15.255.255
+
+255.255.224.0
+
+0.0.31.255
+
+255.255.255.252
+
+0.0.0.3
+
+Mascara coringa
+•
+•
+•
+
+Será utilizada em
+alguns protocolos de
+roteamento
+Configurações de
+ACL
+Configurações de
+Firewall em regras
+
+12
+
+RIP
+
+Sintaxe dos Protocolos de
+Roteamento
+RIP Versão II
+
+Router Rip
+Network (endereço das redes
+diretamente conectadas)
+
+Router RIP
+Version 2
+Network (endereço das redes diretamente
+conectadas)
+No auto-summary
+
+IGRP
+
+EIGRP
+
+Router IGRP (numero do SA)
+Network (endereço das redes
+diretamente conectadas)
+
+Router EIGRP (numero do SA)
+Network (endereço das redes diretamente
+conectadas) (Mascara Coringa)
+
+OSPF
+
+BGP
+
+Router OSPF <ID>
+Network (endereço das redes
+diretamente conectadas) (mascara
+coringa) area (numero da área)
+
+Router BGP <numero do SA>
+Neighbor(IP diretamente conectado) remoteas (numero do AS diretamente conectado)
+Network (redes conectadas)
+13
+
+PRINCIPIOS DO ROTEAMENTO
+ Processos de localização de um caminho para um
+host de destino;
+ É um processo de retransmissão no qual os
+pacotes são encaminhados de uma localidade
+para outra;
+ O Processo de roteamento avalia a origem e o
+destino do tráfego com base no conhecimento das
+condições da rede;
+ A decisão do roteamento está baseada em vários
+critérios: velocidade de enlace,
+distância
+topológica, quantidade de saltos…
+Cada protocolo de roteamento possui suas
+próprias informações de roteamento.
+14
+
+192.168.100.35/28
+Rede
+192.168.100.32
+A
+192.168.100.47
+
+Roteador Analisa a solicitação AND
+
+/28
+
+Endereço IP sobre Mascara
+
+WAN
+192.168.100.68/30
+
+Rede
+192.168.100.4
+8
+A
+192.168.100.6
+3
+/28
+
+O Banco de
+dados recebe
+a solicitação e
+devolve
+
+192.168.100.
+
+00100011
+
+255.255.255.
+
+11110000 (240)
+00100000
+
+WAN
+192.168.100.72/30
+
+WAN
+192.168.100.64 /
+30
+
+Maria quer acessar o B.D.
+e envia a solicitação para
+192.168.100.35/28
+
+192.168.100.24/28
+
+(35)
+(32)
+
+Default Gateway
+192.168.100.17/28
+Switch
+recebe o
+pacote não
+reconhece e
+envia para
+o Default
+Gateway
+Rede
+192.168.100.1
+6
+A
+192.168.100.3
+1
+
+15
+
+FUNÇÃO AND E OR
+FUNÇÃO AND
+0 C 0 =0
+0 C 1 =0
+1 C 0= 0
+1 C 1 =1
+
+FUNÇÃO OR
+0 C 0 =0
+0 C 1 =1
+1 C 0= 1
+1 C 1 =1
+
+São funções matemáticas
+executadas pelo roteador
+para obtenção do endereço
+de rede a que pertence um
+determinado IP.
+
+EXEMPLO PRATICO
+172.16.167.159 /20
+255.255.240.0  Mascara de
+
+sub rede
+ou seja a incidência de variação encontra-se no terceiro
+octeto
+Convertemos
+o terceiro
+de decimal
+para
+e
+172.16. 128
+64 octeto
+32 16
+8 4 2
+1 binário
+159
+incidimos a respectiva mascara de sub rede e executamos
+135
+1
+0
+0
+1
+1
+1 1 1
+a função
+AND.
+240
+1
+1
+1
+1
+0
+0 0 0
+And
+
+1
+
+0
+
+0
+
+1
+
+0
+
+0
+
+0
+
+0
+
+=
+144
+
+Ou seja o respectivo ip pertence ao range
+172.16.144.0 /20
+16
+
+LOCALIZAÇÃO GEOGRAFICA DO ENDEREÇO IP
+
+https://dnschecker.org/ip-loc
+ation.php
+
+https://www.geolocation.com/pt
+
+17
+
+

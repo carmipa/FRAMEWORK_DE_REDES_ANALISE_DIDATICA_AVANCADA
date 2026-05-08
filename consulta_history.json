@@ -1,5 +1,42 @@
 [
   {
+    "id": "5e682f1e",
+    "timestamp": "2026-05-08T10:51:35.213516+00:00",
+    "modo": "geo",
+    "ip_entrada": "127.0.0.1",
+    "ipv6_entrada": "",
+    "cidr_entrada": "",
+    "mask_entrada": "LOCAL",
+    "wildcard_entrada": "",
+    "rede": "Privado",
+    "broadcast": "Local",
+    "mask": "N/A",
+    "cidr": "",
+    "tema": "GeoIP: Privado/Local",
+    "geo_consulta": {
+      "ip": "127.0.0.1",
+      "tipo": "IPv4",
+      "reservado": true,
+      "reservado_motivo": "Loopback (localhost)",
+      "pais": "",
+      "pais_codigo": "",
+      "pais_bandeira": "🏠",
+      "regiao": "",
+      "cidade": "",
+      "isp": "—",
+      "org": "",
+      "as_name": "",
+      "proxy": false,
+      "hosting": false,
+      "mobile": false,
+      "risco_nivel": "N/A",
+      "risco_badge_color": "secondary",
+      "fonte": "",
+      "ok": false,
+      "motivo": "private_or_local"
+    }
+  },
+  {
     "id": "2f16845b",
     "timestamp": "2026-05-08T01:07:27.881135+00:00",
     "modo": "wildcard",
@@ -12,7 +49,8 @@
     "broadcast": "192.168.1.255",
     "mask": "255.255.255.0",
     "cidr": 24,
-    "tema": "Baixo risco operacional"
+    "tema": "Baixo risco operacional",
+    "timestamp_utc": "2026-05-08 01:07:27 UTC"
   },
   {
     "id": "c5da77fe",
