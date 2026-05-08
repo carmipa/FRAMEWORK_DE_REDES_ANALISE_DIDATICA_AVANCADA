@@ -105,6 +105,9 @@
         </div>
         {% endif %}
       </div>
+      {% if not geo.regiao and not geo.cidade %}
+      <p class="small text-secondary mb-3">Região e cidade não constam na base GeoIP local para este IP (comum em CDNs / anycast).</p>
+      {% endif %}
 
       {% if geo.isp or geo.org or geo.as_name or geo.cidr %}
       <h6 class="text-primary border-bottom pb-1 mb-2">🌐 Rede / ASN</h6>

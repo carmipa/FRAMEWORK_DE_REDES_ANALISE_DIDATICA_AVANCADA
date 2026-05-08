@@ -222,6 +222,10 @@
                 resCorp =
                     '<span class="badge bg-secondary fs-6 px-3 py-2">🖥️ Conexão residencial / corporativa</span>';
             }
+            const locNote =
+                !j.regiao && !j.cidade
+                    ? '<p class="small text-secondary mb-3">Região e cidade não constam na base GeoIP local para este IP (comum em CDNs / anycast).</p>'
+                    : "";
 
             rootEl.innerHTML =
                 '<div class="card border-primary mt-3">' +
@@ -242,6 +246,7 @@
                 '<div class="row row-cols-2 row-cols-md-3 g-2 mb-3">' +
                 locRows.join("") +
                 "</div>" +
+                locNote +
                 netSection +
                 '<h6 class="text-primary border-bottom pb-1 mb-2">🔍 Tipo de Conexão</h6>' +
                 '<div class="d-flex flex-wrap gap-2 mb-3">' +
