@@ -105,7 +105,7 @@
                     '<div class="text-muted" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.5px;">Estado / Região</div>' +
                     '<div class="fw-bold">' +
                     esc(j.regiao) +
-                    "</div></div>"
+                    "</div></div></div>"
                 );
             }
             if (j.cidade) {
@@ -114,7 +114,7 @@
                     '<div class="text-muted" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.5px;">Cidade</div>' +
                     '<div class="fw-bold">' +
                     esc(j.cidade) +
-                    "</div></div>"
+                    "</div></div></div>"
                 );
             }
             if (j.timezone) {
@@ -123,7 +123,7 @@
                     '<div class="text-muted" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.5px;">Fuso Horário</div>' +
                     '<div class="fw-bold">🕐 ' +
                     esc(j.timezone) +
-                    "</div></div>"
+                    "</div></div></div>"
                 );
             }
             if (hasCoords) {
@@ -152,7 +152,7 @@
                     '<div class="text-muted" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.5px;">ISP (Provedor)</div>' +
                     '<div class="fw-bold">' +
                     esc(j.isp) +
-                    "</div></div>"
+                    "</div></div></div>"
                 );
             }
             if (j.org && j.org !== j.isp) {
@@ -161,7 +161,7 @@
                     '<div class="text-muted" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.5px;">Organização</div>' +
                     '<div class="fw-bold">' +
                     esc(j.org) +
-                    "</div></div>"
+                    "</div></div></div>"
                 );
             }
             if (j.as_name) {
@@ -186,7 +186,7 @@
                     '<div class="text-muted" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.5px;">Bloco IP (CIDR)</div>' +
                     '<div class="fw-bold font-monospace" style="font-size:.85rem;">' +
                     esc(j.cidr) +
-                    "</div></div>"
+                    "</div></div></div>"
                 );
             }
             const netSection =
