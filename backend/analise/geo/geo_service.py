@@ -8,6 +8,40 @@ from backend.core.exceptions import HistoricoPersistenciaError
 from backend.core.logging import logger
 from backend.suporte.historico.historico_service import registrar_consulta
 
+_GEO_HIST_SNAPSHOT_KEYS = (
+    "ip",
+    "tipo",
+    "reservado",
+    "reservado_motivo",
+    "pais",
+    "pais_codigo",
+    "pais_bandeira",
+    "regiao",
+    "cidade",
+    "isp",
+    "org",
+    "as_name",
+    "proxy",
+    "hosting",
+    "mobile",
+    "risco_nivel",
+    "risco_badge_color",
+    "fonte",
+    "ok",
+    "motivo",
+)
+
+
+def _snapshot_geo_consulta(payload: dict) -> dict:
+    out: dict = {}
+    for k in _GEO_HIST_SNAPSHOT_KEYS:
+        if k not in payload:
+            continue
+        v = payload[k]
+        if isinstance(v, (str, int, float, bool)) or v is None:
+            out[k] = v
+    return out
+
 
 def _registrar_historico_geo(payload_geo: dict) -> None:
     consultado = (payload_geo.get("consultado") or "").strip()
@@ -48,6 +82,7 @@ def _registrar_historico_geo(payload_geo: dict) -> None:
                 "mask": "N/A",
                 "cidr": "",
                 "nivel_tema": nivel,
+                "geo_consulta": _snapshot_geo_consulta(payload_geo),
             },
         )
     except HistoricoPersistenciaError as exc:

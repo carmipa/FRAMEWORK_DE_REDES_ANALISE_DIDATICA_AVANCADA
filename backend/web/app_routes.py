@@ -15,6 +15,7 @@ from backend.core.exceptions import (
 )
 from backend.core.logging import log_event, logger
 from backend.analise.dominio_service import resolver_dns_com_cache
+from backend.analise.geo.geo_lookup_service import _enriquecer_resposta_geo
 from backend.analise.geo_service import (
     cliente_ip_efetivo,
     lookup_regiao_geografica,
@@ -348,12 +349,26 @@ def informacoes():
     if raw_digitado:
         norm, err_msg = normalizar_ip_digitado(raw_digitado)
         if err_msg:
-            geo = {
-                "ok": False,
-                "motivo": "invalid",
-                "mensagem": err_msg,
-                "ip": raw_digitado,
-            }
+            geo = _enriquecer_resposta_geo(
+                {
+                    "ok": False,
+                    "motivo": "invalid",
+                    "mensagem": err_msg,
+                    "ip": raw_digitado,
+                    "pais": "",
+                    "codigo_pais": "",
+                    "pais_codigo": "",
+                    "regiao": "",
+                    "cidade": "",
+                    "lat": None,
+                    "lon": None,
+                    "isp": "—",
+                    "reservado": False,
+                    "valido": False,
+                    "tipo": "",
+                    "fonte": "",
+                }
+            )
             consultado = raw_digitado
             modo_geo = "manual"
         else:

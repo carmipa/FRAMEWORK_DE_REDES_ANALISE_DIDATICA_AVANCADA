@@ -1066,6 +1066,7 @@
 {% endblock %}
 
 {% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/geo_report.js') }}"></script>
 <script>
     const activeTabFromServer = "{{ active_tab_pre }}";
     const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
@@ -1090,12 +1091,9 @@
         const failBox = document.getElementById('geo-falha');
         const elIp = document.getElementById('geo-ip');
         const elMsg = document.getElementById('geo-msg');
-        const elFlag = document.getElementById('geo-flag');
-        const elPais = document.getElementById('geo-pais');
-        const elRegiao = document.getElementById('geo-regiao');
+        const reportRoot = document.getElementById('geo-report-root');
         const refBox = document.getElementById('geo-ref-ligacao');
         const refIpEl = document.getElementById('geo-ref-ip');
-        const elFlagImg = document.getElementById('geo-flag-img');
         const geoHistoryBody = document.getElementById('geo-history-body');
         const geoHistoryCounter = document.getElementById('geo-history-counter');
         const geoHistoryPrev = document.getElementById('geo-history-prev');
@@ -1134,6 +1132,24 @@
             }
             return { regiao: "—", pais: "—" };
         };
+        const escHist = (s) => {
+            if (s == null || s === "") return "";
+            return String(s)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#39;");
+        };
+        const riskBadgeClass = (c) => {
+            const x = String(c || "").toLowerCase();
+            return ["danger", "warning", "success", "secondary"].includes(x) ? x : "secondary";
+        };
+        const truncHist = (s, n) => {
+            const t = String(s || "");
+            return t.length > n ? t.slice(0, n) + "…" : t;
+        };
+        const geoEhLocal = (g) =>
+            g && (g.reservado === true || g.motivo === "private_or_local");
         const renderGeoHistory = () => {
             if (!geoHistoryBody || !geoHistoryCounter || !geoHistoryPage || !geoHistoryPrev || !geoHistoryNext) return;
             const total = geoHistoryItems.length;
@@ -1142,22 +1158,113 @@
             const start = (geoHistoryPageIdx - 1) * geoHistoryPageSize;
             const pageItems = geoHistoryItems.slice(start, start + geoHistoryPageSize);
             if (!pageItems.length) {
-                geoHistoryBody.innerHTML = '<tr><td colspan="4" class="text-secondary">Sem histórico GeoIP no momento.</td></tr>';
+                geoHistoryBody.innerHTML = '<tr><td colspan="8" class="text-secondary">Sem histórico GeoIP no momento.</td></tr>';
             } else {
                 geoHistoryBody.innerHTML = pageItems.map((it) => {
-                    const geo = parseGeoTema(it.tema);
-                    const cc = (it.mask_entrada || "").toUpperCase();
-                    const flagEmoji = codigoPaisParaBandeira(cc);
-                    const flagUrl = flagImageUrl(cc.toLowerCase());
-                    const flagHtml = (cc && cc !== "LOCAL")
-                        ? `${flagEmoji ? `<span class="me-1">${flagEmoji}</span>` : ""}<img src="${flagUrl}" alt="Bandeira ${cc}" width="20" height="14" class="me-1" loading="lazy">`
-                        : (cc === "LOCAL" ? `<span class="me-1">🏠</span>` : "");
+                    const g = it.geo_consulta && typeof it.geo_consulta === "object" ? it.geo_consulta : null;
+                    const fb = parseGeoTema(it.tema);
+                    const ip = escHist((g && g.ip) || it.ip_entrada || "—");
+                    const tipo = escHist((g && g.tipo) || "IPv4");
+                    const ts = escHist(formatTs(it.timestamp_utc || it.timestamp));
+                    let paisCell;
+                    if (geoEhLocal(g)) {
+                        paisCell =
+                            '<span class="text-warning me-1" aria-hidden="true">🏠</span><span class="text-light">Local / reservado</span>';
+                    } else if (g) {
+                        const ccRaw = String(g.pais_codigo || g.codigo_pais || "")
+                            .replace(/\s+/g, "")
+                            .toUpperCase();
+                        let flagPart = "";
+                        if (/^[A-Z]{2}$/.test(ccRaw)) {
+                            const fu = flagImageUrl(ccRaw.toLowerCase());
+                            if (fu) {
+                                flagPart = `<img src="${fu}" alt="" width="22" height="16" class="me-1 align-middle rounded geo-flag-img" loading="lazy">`;
+                            }
+                        }
+                        if (!flagPart) {
+                            flagPart = `<span class="me-1">${escHist(g.pais_bandeira || "🌐")}</span>`;
+                        }
+                        const ccLab = /^[A-Z]{2}$/.test(ccRaw)
+                            ? `<span class="text-secondary">${escHist(ccRaw)}</span> `
+                            : "";
+                        const pn = escHist(g.pais || "—");
+                        paisCell = `${flagPart}${ccLab}<span class="text-light">${pn}</span>`;
+                    } else {
+                        const cc = (it.mask_entrada || "").toUpperCase();
+                        const flagEmoji = codigoPaisParaBandeira(cc);
+                        const flagUrl = flagImageUrl(cc.toLowerCase());
+                        const flagHtml =
+                            cc && cc !== "LOCAL"
+                                ? `${flagEmoji ? `<span class="me-1">${flagEmoji}</span>` : ""}<img src="${flagUrl}" alt="" width="20" height="14" class="me-1" loading="lazy">`
+                                : cc === "LOCAL"
+                                  ? '<span class="text-warning me-1" aria-hidden="true">🏠</span><span class="text-light">Local</span>'
+                                  : "";
+                        paisCell = cc === "LOCAL" ? flagHtml : `${flagHtml}${escHist(fb.pais)}`;
+                    }
+                    let regCid;
+                    if (g) {
+                        if (geoEhLocal(g)) {
+                            regCid = "Rede local / privado";
+                        } else {
+                            const c = g.cidade ? `${escHist(g.cidade)}, ` : "";
+                            const r = g.regiao ? escHist(g.regiao) : "—";
+                            regCid = `${c}${r}`;
+                        }
+                    } else {
+                        regCid = escHist(fb.regiao);
+                    }
+                    let ispCell;
+                    const ispRaw = g && g.isp != null ? String(g.isp).trim() : "";
+                    const ispMeaningful =
+                        ispRaw &&
+                        ispRaw !== "—" &&
+                        ispRaw !== "-" &&
+                        ispRaw !== "N/A";
+                    if (geoEhLocal(g)) {
+                        ispCell =
+                            '<span class="text-secondary" style="font-size:.78rem;">Sem ISP público (rede interna)</span>';
+                    } else if (g && ispMeaningful) {
+                        const orgT = escHist(g.org || "");
+                        const isp0 = escHist(truncHist(g.isp, 30));
+                        const as0 = g.as_name ? `<br><span class="text-muted font-monospace" style="font-size:.7rem;">${escHist(truncHist(g.as_name, 25))}</span>` : "";
+                        ispCell = `<span title="${orgT}">${isp0}</span>${as0}`;
+                    } else {
+                        ispCell = '<span class="text-muted">—</span>';
+                    }
+                    let connCell;
+                    if (geoEhLocal(g)) {
+                        connCell = '<span class="badge bg-secondary" style="font-size:.7rem;">Reservado</span>';
+                    } else if (g) {
+                        if (g.proxy) {
+                            connCell = '<span class="badge bg-danger" style="font-size:.7rem;">🔴 Proxy/VPN</span>';
+                        } else if (g.hosting) {
+                            connCell = '<span class="badge bg-warning text-dark" style="font-size:.7rem;">🟡 Datacenter</span>';
+                        } else if (g.mobile) {
+                            connCell = '<span class="badge bg-info text-dark" style="font-size:.7rem;">📱 Móvel</span>';
+                        } else {
+                            connCell = '<span class="badge bg-success" style="font-size:.7rem;">🟢 Direto</span>';
+                        }
+                    } else {
+                        connCell = '<span class="text-muted">—</span>';
+                    }
+                    let riscoCell;
+                    if (g && g.risco_badge_color) {
+                        const rc = riskBadgeClass(g.risco_badge_color);
+                        const rn = escHist(g.risco_nivel || "—");
+                        riscoCell = `<span class="badge bg-${rc}" style="font-size:.7rem;">${rn}</span>`;
+                    } else {
+                        riscoCell = '<span class="text-muted">—</span>';
+                    }
                     return `
                         <tr>
-                            <td>${formatTs(it.timestamp_utc || it.timestamp)}</td>
-                            <td>${it.ip_entrada || "—"}</td>
-                            <td>${flagHtml}${geo.pais}</td>
-                            <td>${geo.regiao}</td>
+                            <td class="font-monospace" style="font-size:.8rem;white-space:nowrap;">${ts}</td>
+                            <td class="font-monospace fw-bold">${ip}</td>
+                            <td><span class="badge bg-secondary" style="font-size:.7rem;">${tipo}</span></td>
+                            <td>${paisCell}</td>
+                            <td style="font-size:.85rem;">${regCid}</td>
+                            <td style="font-size:.8rem;">${ispCell}</td>
+                            <td>${connCell}</td>
+                            <td>${riscoCell}</td>
                         </tr>
                     `;
                 }).join("");
@@ -1193,36 +1300,17 @@
 
         const applyPayload = (j) => {
             const analisado = j.consultado != null ? j.consultado : j.cliente_ip;
-            elIp && (elIp.textContent = analisado || '—');
+            elIp && (elIp.textContent = analisado || "—");
             if (refIpEl && j.cliente_ip) refIpEl.textContent = j.cliente_ip;
-            if (refBox) refBox.classList.toggle('d-none', j.modo !== 'manual');
-            if (j.ok) {
-                okBox && okBox.classList.remove('d-none');
-                failBox && failBox.classList.add('d-none');
-                if (elFlag) elFlag.textContent = codigoPaisParaBandeira(j.codigo_pais);
-                if (elFlagImg) {
-                    const url = flagImageUrl(j.codigo_pais);
-                    if (url) {
-                        elFlagImg.src = url;
-                        elFlagImg.classList.remove("d-none");
-                    } else {
-                        elFlagImg.src = "";
-                        elFlagImg.classList.add("d-none");
-                    }
-                }
-                elPais && (elPais.textContent = j.pais || '—');
-                elRegiao && (elRegiao.textContent = j.regiao || '—');
-            } else {
-                okBox && okBox.classList.add('d-none');
-                failBox && failBox.classList.remove('d-none');
-                if (elFlag) elFlag.textContent = "";
-                if (elFlagImg) {
-                    elFlagImg.src = "";
-                    elFlagImg.classList.add("d-none");
-                }
-                elPais && (elPais.textContent = "");
-                elRegiao && (elRegiao.textContent = "");
-                elMsg && (elMsg.textContent = j.mensagem || 'Indisponível.');
+            if (refBox) refBox.classList.toggle("d-none", j.modo !== "manual");
+            if (typeof renderGeoRelatorio === "function" && reportRoot) {
+                renderGeoRelatorio(reportRoot, j);
+                okBox && okBox.classList.remove("d-none");
+                failBox && failBox.classList.add("d-none");
+            } else if (failBox && elMsg) {
+                okBox && okBox.classList.add("d-none");
+                failBox.classList.remove("d-none");
+                elMsg.textContent = j.mensagem || j.erro || "Indisponível.";
             }
         };
         const fetchGeo = async (ipForced) => {
@@ -1233,9 +1321,10 @@
                 applyPayload(j);
                 await refreshGeoHistory();
             } catch (e) {
-                okBox && okBox.classList.add('d-none');
-                failBox && failBox.classList.remove('d-none');
-                elMsg && (elMsg.textContent = 'Erro ao consultar: ' + e);
+                if (reportRoot) reportRoot.innerHTML = "";
+                okBox && okBox.classList.add("d-none");
+                failBox && failBox.classList.remove("d-none");
+                elMsg && (elMsg.textContent = "Erro ao consultar: " + e);
             } finally {
                 setLoading(false);
             }

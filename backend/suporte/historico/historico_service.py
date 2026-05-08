@@ -88,6 +88,9 @@ def registrar_consulta(entrada, res):
         "cidr": res.get("cidr", ""),
         "tema": res.get("nivel_tema", ""),
     }
+    gc = res.get("geo_consulta")
+    if isinstance(gc, dict):
+        registro["geo_consulta"] = gc
     history_store.appendleft(registro)
     log_event(
         "info",

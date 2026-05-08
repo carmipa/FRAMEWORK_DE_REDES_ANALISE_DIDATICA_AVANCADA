@@ -1,3 +1,4 @@
 flask
 colorama>=0.4.6
 pytest
+geoip2fast>=1.2.2

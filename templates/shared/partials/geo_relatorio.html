@@ -1,0 +1,190 @@
+{# Relatório GeoIP (Bootstrap) — espera variável `geo` no contexto #}
+{% if geo %}
+  {% if geo.erro %}
+  <div class="alert alert-danger mt-3">
+    <strong>⚠️ Erro:</strong> {{ geo.erro }}
+  </div>
+
+  {% elif geo.reservado or geo.motivo == 'private_or_local' %}
+  <div class="card geo-card-reserved border-secondary mt-3">
+    <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+      <span><strong>🏠 IP reservado / rede local</strong></span>
+      <span class="badge bg-dark">{{ geo.tipo }}</span>
+    </div>
+    <div class="card-body">
+      <div class="row mb-3">
+        <div class="col-12">
+          <h5 class="font-monospace geo-ip-readout mb-2">{{ geo.ip }}</h5>
+          <span class="badge bg-secondary me-1">{{ geo.reservado_motivo }}</span>
+          <span class="badge bg-dark">Sem país no mapa público</span>
+        </div>
+      </div>
+      <hr class="border-secondary opacity-75">
+      <p class="mb-1 geo-report-muted" style="font-size:.85rem;">
+        Endereços reservados não são roteados na Internet pública.
+        Geolocalização externa não é aplicável para este tipo de IP.
+      </p>
+      <p class="mb-0 geo-report-muted" style="font-size:.8rem;">
+        <strong class="text-light">Exemplos de uso:</strong> redes internas (RFC 1918),
+        loopback (127.x), link-local (169.254.x), CGNAT (100.64.x).
+      </p>
+    </div>
+  </div>
+
+  {% elif geo.ok %}
+  {% set cc_iso = (geo.pais_codigo or geo.codigo_pais or '')|replace(' ', '')|upper %}
+  <div class="card border-primary mt-3">
+    <div class="card-header d-flex justify-content-between align-items-center bg-primary bg-opacity-25 flex-wrap gap-2">
+      <div class="d-flex align-items-center flex-wrap gap-2">
+        {% if cc_iso|length == 2 %}
+        <img src="https://flagcdn.com/w40/{{ cc_iso|lower }}.png" width="32" height="24" class="geo-flag-img rounded" alt="" loading="lazy">
+        {% else %}
+        <span class="geo-flag-emoji" style="font-size:1.4rem;">{{ geo.pais_bandeira or '🌐' }}</span>
+        {% endif %}
+        <strong class="font-monospace geo-ip-readout">{{ geo.ip }}</strong>
+        <span class="badge bg-secondary">{{ geo.tipo }}</span>
+      </div>
+      <span class="badge bg-{{ geo.risco_badge_color }} fs-6 px-3">
+        {{ geo.risco_badge }}
+      </span>
+    </div>
+
+    <div class="card-body">
+      <h6 class="text-primary border-bottom pb-1 mb-2">📍 Localização</h6>
+      <div class="row row-cols-2 row-cols-md-3 g-2 mb-3">
+        <div class="col">
+          <div class="p-2 rounded bg-body-secondary h-100">
+            <div class="text-muted" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.5px;">País</div>
+            <div class="fw-bold d-flex align-items-center flex-wrap gap-2">
+              {% if cc_iso|length == 2 %}
+              <img src="https://flagcdn.com/w40/{{ cc_iso|lower }}.png" width="28" height="21" class="geo-flag-img rounded" alt="" loading="lazy">
+              {% endif %}
+              <span>{% if cc_iso|length == 2 %}{{ geo.pais }}{% else %}{{ geo.pais_bandeira or '🌐' }} {{ geo.pais }}{% endif %}</span>
+            </div>
+            {% if geo.pais_codigo or geo.codigo_pais %}
+            <div><span class="badge border text-secondary" style="font-size:.7rem;">{{ geo.pais_codigo or geo.codigo_pais }}</span></div>
+            {% endif %}
+          </div>
+        </div>
+        {% if geo.regiao %}
+        <div class="col">
+          <div class="p-2 rounded bg-body-secondary h-100">
+            <div class="text-muted" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.5px;">Estado / Região</div>
+            <div class="fw-bold">{{ geo.regiao }}</div>
+          </div>
+        </div>
+        {% endif %}
+        {% if geo.cidade %}
+        <div class="col">
+          <div class="p-2 rounded bg-body-secondary h-100">
+            <div class="text-muted" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.5px;">Cidade</div>
+            <div class="fw-bold">{{ geo.cidade }}</div>
+          </div>
+        </div>
+        {% endif %}
+        {% if geo.timezone %}
+        <div class="col">
+          <div class="p-2 rounded bg-body-secondary h-100">
+            <div class="text-muted" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.5px;">Fuso Horário</div>
+            <div class="fw-bold">🕐 {{ geo.timezone }}</div>
+          </div>
+        </div>
+        {% endif %}
+        {% if geo.latitude is not none and geo.longitude is not none %}
+        <div class="col">
+          <div class="p-2 rounded bg-body-secondary h-100">
+            <div class="text-muted" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.5px;">Coordenadas</div>
+            <div class="fw-bold" style="font-size:.85rem;">{{ geo.latitude }}, {{ geo.longitude }}</div>
+            {% if geo.maps_url %}
+            <a href="{{ geo.maps_url }}" target="_blank" rel="noopener"
+               class="btn btn-outline-info btn-sm mt-1 py-0 px-2" style="font-size:.7rem;">
+              🗺️ Ver no Maps
+            </a>
+            {% endif %}
+          </div>
+        </div>
+        {% endif %}
+      </div>
+
+      {% if geo.isp or geo.org or geo.as_name or geo.cidr %}
+      <h6 class="text-primary border-bottom pb-1 mb-2">🌐 Rede / ASN</h6>
+      <div class="row row-cols-1 row-cols-md-2 g-2 mb-3">
+        {% if geo.isp %}
+        <div class="col">
+          <div class="p-2 rounded bg-body-secondary h-100">
+            <div class="text-muted" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.5px;">ISP (Provedor)</div>
+            <div class="fw-bold">{{ geo.isp }}</div>
+          </div>
+        </div>
+        {% endif %}
+        {% if geo.org and geo.org != geo.isp %}
+        <div class="col">
+          <div class="p-2 rounded bg-body-secondary h-100">
+            <div class="text-muted" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.5px;">Organização</div>
+            <div class="fw-bold">{{ geo.org }}</div>
+          </div>
+        </div>
+        {% endif %}
+        {% if geo.as_name %}
+        <div class="col">
+          <div class="p-2 rounded bg-body-secondary h-100">
+            <div class="text-muted" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.5px;">Sistema Autônomo (AS)</div>
+            <div class="fw-bold font-monospace" style="font-size:.85rem;">{{ geo.as_name }}</div>
+            {% if geo.as_cidr %}
+            <div class="text-muted font-monospace" style="font-size:.75rem;">{{ geo.as_cidr }}</div>
+            {% endif %}
+          </div>
+        </div>
+        {% endif %}
+        {% if geo.cidr %}
+        <div class="col">
+          <div class="p-2 rounded bg-body-secondary h-100">
+            <div class="text-muted" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.5px;">Bloco IP (CIDR)</div>
+            <div class="fw-bold font-monospace" style="font-size:.85rem;">{{ geo.cidr }}</div>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      <h6 class="text-primary border-bottom pb-1 mb-2">🔍 Tipo de Conexão</h6>
+      <div class="d-flex flex-wrap gap-2 mb-3">
+        <span class="badge fs-6 px-3 py-2 {% if geo.proxy %}bg-danger{% else %}bg-success{% endif %}">
+          {{ geo.proxy_flag }}
+        </span>
+        {% if geo.hosting_flag %}
+        <span class="badge bg-warning text-dark fs-6 px-3 py-2">{{ geo.hosting_flag }}</span>
+        {% endif %}
+        {% if geo.mobile_flag %}
+        <span class="badge bg-info text-dark fs-6 px-3 py-2">{{ geo.mobile_flag }}</span>
+        {% endif %}
+        {% if not geo.hosting_flag and not geo.mobile_flag and not geo.proxy %}
+        <span class="badge bg-secondary fs-6 px-3 py-2">🖥️ Conexão residencial / corporativa</span>
+        {% endif %}
+      </div>
+
+      <h6 class="text-primary border-bottom pb-1 mb-2">🛡️ Avaliação de Risco (GRC)</h6>
+      <div class="alert alert-{{ geo.risco_badge_color }} py-2 mb-2">
+        <div class="d-flex align-items-center gap-2 mb-1">
+          <strong>Nível:</strong>
+          <span class="badge bg-{{ geo.risco_badge_color }} fs-6">{{ geo.risco_badge }}</span>
+        </div>
+        <p class="mb-0" style="font-size:.85rem;">{{ geo.risco_recomendacao }}</p>
+      </div>
+
+      {% if geo.fonte %}
+      <div class="text-end mt-2">
+        <span class="text-muted" style="font-size:.75rem;">
+          📡 Dados: <strong>{{ geo.fonte }}</strong>
+        </span>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  {% else %}
+  <div class="alert alert-secondary mt-3 mb-0" role="alert">
+    <strong>{{ geo.motivo or 'Aviso' }}:</strong> {{ geo.mensagem or 'Indisponível.' }}
+  </div>
+  {% endif %}
+{% endif %}
