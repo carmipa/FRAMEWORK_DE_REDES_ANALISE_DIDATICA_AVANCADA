@@ -7,8 +7,19 @@ HISTORY_FILE = BASE_DIR / "consulta_history.json"
 # Flask
 APP_HOST = os.getenv("APP_HOST", "127.0.0.1")
 APP_PORT_RAW = os.getenv("APP_PORT", "5000")
-APP_DEBUG = os.getenv("APP_DEBUG", "true").lower() in {"1", "true", "yes", "on"}
-APP_OPEN_BROWSER = os.getenv("APP_OPEN_BROWSER", "true").lower() in {"1", "true", "yes", "on"}
+APP_DEBUG = (
+    os.getenv("APP_DEBUG", "true").lower() in {"1", "true", "yes", "on"}
+)
+APP_OPEN_BROWSER = (
+    os.getenv("APP_OPEN_BROWSER", "true").lower() in {"1", "true", "yes", "on"}
+)
+# Nginx/NPM: Proto e Host encaminhados para URLs e redirects corretos (HTTPS).
+APP_BEHIND_PROXY = os.getenv("APP_BEHIND_PROXY", "false").lower() in {
+    "1",
+    "true",
+    "yes",
+    "on",
+}
 
 # UI
 REGUA_COUNT_OPCOES = {5, 10, 15, 25, 50, 100}

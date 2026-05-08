@@ -7,6 +7,7 @@ import webbrowser
 
 from flask import Flask, g, render_template, request
 from werkzeug.exceptions import HTTPException
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from backend.analise.auto_cidr.auto_cidr_routes import auto_cidr_bp
 from backend.analise.cidr.cidr_routes import cidr_bp
@@ -18,7 +19,13 @@ from backend.analise.mascara.mascara_routes import mascara_bp
 from backend.analise.portas.portas_routes import portas_bp
 from backend.analise.protocolos.protocolos_routes import protocolos_bp
 from backend.analise.wildcard.wildcard_routes import wildcard_bp
-from backend.config import APP_DEBUG, APP_HOST, APP_OPEN_BROWSER, APP_PORT_RAW
+from backend.config import (
+    APP_BEHIND_PROXY,
+    APP_DEBUG,
+    APP_HOST,
+    APP_OPEN_BROWSER,
+    APP_PORT_RAW,
+)
 from backend.core.exceptions import HistoricoPersistenciaError
 from backend.core.logging import log_event, logger
 from backend.resolucao.export.export_routes import export_bp
@@ -30,6 +37,15 @@ from backend.web.app_routes import register_views
 
 def create_app() -> Flask:
     app = Flask(__name__, template_folder="templates", static_folder="static")
+    if APP_BEHIND_PROXY:
+        app.wsgi_app = ProxyFix(
+            app.wsgi_app,
+            x_for=1,
+            x_proto=1,
+            x_host=1,
+            x_port=1,
+            x_prefix=1,
+        )
 
     blueprints = (
         cidr_bp,

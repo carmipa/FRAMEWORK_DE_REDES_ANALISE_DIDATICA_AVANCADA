@@ -1,0 +1,26 @@
+# Desenvolvimento local: código do host é montado em /app — alterações em app.py e no restante
+# do projeto aparecem sem rebuild (use junto com APP_DEBUG para reload do Flask).
+#
+# Uso: docker compose -f docker-compose.dev.yml up --build
+#
+# Se você usa o compose de produção (rede externa nginx), continue fazendo rebuild após mudanças:
+#   docker compose build --no-cache && docker compose up -d
+
+services:
+  framework-redes:
+    build: .
+    container_name: framework-redes-analise-dev
+    # 5001 no host evita conflito com `python app.py` na porta 5000
+    ports:
+      - "127.0.0.1:5001:5000"
+    volumes:
+      # Pasta atual espelhada no container — edições locais = edições vistas pelo Python
+      - .:/app
+    environment:
+      APP_HOST: "0.0.0.0"
+      APP_PORT: "5000"
+      APP_DEBUG: "true"
+      APP_OPEN_BROWSER: "false"
+      APP_LOG_LEVEL: "INFO"
+    tty: true
+    stdin_open: true
