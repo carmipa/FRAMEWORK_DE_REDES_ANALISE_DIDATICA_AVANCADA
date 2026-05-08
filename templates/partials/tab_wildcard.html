@@ -13,16 +13,22 @@
     <div class="col-lg-5">
         <label class="form-label small text-secondary">🌐 Endereço IPv4 (obrigatório)</label>
         <input type="text" name="ip" class="form-control bg-dark text-light border-secondary {{ 'is-invalid' if 'ip' in invalid_fields else '' }}"
-               placeholder="Ex.: 172.16.8.8" value="{{ ip_pre }}">
+               placeholder="Ex.: 172.16.8.8" value="{{ ip_pre }}"
+               data-bs-toggle="tooltip" data-bs-placement="top"
+               title="IP base usado para calcular rede, broadcast e hosts com wildcard.">
     </div>
     <div class="col-lg-3">
         <label class="form-label small text-secondary">🧩 Wildcard mask</label>
         <input type="text" name="wildcard_mask" class="form-control bg-dark text-light border-secondary {{ 'is-invalid' if 'wildcard_mask' in invalid_fields else '' }}"
-               placeholder="Ex.: 0.0.15.255" value="{{ wildcard_pre }}">
+               placeholder="Ex.: 0.0.15.255" value="{{ wildcard_pre }}"
+               data-bs-toggle="tooltip" data-bs-placement="top"
+               title="Máscara inversa (255 - máscara). Ex.: /24 = 0.0.0.255.">
     </div>
     <div class="col-lg-2">
         <label class="form-label small text-secondary">📐 Régua</label>
-        <select name="regua_count" class="form-select bg-dark text-light border-secondary">
+        <select name="regua_count" class="form-select bg-dark text-light border-secondary"
+                data-bs-toggle="tooltip" data-bs-placement="top"
+                title="Quantidade de linhas exibidas na régua de sub-redes.">
             <option value="5" {{ 'selected' if regua_count_pre == '5' else '' }}>5</option>
             <option value="10" {{ 'selected' if regua_count_pre == '10' else '' }}>10</option>
             <option value="15" {{ 'selected' if regua_count_pre == '15' else '' }}>15</option>

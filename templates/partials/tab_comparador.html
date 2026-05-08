@@ -21,7 +21,9 @@
                     data-bs-content="Primeiro /barra da comparação. Ex.: 20 para /20.">ℹ️</button>
         </label>
         <input type="number" name="comparador_cidr_a" min="0" max="32" class="form-control bg-dark text-light border-secondary"
-               value="{{ comparador_cidr_a_pre }}" placeholder="Ex.: 20">
+               value="{{ comparador_cidr_a_pre }}" placeholder="Ex.: 20"
+               data-bs-toggle="tooltip" data-bs-placement="top"
+               title="Primeiro prefixo da comparação (/0–/32).">
         <div class="form-text text-secondary small">Valor entre 0 e 32.</div>
     </div>
     <div class="col-lg-3">
@@ -32,7 +34,9 @@
                     data-bs-content="Segundo /barra da comparação. Ex.: 24 para /24.">ℹ️</button>
         </label>
         <input type="number" name="comparador_cidr_b" min="0" max="32" class="form-control bg-dark text-light border-secondary"
-               value="{{ comparador_cidr_b_pre }}" placeholder="Ex.: 24">
+               value="{{ comparador_cidr_b_pre }}" placeholder="Ex.: 24"
+               data-bs-toggle="tooltip" data-bs-placement="top"
+               title="Segundo prefixo da comparação (/0–/32).">
         <div class="form-text text-secondary small">Valor entre 0 e 32.</div>
     </div>
     <div class="col-lg-2 tab-actions d-grid gap-2">

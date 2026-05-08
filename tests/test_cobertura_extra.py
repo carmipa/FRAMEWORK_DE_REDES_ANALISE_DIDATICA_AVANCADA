@@ -12,6 +12,7 @@ from backend.analise.home_web_helpers import normalizar_hostname_entrada
 from backend.analise.portas.portas_service import (
     montar_portas_catalogo_exibicao,
 )
+from backend.analise.protocolos.protocolos_catalog import PROTOCOLOS_CATALOGO
 
 
 class TestRotasEExportacoes(unittest.TestCase):
@@ -180,6 +181,22 @@ class TestHelpersPuros(unittest.TestCase):
         cat = montar_portas_catalogo_exibicao()
         self.assertIsInstance(cat, list)
         self.assertGreater(len(cat), 0)
+
+    def test_catalogo_protocolos_roteamento_com_campos_didaticos(self):
+        roteamento = [p for p in PROTOCOLOS_CATALOGO if p.get("categoria") == "roteamento"]
+        self.assertGreaterEqual(len(roteamento), 6)
+        for proto in roteamento:
+            self.assertTrue(proto.get("convergencia"))
+            self.assertTrue(proto.get("ecmp"))
+            self.assertTrue(proto.get("problemas_comuns"))
+            self.assertTrue(proto.get("mitigacoes"))
+            self.assertTrue(proto.get("caso_uso_real"))
+            self.assertTrue(proto.get("diagnostico_comandos"))
+
+    def test_catalogo_protocolos_inclui_bgp_ospf_rip_eigrp(self):
+        nomes = {p.get("nome", "") for p in PROTOCOLOS_CATALOGO}
+        esperados = {"BGP-4 / eBGP", "OSPFv2", "RIPv2", "EIGRP"}
+        self.assertTrue(esperados.issubset(nomes))
 
 
 if __name__ == "__main__":

@@ -10,7 +10,9 @@
     <div class="col-lg-3">
         <label class="form-label small text-secondary">🧷 CIDR (opcional)</label>
         <input type="number" name="cidr" class="form-control bg-dark text-light border-secondary {{ 'is-invalid' if 'cidr' in invalid_fields else '' }}"
-               min="0" max="32" value="{{ cidr_pre }}">
+               min="0" max="32" value="{{ cidr_pre }}"
+               data-bs-toggle="tooltip" data-bs-placement="top"
+               title="Prefixo /0–/32 opcional para forçar análise após resolver o domínio.">
     </div>
     <div class="col-lg-2 tab-actions d-grid gap-2">
         <button type="submit" name="modo" value="dominio" class="btn btn-light fw-bold text-dark btn-sm w-100" data-bs-toggle="tooltip" data-bs-placement="top" title="Resolve domínio para IPv4 e executa a análise.">🌐 Executar</button>

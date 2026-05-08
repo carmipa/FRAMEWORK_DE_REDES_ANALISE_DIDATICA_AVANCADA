@@ -1057,7 +1057,7 @@
         <div class="modal-content bg-dark text-light border border-secondary">
             <div class="modal-header border-secondary">
                 <h5 class="modal-title" id="commDetailsModalLabel">Detalhes</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar" data-bs-toggle="tooltip" data-bs-placement="top" title="Fecha a janela de detalhes."></button>
             </div>
             <div class="modal-body" id="commDetailsModalBody"></div>
         </div>
@@ -1491,6 +1491,7 @@
 
         const search = document.querySelector(`[data-grid-search="${gridId}"]`);
         const category = document.querySelector(`[data-grid-category="${gridId}"]`);
+        const context = document.querySelector(`[data-grid-context="${gridId}"]`);
         const transport = document.querySelector(`[data-grid-transport="${gridId}"]`);
         const risk = document.querySelector(`[data-grid-risk="${gridId}"]`);
         const alcanceEl = document.querySelector(`[data-grid-alcance="${gridId}"]`);
@@ -1540,19 +1541,22 @@
                 const text = normalize(row.dataset.search);
                 const term = normalize(search && search.value);
                 const cat = normalize(category && category.value);
+                const ctx = normalize(context && context.value);
                 const trans = normalize(transport && transport.value);
                 const r = normalize(risk && risk.value);
                 const categoryValue = normalize(row.dataset.categoria || row.dataset.camada);
+                const contextValue = normalize(row.dataset.categoria || "outros");
                 const transportValue = normalize(row.dataset.transporte || "");
                 const riskValue = normalize(row.dataset.risco || row.dataset.nivel || "");
                 const alcFilter = alcanceEl ? normalize(alcanceEl.value) : "all";
                 const rowAlc = normalize(row.dataset.alcance || "n/a");
                 const termOk = !term || text.includes(term);
                 const catOk = cat === "all" || categoryValue === cat;
+                const ctxOk = ctx === "all" || contextValue === ctx;
                 const transOk = trans === "all" || transportValue.includes(trans);
                 const riskOk = r === "all" || riskValue.includes(r);
                 const alcOk = alcFilter === "all" || rowAlc === alcFilter;
-                return termOk && catOk && transOk && riskOk && alcOk;
+                return termOk && catOk && ctxOk && transOk && riskOk && alcOk;
             });
         };
 
@@ -1607,11 +1611,11 @@
             apply();
         }));
 
-        [search, category, transport, risk, alcanceEl].forEach((el) => el && el.addEventListener("input", () => {
+        [search, category, context, transport, risk, alcanceEl].forEach((el) => el && el.addEventListener("input", () => {
             page = 1;
             apply();
         }));
-        [category, transport, risk, alcanceEl].forEach((el) => el && el.addEventListener("change", () => {
+        [category, context, transport, risk, alcanceEl].forEach((el) => el && el.addEventListener("change", () => {
             page = 1;
             apply();
         }));
@@ -1638,6 +1642,7 @@
         clearBtn.addEventListener("click", () => {
             if (search) search.value = "";
             if (category) category.value = "all";
+            if (context) context.value = "all";
             if (transport) transport.value = "all";
             if (risk) risk.value = "all";
             if (alcanceEl) alcanceEl.value = "all";
@@ -1680,6 +1685,12 @@
                         row.dataset.metrica ? `<p><strong>Métrica:</strong> ${row.dataset.metrica}</p>` : "",
                         row.dataset.ad ? `<p><strong>Distância administrativa:</strong> ${row.dataset.ad}</p>` : "",
                         row.dataset.atualizacao ? `<p><strong>Atualização:</strong> ${row.dataset.atualizacao}</p>` : "",
+                        row.dataset.convergencia ? `<p><strong>Convergência:</strong> ${row.dataset.convergencia}</p>` : "",
+                        row.dataset.ecmp ? `<p><strong>Load balancing (ECMP):</strong> ${row.dataset.ecmp}</p>` : "",
+                        row.dataset.problemas ? `<p><strong>Problemas comuns:</strong> ${row.dataset.problemas}</p>` : "",
+                        row.dataset.mitigacoes ? `<p><strong>Mitigações:</strong> ${row.dataset.mitigacoes}</p>` : "",
+                        row.dataset.casouso ? `<p><strong>Caso de uso real:</strong> ${row.dataset.casouso}</p>` : "",
+                        row.dataset.diagnostico ? `<p><strong>Comandos de troubleshooting:</strong> <code>${row.dataset.diagnostico}</code></p>` : "",
                         row.dataset.sintaxe ? `<p><strong>Sintaxe base (lab):</strong> <code>${row.dataset.sintaxe}</code></p>` : "",
                         row.dataset.dica ? `<p><strong>Dica didática:</strong> ${row.dataset.dica}</p>` : "",
                     ].join("");
@@ -1713,5 +1724,23 @@
 
     initGrid("portas");
     initGrid("protocolos");
+
+    document.addEventListener("click", async (ev) => {
+        const copyBtn = ev.target.closest("[data-copy-snippet]");
+        if (!copyBtn) return;
+        const text = copyBtn.getAttribute("data-copy-text") || "";
+        const label = copyBtn.getAttribute("data-copy-label") || "item";
+        if (!text.trim()) return;
+        try {
+            await navigator.clipboard.writeText(text);
+            copyBtn.textContent = "✅ Copiado";
+            setTimeout(() => {
+                copyBtn.textContent = "📋 Copiar comandos";
+            }, 1200);
+            copyBtn.setAttribute("title", `Comandos de ${label} copiados para a área de transferência.`);
+        } catch (_err) {
+            copyBtn.setAttribute("title", "Não foi possível copiar automaticamente. Tente novamente.");
+        }
+    });
 </script>
 {% endblock %}

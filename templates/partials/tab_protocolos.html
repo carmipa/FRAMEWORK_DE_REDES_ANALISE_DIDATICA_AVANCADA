@@ -6,6 +6,57 @@
         <strong class="text-warning">Resumo rápido do módulo de roteamento (PPT):</strong>
         RIP usa <em>Distance Vector</em> (métrica por hops), OSPF/IS-IS usam <em>Link-State</em> (SPF), e BGP usa <em>Path Vector</em> (políticas entre AS). Em laboratório Cisco, destaque para sintaxe com <code>network</code> e uso de <strong>wildcard mask</strong> no OSPF.
     </div>
+    <div class="table-responsive mb-3 border border-secondary border-opacity-25 rounded">
+        <table class="table table-dark table-bordered table-sm mb-0">
+            <thead>
+                <tr>
+                    <th>Protocolo</th>
+                    <th>Métrica</th>
+                    <th>AD</th>
+                    <th>Convergência</th>
+                    <th>Escalabilidade</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>RIPv2</td><td>Hop count</td><td>120</td><td>Lenta</td><td>Baixa</td></tr>
+                <tr><td>OSPFv2/v3</td><td>Cost</td><td>110</td><td>Rápida</td><td>Alta</td></tr>
+                <tr><td>EIGRP</td><td>Composta</td><td>90/170</td><td>Rápida</td><td>Alta</td></tr>
+                <tr><td>BGP (eBGP/iBGP)</td><td>AS-PATH e políticas</td><td>20/200</td><td>Moderada</td><td>Muito alta</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="card-tech p-3 mb-3 border border-warning border-opacity-25">
+        <h6 class="text-warning mb-2">🛠️ Troubleshooting rápido (roteamento)</h6>
+        <p class="small text-secondary mb-3">
+            Comandos de validação imediata para laboratório Cisco. Use após aplicar configuração e antes de exportar evidências.
+        </p>
+        <div class="row g-2">
+            {% for item in protocolos_catalogo if item.categoria | default('') == 'roteamento' %}
+            <div class="col-12 col-xl-6">
+                <div class="border border-secondary border-opacity-25 rounded p-2 h-100">
+                    <div class="small text-info fw-bold mb-1">{{ item.nome }}</div>
+                    <div class="small text-light mb-1"><strong>Falha típica:</strong> {{ item.problemas_comuns | default('—') }}</div>
+                    <div class="small text-light mb-1"><strong>Mitigação:</strong> {{ item.mitigacoes | default('—') }}</div>
+                    <pre class="small bg-dark border border-secondary rounded p-2 mb-0 text-light">{{ item.diagnostico_comandos | default('show ip route') }}</pre>
+                    <div class="mt-2 d-flex justify-content-end">
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-info text-dark fw-bold"
+                            data-copy-snippet
+                            data-copy-label="{{ item.nome }}"
+                            data-copy-text="{{ item.diagnostico_comandos | default('show ip route') }}"
+                            data-bs-toggle="tooltip"
+                            data-bs-placement="top"
+                            title="Copia os comandos de troubleshooting deste protocolo para área de transferência."
+                        >
+                            📋 Copiar comandos
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
     <div class="comm-summary mb-3" data-summary-target="protocolos"></div>
     <div class="d-flex flex-wrap gap-2 mb-2">
         <span class="shield-badge"><span class="icon">🔎</span>Busca por protocolo/camada</span>
@@ -50,6 +101,16 @@
             <input type="text" class="form-control bg-dark text-light border-secondary" data-grid-search="protocolos" placeholder="Protocolo, IGP, EGP, camada..." data-bs-toggle="tooltip" data-bs-placement="top" title="Busca geral: digite protocolo, camada, IGP/EGP, função, transporte ou nível.">
         </div>
         <div class="col-lg-2">
+            <label class="form-label small text-secondary d-flex align-items-center gap-1">🧭 Categoria
+                <button type="button" class="help-hint-btn" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-placement="top" title="Filtro por categoria didática" data-bs-content="Separa protocolos de roteamento dos demais temas do catálogo para foco em aula/laboratório.">ℹ️</button>
+            </label>
+            <select class="form-select bg-dark text-light border-secondary" data-grid-context="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Filtra por categoria didática (ex.: roteamento).">
+                <option value="all">Todas</option>
+                <option value="roteamento">Roteamento</option>
+                <option value="outros">Outros</option>
+            </select>
+        </div>
+        <div class="col-lg-2">
             <label class="form-label small text-secondary d-flex align-items-center gap-1">🧱 Camada
                 <button type="button" class="help-hint-btn" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-placement="top" title="Filtro por camada" data-bs-content="Mostra protocolos da camada selecionada (Aplicação, Transporte, Rede ou Enlace).">ℹ️</button>
             </label>
@@ -63,7 +124,7 @@
                 <option value="enlace">Enlace</option>
             </select>
         </div>
-        <div class="col-lg-2">
+        <div class="col-lg-1">
             <label class="form-label small text-secondary d-flex align-items-center gap-1">🔌 Transporte
                 <button type="button" class="help-hint-btn" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-placement="top" title="Filtro por transporte" data-bs-content="Filtra protocolos que usam TCP, UDP, ICMP ou N/A.">ℹ️</button>
             </label>
@@ -75,7 +136,7 @@
                 <option value="n/a">N/A</option>
             </select>
         </div>
-        <div class="col-lg-2">
+        <div class="col-lg-1">
             <label class="form-label small text-secondary d-flex align-items-center gap-1">🛡️ Nível
                 <button type="button" class="help-hint-btn" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-placement="top" title="Nível de atenção" data-bs-content="Filtra pelo nível didático de segurança: Crítico, Atenção, Seguro ou Didático.">ℹ️</button>
             </label>
@@ -114,7 +175,8 @@
                 {% set alc_item = item.alcance | default('N/A') %}
                 <tr
                     data-grid-row="protocolos"
-                    data-search="{{ item.nome }} {{ item.camada }} {{ alc_item }} {{ item.transporte }} {{ item.porta_comum }} {{ item.seguro }} {{ item.badge }} {{ item.funcao }} {{ item.algoritmo | default('') }} {{ item.metrica | default('') }} {{ item.distancia_administrativa | default('') }} {{ item.sintaxe_base | default('') }} {{ item.dica_didatica | default('') }}"
+                    data-search="{{ item.nome }} {{ item.camada }} {{ alc_item }} {{ item.transporte }} {{ item.porta_comum }} {{ item.seguro }} {{ item.badge }} {{ item.funcao }} {{ item.algoritmo | default('') }} {{ item.metrica | default('') }} {{ item.distancia_administrativa | default('') }} {{ item.sintaxe_base | default('') }} {{ item.dica_didatica | default('') }} {{ item.problemas_comuns | default('') }} {{ item.mitigacoes | default('') }} {{ item.diagnostico_comandos | default('') }}"
+                    data-categoria="{{ item.categoria | default('outros') }}"
                     data-nome="{{ item.nome }}"
                     data-camada="{{ item.camada }}"
                     data-alcance="{{ alc_item | lower }}"
@@ -128,7 +190,13 @@
                     data-ad="{{ item.distancia_administrativa | default('') }}"
                     data-atualizacao="{{ item.atualizacao | default('') }}"
                     data-sintaxe="{{ item.sintaxe_base | default('') }}"
-                    data-dica="{{ item.dica_didatica | default('') }}">
+                    data-dica="{{ item.dica_didatica | default('') }}"
+                    data-convergencia="{{ item.convergencia | default('') }}"
+                    data-ecmp="{{ item.ecmp | default('') }}"
+                    data-problemas="{{ item.problemas_comuns | default('') }}"
+                    data-mitigacoes="{{ item.mitigacoes | default('') }}"
+                    data-casouso="{{ item.caso_uso_real | default('') }}"
+                    data-diagnostico="{{ item.diagnostico_comandos | default('') }}">
                     <td class="fw-bold text-info">{{ item.nome }}</td>
                     <td>{{ item.camada }}</td>
                     <td>{% if alc_item != 'N/A' %}<span class="badge bg-dark border {% if alc_item == 'IGP' %}border-success text-success{% elif alc_item == 'EGP' %}border-primary text-primary{% else %}border-secondary{% endif %}">{{ alc_item }}</span>{% else %}<span class="text-secondary">N/A</span>{% endif %}</td>
@@ -154,7 +222,8 @@
             <div
                 class="col-12 card-tech p-3"
                 data-grid-mobile-row="protocolos"
-                data-search="{{ item.nome }} {{ item.camada }} {{ alc_item }} {{ item.transporte }} {{ item.porta_comum }} {{ item.seguro }} {{ item.badge }} {{ item.funcao }} {{ item.algoritmo | default('') }} {{ item.metrica | default('') }} {{ item.distancia_administrativa | default('') }} {{ item.sintaxe_base | default('') }} {{ item.dica_didatica | default('') }}"
+                data-search="{{ item.nome }} {{ item.camada }} {{ alc_item }} {{ item.transporte }} {{ item.porta_comum }} {{ item.seguro }} {{ item.badge }} {{ item.funcao }} {{ item.algoritmo | default('') }} {{ item.metrica | default('') }} {{ item.distancia_administrativa | default('') }} {{ item.sintaxe_base | default('') }} {{ item.dica_didatica | default('') }} {{ item.problemas_comuns | default('') }} {{ item.mitigacoes | default('') }} {{ item.diagnostico_comandos | default('') }}"
+                data-categoria="{{ item.categoria | default('outros') }}"
                 data-nome="{{ item.nome }}"
                 data-camada="{{ item.camada }}"
                 data-alcance="{{ alc_item | lower }}"
@@ -169,6 +238,12 @@
                 data-atualizacao="{{ item.atualizacao | default('') }}"
                 data-sintaxe="{{ item.sintaxe_base | default('') }}"
                 data-dica="{{ item.dica_didatica | default('') }}"
+                data-convergencia="{{ item.convergencia | default('') }}"
+                data-ecmp="{{ item.ecmp | default('') }}"
+                data-problemas="{{ item.problemas_comuns | default('') }}"
+                data-mitigacoes="{{ item.mitigacoes | default('') }}"
+                data-casouso="{{ item.caso_uso_real | default('') }}"
+                data-diagnostico="{{ item.diagnostico_comandos | default('') }}"
             >
                 <h6 class="mb-3 text-info">📡 {{ item.nome }}</h6>
                 <dl class="small mb-0 protocolo-mobile-dl">
@@ -211,9 +286,9 @@
     <div class="d-flex flex-column align-items-center gap-2 mt-2">
         <div class="small text-secondary text-center" data-grid-counter="protocolos"></div>
         <div class="d-flex gap-2 align-items-center justify-content-center">
-            <button type="button" class="btn btn-sm btn-outline-light" data-grid-prev="protocolos">⬅️</button>
+            <button type="button" class="btn btn-sm btn-outline-light" data-grid-prev="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Volta para a página anterior dos resultados filtrados.">⬅️</button>
             <span class="small text-secondary" data-grid-page-label="protocolos"></span>
-            <button type="button" class="btn btn-sm btn-outline-light" data-grid-next="protocolos">➡️</button>
+            <button type="button" class="btn btn-sm btn-outline-light" data-grid-next="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Avança para a próxima página dos resultados filtrados.">➡️</button>
         </div>
     </div>
 </div>

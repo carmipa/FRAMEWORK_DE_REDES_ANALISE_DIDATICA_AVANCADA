@@ -9,7 +9,9 @@
     </div>
     <div class="col-lg-3">
         <label class="form-label small text-secondary">📐 Régua</label>
-        <select name="regua_count" class="form-select bg-dark text-light border-secondary">
+        <select name="regua_count" class="form-select bg-dark text-light border-secondary"
+                data-bs-toggle="tooltip" data-bs-placement="top"
+                title="Quantidade de linhas exibidas na régua de sub-redes.">
             <option value="5" {{ 'selected' if regua_count_pre == '5' else '' }}>5</option>
             <option value="10" {{ 'selected' if regua_count_pre == '10' else '' }}>10</option>
             <option value="15" {{ 'selected' if regua_count_pre == '15' else '' }}>15</option>
