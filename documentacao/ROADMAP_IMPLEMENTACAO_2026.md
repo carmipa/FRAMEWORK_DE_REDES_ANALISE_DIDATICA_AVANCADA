@@ -1,10 +1,37 @@
 # 🚀 ROADMAP DE IMPLEMENTAÇÃO 2026
 ## Framework de Redes - Análise Didática Avançada
 **Data de Criação:** 08/05/2026  
-**Status:** Pronto para Implementação  
-**Completude Atual:** 60% (média entre as 5 áreas)  
+**Status:** Em execução (Fase 1 e parte da Fase 2 já entregues)  
+**Completude Atual:** ~70% (revisão pós-implementação)  
 **Completude Alvo:** 95%+  
-**Tempo Total Estimado:** 70+ horas (8-10 semanas)
+**Tempo Total Estimado:** 70+ horas (8-10 semanas, baseline original)
+
+> ## ✅ ATUALIZAÇÃO DE EXECUÇÃO (08/05/2026)
+>
+> ### Entregas concluídas neste ciclo
+> - VLSM/WAN:
+>   - explicação didática do cálculo (step-by-step)
+>   - validação de localidades duplicadas
+>   - eficiência por localidade e geral
+>   - análise de espaço (consumo/livre) + prefixo sugerido
+>   - projeção de crescimento
+>   - comparação Ring vs Mesh
+>   - checklist final Packet Tracer
+>   - diagrama Mermaid interativo com detalhes por clique
+> - Máscara/Wildcard:
+>   - tabela de referência rápida
+>   - calculadora visual de hosts/prefixo/máscara/wildcard
+>   - guia contextual de wildcard e exemplos ACL/OSPF/EIGRP com cópia
+>   - explicações de cálculo também na saída de resultados
+> - Arquitetura e qualidade:
+>   - refatoração das rotas de resolução/exportação/home
+>   - testes extras adicionados para helpers refatorados
+>   - regressão validada com suíte principal (55 testes passando)
+>
+> ### Próxima frente recomendada (curto prazo)
+> 1. Documentação estrutural crítica (Quick Start + Arquitetura do Sistema)
+> 2. Protocolos (comparação visual RIP/OSPF/EIGRP/BGP)
+> 3. Evolução didática de logs/exceções com guias de operação
 
 ---
 

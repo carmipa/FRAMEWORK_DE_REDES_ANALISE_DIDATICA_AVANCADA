@@ -79,6 +79,25 @@ def build_lan_blocks(base_network, locations):
         location["host_range_start"] = first_host
         location["host_range_end"] = last_host
         location["_network_obj"] = subnet
+        location["calculation_breakdown"] = {
+            "hosts_requested": hosts,
+            "overhead_hosts": 2,
+            "total_needed": needed,
+            "next_power_of_2": 2 ** host_bits,
+            "host_bits_required": host_bits,
+            "formula_used": f"2^{host_bits} = {2 ** host_bits} > {needed} ✓",
+            "prefix_calculation": f"32 - {host_bits} = /{prefix}",
+            "explanation_steps": [
+                f"1. Hosts solicitados: {hosts}",
+                f"2. Adicionar network + broadcast: {hosts} + 2 = {needed}",
+                f"3. Próxima potência de 2: 2^{host_bits} = {2 ** host_bits}",
+                f"4. Bits de host necessários: {host_bits}",
+                f"5. Prefix resultante: 32 - {host_bits} = /{prefix}",
+                f"6. Rede alocada: {subnet.with_prefixlen}",
+                f"7. Hosts disponíveis: {location['hosts_supported']}",
+                f"8. Eficiência: {location['hosts_required']}/{location['hosts_supported']} = {location['efficiency_pct']}%"
+            ]
+        }
         log_event(
             "info",
             "problem_lan_allocated",

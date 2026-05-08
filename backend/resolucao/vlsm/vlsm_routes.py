@@ -87,18 +87,38 @@ def _build_form_data() -> dict[str, str]:
     return form_data
 
 
-def _collect_locations_from_form() -> list[dict[str, str]]:
+def _collect_locations_from_form() -> tuple[list[dict[str, str]], str, set]:
     location_names = request.form.getlist("loc_name")
     location_hosts = request.form.getlist("loc_hosts")
     locations = []
+    seen_names = set()
     total_rows = max(len(location_names), len(location_hosts))
+    duplicate_error = None
+    invalid_fields = set()
+
     for index in range(total_rows):
         name = location_names[index].strip() if index < len(location_names) else ""
         hosts = location_hosts[index].strip() if index < len(location_hosts) else ""
         if not name and not hosts:
             continue
+
+        # Validação de nomes duplicados
+        if name.lower() in [n.lower() for n in seen_names]:
+            duplicate_error = f"Localidade duplicada: '{name}' aparece mais de uma vez."
+            invalid_fields.add("loc_name")
+            log_event(
+                "warning",
+                "problem_resolution_use",
+                status="duplicate_location",
+                location_name=name,
+                reason="Usuário tentou criar localidade duplicada.",
+            )
+            break
+
+        seen_names.add(name)
         locations.append({"name": name, "hosts": hosts})
-    return locations
+
+    return locations, duplicate_error, invalid_fields
 
 
 def _mark_invalid_fields(form_data: dict[str, str], locations: list[dict[str, str]]) -> set[str]:
@@ -129,7 +149,22 @@ def resolucao_problemas():
     if request.method == "POST":
         action_type = request.form.get("action_type", "calculate").strip().lower()
         form_data = _build_form_data()
-        locations = _collect_locations_from_form()
+        locations, duplicate_error, duplicate_invalid_fields = _collect_locations_from_form()
+
+        # Verifica se houve erro de duplicatas
+        if duplicate_error:
+            erro = duplicate_error
+            invalid_fields.update(duplicate_invalid_fields)
+            return render_template(
+                "resolucao/resolucao_problemas.html",
+                active_main_menu="resolucao",
+                erro=erro,
+                invalid_fields=invalid_fields,
+                form_data=form_data,
+                locations=locations,
+                scenario=None,
+            )
+
         log_event(
             "info",
             "problem_resolution_use",
