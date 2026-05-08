@@ -1066,7 +1066,7 @@
 {% endblock %}
 
 {% block extra_scripts %}
-<script src="{{ url_for('static', filename='js/geo_report.js') }}"></script>
+<script src="{{ url_for('static', filename='js/geo_report.js') }}?v=20260508"></script>
 <script>
     const activeTabFromServer = "{{ active_tab_pre }}";
     const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
