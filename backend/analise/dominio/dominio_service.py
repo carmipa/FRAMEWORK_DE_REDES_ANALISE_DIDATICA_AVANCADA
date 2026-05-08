@@ -4,7 +4,7 @@ from backend.analise.cidr_service import inferir_cidr_por_ip
 from backend.analise.dominio_service import resolver_dns_com_cache
 from backend.analise.helpers_web import normalizar_hostname_entrada
 from backend.core.exceptions import DnsResolucaoError
-from backend.core.logging import log_event, logger
+from backend.core.logging import log_event
 
 
 def processar_modo_dominio(ip_entrada_bruta: str, cidr_raw: str) -> dict:
@@ -47,18 +47,14 @@ def processar_modo_dominio(ip_entrada_bruta: str, cidr_raw: str) -> dict:
                     f"{origem_inferida}."
                 )
         except ValueError:
-            logger.warning(
-                "evento=calc status=invalid_input modo=dominio campo=cidr"
-            )
+            log_event("warning", "calc", status="invalid_input", modo="dominio", campo="cidr")
             erro = (
                 "No modo Domínio, o CIDR (se informado) deve ser um número "
                 "inteiro entre 0 e 32."
             )
             invalid_fields.add("cidr")
         except DnsResolucaoError as exc:
-            logger.warning(
-                "evento=calc status=dns_error modo=dominio erro=%s", exc
-            )
+            log_event("warning", "calc", status="dns_error", modo="dominio", erro=exc)
             erro = str(exc)
             invalid_fields.add("ip")
 

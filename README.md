@@ -27,6 +27,7 @@ Aplicação didática em Flask para análise de redes, com dois módulos princip
 - Execução local e Docker
 - Variáveis de ambiente
 - Logging e observabilidade (server-side)
+- Documentação do projeto
 - Estrutura de pastas
 - Testes
 - Roadmap
@@ -209,6 +210,22 @@ Coleta recomendada em produção:
 
 ---
 
+## 📁 Documentação do Projeto
+
+Os documentos de análise, padrões e guias de apoio ficam centralizados em:
+
+- `documentacao/`
+
+Principais arquivos:
+
+- `documentacao/DOCUMENTACAO_TECNICA_ATUALIZADA.md`
+- `documentacao/ANALISE_LOGS_EXCECOES.md`
+- `documentacao/PADROES_EXCECOES.md`
+- `documentacao/EXEMPLOS_REFATORACAO.md`
+- `documentacao/CHECKLIST_CONFORMIDADE_UX_TOOLTIPS.md`
+
+---
+
 ## 🗂️ Estrutura de Pastas
 
 ```text
@@ -221,6 +238,7 @@ FRAMEWORK_DE_REDES_ANALISE_DIDATICA_AVANCADA/
 │   ├── analise/           # CIDR, máscara, domínio, IPv6, geo, portas, protocolos…
 │   ├── resolucao/         # VLSM/WAN, exportação TXT/ZIP/PDF
 │   └── suporte/           # histórico, GRC, auditoria em memória
+├── documentacao/          # análises, padrões e guias técnicos
 ├── templates/
 ├── static/css/app.css
 ├── tests/test_app.py

@@ -5,7 +5,7 @@ from backend.analise.geo_service import (
     normalizar_ip_digitado,
 )
 from backend.core.exceptions import HistoricoPersistenciaError
-from backend.core.logging import logger
+from backend.core.logging import log_event
 from backend.suporte.historico.historico_service import registrar_consulta
 
 _GEO_HIST_SNAPSHOT_KEYS = (
@@ -86,14 +86,14 @@ def _registrar_historico_geo(payload_geo: dict) -> None:
             },
         )
     except HistoricoPersistenciaError as exc:
-        logger.warning("evento=history_geo status=warn erro=%s", exc)
+        log_event("warning", "history_geo", status="warn", erro=exc)
 
 
 def executar_api_informacoes_geo(cliente_ip: str, raw_digitado: str) -> dict:
     """Monta o payload JSON de `/api/informacoes/geo` e o histórico."""
     if raw_digitado:
         norm, err_msg = normalizar_ip_digitado(raw_digitado)
-        if err_msg:
+        if err_msg or not norm:
             return {
                 "cliente_ip": cliente_ip,
                 "consultado": raw_digitado,

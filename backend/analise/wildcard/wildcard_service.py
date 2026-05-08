@@ -1,6 +1,6 @@
 from backend.analise.cidr_service import parse_ipv4_parts, wildcard_dotted_para_cidr
 from backend.core.exceptions import EntradaInvalidaError
-from backend.core.logging import logger
+from backend.core.logging import log_event
 
 
 def processar_modo_wildcard(ip_p: str, wildcard_p: str) -> dict:
@@ -28,7 +28,14 @@ def processar_modo_wildcard(ip_p: str, wildcard_p: str) -> dict:
                     "(ex.: 0.0.15.255)."
                 )
             except EntradaInvalidaError as exc:
-                logger.warning("evento=calc status=invalid_input modo=wildcard campo=wildcard_mask erro=%s", exc)
+                log_event(
+                    "warning",
+                    "calc",
+                    status="invalid_input",
+                    modo="wildcard",
+                    campo="wildcard_mask",
+                    erro=exc,
+                )
                 erro = str(exc)
                 invalid_fields.add("wildcard_mask")
 

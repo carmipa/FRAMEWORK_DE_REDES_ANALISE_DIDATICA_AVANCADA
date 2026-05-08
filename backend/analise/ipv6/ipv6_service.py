@@ -2,7 +2,7 @@
 
 from backend.analise.ipv6_service import processar_ipv6 as calcular_ipv6
 from backend.core.exceptions import EntradaInvalidaError
-from backend.core.logging import logger
+from backend.core.logging import log_event
 
 
 def processar_modo_ipv6(ipv6_p: str) -> dict:
@@ -17,9 +17,7 @@ def processar_modo_ipv6(ipv6_p: str) -> dict:
         try:
             ipv6_res = calcular_ipv6(ipv6_p)
         except EntradaInvalidaError as exc:
-            logger.warning(
-                "evento=calc status=invalid_input modo=ipv6 erro=%s", exc
-            )
+            log_event("warning", "calc", status="invalid_input", modo="ipv6", erro=exc)
             erro = str(exc)
             invalid_fields.add("ipv6")
 

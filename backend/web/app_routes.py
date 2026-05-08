@@ -13,7 +13,7 @@ from backend.core.exceptions import (
     EntradaInvalidaError,
     HistoricoPersistenciaError,
 )
-from backend.core.logging import log_event, logger
+from backend.core.logging import log_event
 from backend.analise.dominio_service import resolver_dns_com_cache
 from backend.analise.geo.geo_lookup_service import _enriquecer_resposta_geo
 from backend.analise.geo_service import (
@@ -150,7 +150,7 @@ def home():
                 log_event("info", "dns_autoresolve", status="start", modo=modo)
                 ip_p = resolver_dns_com_cache(ip_p)
             except DnsResolucaoError as exc:
-                logger.warning("evento=dns_autoresolve status=error modo=%s erro=%s", modo, exc)
+                log_event("warning", "dns_autoresolve", status="error", modo=modo, erro=exc)
                 erro = f"Não foi possível resolver o domínio informado: {ip_p}"
 
         if erro is None and modo == "ipv6":
@@ -289,12 +289,12 @@ def home():
                             res,
                         )
                     except HistoricoPersistenciaError as exc:
-                        logger.warning("evento=history_persist status=warn modo=%s erro=%s", modo, exc)
+                        log_event("warning", "history_persist", status="warn", modo=modo, erro=exc)
             except EntradaInvalidaError as exc:
-                logger.warning("evento=calc status=invalid_input modo=%s erro=%s", modo, exc)
+                log_event("warning", "calc", status="invalid_input", modo=modo, erro=exc)
                 erro = str(exc)
-            except Exception:
-                logger.exception("evento=calc status=error modo=%s", modo)
+            except Exception as exc:  # pylint: disable=broad-exception-caught
+                log_event("error", "calc", status="error", modo=modo, erro=exc.__class__.__name__, exc_info=True)
                 erro = "Erro interno ao processar os dados. Revise os campos e tente novamente."
 
         if res and not res.get("somente_mascara"):

@@ -247,8 +247,8 @@ consulta_history.json
 docker-compose.dev.yml
 docker-compose.yml
 icone.png
-refatoracao/GUIA_REFATORACAO_MAIN.txt
-refatoracao/nova_regra.txt
+documentacao/GUIA_REFATORACAO_MAIN.txt
+documentacao/nova_regra.txt
 requirements.txt
 scripts/validar_geoip2fast.py
 static/css/app.css

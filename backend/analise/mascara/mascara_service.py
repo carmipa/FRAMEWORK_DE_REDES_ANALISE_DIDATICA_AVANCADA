@@ -1,6 +1,6 @@
 from backend.analise.cidr_service import inferir_cidr_por_ip, mascara_dotted_para_cidr, parse_ipv4_parts
 from backend.core.exceptions import EntradaInvalidaError
-from backend.core.logging import logger
+from backend.core.logging import log_event
 
 
 def processar_modo_mascara(ip_p: str, mask_dec_p: str) -> dict:
@@ -28,7 +28,7 @@ def processar_modo_mascara(ip_p: str, mask_dec_p: str) -> dict:
                 "(ex.: 255.255.255.0), não valores como 255.0.255.0."
             )
         except EntradaInvalidaError as exc:
-            logger.warning("evento=calc status=invalid_input modo=mask campo=mask_decimal erro=%s", exc)
+            log_event("warning", "calc", status="invalid_input", modo="mask", campo="mask_decimal", erro=exc)
             erro = str(exc)
             invalid_fields.add("mask_decimal")
     elif not mask_dec_p and ip_p:
@@ -44,7 +44,7 @@ def processar_modo_mascara(ip_p: str, mask_dec_p: str) -> dict:
                 cidr_val, origem_inferida = inferir_cidr_por_ip(ip_p)
                 cidr_origem = f"CIDR inferido automaticamente pelo IP informado. {origem_inferida}."
             except EntradaInvalidaError as exc:
-                logger.warning("evento=calc status=invalid_input modo=mask campo=ip erro=%s", exc)
+                log_event("warning", "calc", status="invalid_input", modo="mask", campo="ip", erro=exc)
                 erro = str(exc)
                 invalid_fields.add("ip")
     elif mask_dec_p and not ip_p:

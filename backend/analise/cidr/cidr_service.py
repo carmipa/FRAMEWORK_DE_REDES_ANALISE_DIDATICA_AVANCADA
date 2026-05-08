@@ -1,5 +1,5 @@
 from backend.core.exceptions import EntradaInvalidaError
-from backend.core.logging import logger
+from backend.core.logging import log_event
 from backend.analise.cidr_service import inferir_cidr_por_ip
 
 
@@ -13,7 +13,7 @@ def processar_modo_cidr(ip_p: str, cidr_raw: str) -> dict:
         try:
             cidr_val = int(cidr_raw)
         except ValueError:
-            logger.warning("evento=calc status=invalid_input modo=cidr campo=cidr")
+            log_event("warning", "calc", status="invalid_input", modo="cidr", campo="cidr")
             erro = "O CIDR deve ser um número inteiro entre 0 e 32."
             invalid_fields.add("cidr")
     elif ip_p:
@@ -25,7 +25,7 @@ def processar_modo_cidr(ip_p: str, cidr_raw: str) -> dict:
                 f"{origem_inferida}"
             )
         except EntradaInvalidaError as exc:
-            logger.warning("evento=calc status=invalid_input modo=cidr campo=ip erro=%s", exc)
+            log_event("warning", "calc", status="invalid_input", modo="cidr", campo="ip", erro=exc)
             erro = str(exc)
             invalid_fields.add("ip")
     else:

@@ -75,7 +75,7 @@ def _inicializar_geoip2fast() -> None:
             else:
                 _reader = GeoIP2Fast(verbose=False)
                 log_event("info", "geoip2fast_ok", arquivo="default")
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:  # noqa: BLE001  # pylint: disable=broad-exception-caught
             _reader = None
             _geoip2fast_error = str(exc)[:200]
             log_event("warning", "geoip2fast_falhou", erro=_geoip2fast_error)
@@ -270,7 +270,7 @@ def _lookup_geoip2fast_dict(ip: str) -> dict[str, Any] | None:
             "mobile": False,
             "is_private_local": bool(d.get("is_private")),
         }
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:  # noqa: BLE001  # pylint: disable=broad-exception-caught
         log_event("warning", "geo_local_lookup_erro", ip=ip, erro=str(exc)[:120])
         return None
 
@@ -354,7 +354,7 @@ def _motivo_reservado(ip_obj: ipaddress.IPv4Address | ipaddress.IPv6Address) -> 
     try:
         if ip_obj in ipaddress.ip_network("100.64.0.0/10"):
             return "CGNAT (RFC 6598)"
-    except Exception:
+    except Exception:  # pylint: disable=broad-exception-caught
         pass
     return "Não-roteável"
 

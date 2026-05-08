@@ -118,7 +118,7 @@ def processar_ipv6(ipv6_s):
             raise EntradaInvalidaError("IPv6 com zone index inválido (sufixo após % está vazio).")
     try:
         addr = ipaddress.IPv6Address(base)
-    except Exception as exc:
+    except ValueError as exc:
         raise EntradaInvalidaError(f"IPv6 inválido: {exc}") from exc
     bits = bin(int(addr))[2:].zfill(128)
     blocos_16 = [bits[i:i + 16] for i in range(0, 128, 16)]

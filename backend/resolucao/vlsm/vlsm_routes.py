@@ -147,7 +147,7 @@ def resolucao_problemas():
                     invalid_fields.add("wan_prefix")
             except (TypeError, ValueError):
                 invalid_fields.add("wan_prefix")
-        except Exception as exc:
+        except Exception as exc:  # pylint: disable=broad-exception-caught
             log_event(
                 "error",
                 "problem_resolution_use",

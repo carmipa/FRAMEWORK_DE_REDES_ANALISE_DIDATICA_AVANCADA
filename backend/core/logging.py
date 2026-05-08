@@ -1,13 +1,24 @@
+"""Infraestrutura de logging estruturado do projeto.
+
+Principais recursos:
+- timestamps UTC;
+- request_id por requisição;
+- saída colorida no console (quando habilitada);
+- `log_event()` para eventos estruturados no formato `evento=... campo=...`;
+- integração opcional com trilha de auditoria interna.
+"""
+
 import logging
 import os
 import re
 import sys
 import time
+from typing import Any, Callable
 
 from flask import g
 
 try:
-    from colorama import just_fix_windows_console
+    from colorama import just_fix_windows_console  # type: ignore[import-untyped]
 
     just_fix_windows_console()
 except Exception:
@@ -156,16 +167,25 @@ logger = RequestLoggerAdapter(_base_logger, {})
 
 
 def log_event(level: str, evento: str, exc_info: bool = False, **fields):
+    """Emite log estruturado e replica para auditoria quando disponível.
+
+    Args:
+        level: Nível de log textual (`debug`, `info`, `warning`, `error`).
+        evento: Nome curto e estável do evento.
+        exc_info: Se `True`, inclui stack trace no logger.
+        **fields: Campos adicionais serializados como pares `chave=valor`.
+    """
     cleaned = {k: v for k, v in fields.items() if v is not None and v != ""}
     payload = " ".join(f"{k}={cleaned[k]}" for k in sorted(cleaned))
     message = f"evento={evento}" + (f" {payload}" if payload else "")
     getattr(logger, level.lower(), logger.info)(message, exc_info=exc_info)
+    register_audit_event: Callable[..., Any] | None = None
+    request_id = "-"
     try:
         from backend.suporte.audit.audit_service import register_audit_event
 
         request_id = getattr(g, "request_id", "-")
     except Exception:
-        register_audit_event = None
-        request_id = "-"
+        pass
     if register_audit_event is not None:
         register_audit_event(level=level, evento=evento, fields=cleaned, request_id=request_id)

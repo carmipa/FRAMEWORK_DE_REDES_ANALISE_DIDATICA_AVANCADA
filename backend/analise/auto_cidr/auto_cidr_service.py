@@ -2,7 +2,7 @@
 
 from backend.analise.cidr_service import inferir_cidr_por_ip
 from backend.core.exceptions import EntradaInvalidaError
-from backend.core.logging import logger
+from backend.core.logging import log_event
 
 
 def processar_modo_auto_cidr(ip_p: str) -> dict:
@@ -18,9 +18,13 @@ def processar_modo_auto_cidr(ip_p: str) -> dict:
         try:
             cidr_val, cidr_origem = inferir_cidr_por_ip(ip_p)
         except EntradaInvalidaError as exc:
-            logger.warning(
-                "evento=calc status=invalid_input modo=autoip campo=ip erro=%s",
-                exc,
+            log_event(
+                "warning",
+                "calc",
+                status="invalid_input",
+                modo="autoip",
+                campo="ip",
+                erro=exc,
             )
             erro = str(exc)
             invalid_fields.add("ip")

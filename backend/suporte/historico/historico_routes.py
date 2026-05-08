@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
 
 from backend.core.exceptions import HistoricoPersistenciaError
-from backend.core.logging import logger
+from backend.core.logging import log_event
 from backend.suporte.historico.historico_service import (
     list_history,
     registrar_consulta,
@@ -41,10 +41,6 @@ def history_catalog():
             },
         )
     except HistoricoPersistenciaError as exc:
-        logger.warning(
-            "evento=history_catalog status=warn modo=%s erro=%s",
-            modo,
-            exc,
-        )
+        log_event("warning", "history_catalog", status="warn", modo=modo, erro=exc)
         return jsonify({"ok": False, "erro": "persistencia_indisponivel"}), 503
     return jsonify({"ok": True})

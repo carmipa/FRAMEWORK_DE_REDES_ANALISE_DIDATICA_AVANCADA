@@ -351,7 +351,7 @@ pytest --cov
 ## 🎯 ESTRUTURA RECOMENDADA
 
 ```
-docs/
+documentacao/
 ├── README.md                    (já existe, melhorado)
 ├── CONTRIBUTING.md              (NOVO - crítico)
 ├── API.md                       (NOVO - crítico)
@@ -475,7 +475,7 @@ curl -X GET "http://localhost:5000/analisar/cidr?ip=192.168.1.5&cidr=/24"
 
 ## 🔧 EXEMPLO: API.md COMPLETO
 
-Veja documento separado: `TEMPLATE_API_DOCUMENTATION.md`
+Veja documento separado: `TEMPLATE_API.md`
 
 ---
 

@@ -2,12 +2,13 @@ import json
 import uuid
 from collections import deque
 from datetime import datetime, timezone
+from typing import Any
 
 from backend.config import HISTORY_FILE, MAX_HISTORY
 from backend.core.exceptions import HistoricoPersistenciaError
 from backend.core.logging import log_event
 
-history_store = deque(maxlen=MAX_HISTORY)
+history_store: deque[dict[str, Any]] = deque(maxlen=MAX_HISTORY)
 
 
 def utc_now_iso():
@@ -25,7 +26,7 @@ def formatar_timestamp_utc(ts):
             dt = dt.replace(tzinfo=timezone.utc)
         dt_utc = dt.astimezone(timezone.utc)
         return dt_utc.strftime("%Y-%m-%d %H:%M:%S UTC")
-    except Exception:
+    except ValueError:
         return f"{s} UTC"
 
 
@@ -40,7 +41,7 @@ def carregar_historico():
                     history_store.append(item)
         log_event("info", "history_load", status="ok", total=len(history_store))
         return True
-    except Exception as exc:
+    except (OSError, json.JSONDecodeError, TypeError, ValueError) as exc:
         log_event(
             "error",
             "history_load",
@@ -59,7 +60,7 @@ def persistir_historico():
         )
         log_event("info", "history_persist", status="ok", total=len(history_store))
         return True
-    except Exception as exc:
+    except (OSError, TypeError, ValueError) as exc:
         log_event(
             "error",
             "history_persist",
