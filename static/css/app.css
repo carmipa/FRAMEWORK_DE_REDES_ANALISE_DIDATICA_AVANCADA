@@ -37,10 +37,16 @@ body { background-color: #0d1117; color: #c9d1d9; font-family: 'Consolas', monos
         .geo-report-root {
             display: flow-root;
             width: 100%;
+            position: relative;
+            z-index: 0;
+        }
+        /* Evita colunas Bootstrap a esticarem à altura da mais alta (barras cinzentas enormes sobre o histórico) */
+        .geo-report-root .row {
+            align-items: flex-start;
         }
         #geo-historico-panel {
             position: relative;
-            z-index: 1;
+            z-index: 2;
             clear: both;
         }
         #geo-historico-panel thead th {

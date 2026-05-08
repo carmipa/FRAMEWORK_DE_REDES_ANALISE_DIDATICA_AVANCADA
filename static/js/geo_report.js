@@ -82,7 +82,7 @@
                     : "";
             const locRows = [];
             locRows.push(
-                '<div class="col"><div class="p-2 rounded bg-body-secondary h-100">' +
+                '<div class="col"><div class="p-2 rounded bg-body-secondary">' +
                 '<div class="text-muted" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.5px;">País</div>' +
                 '<div class="fw-bold d-flex align-items-center flex-wrap gap-2">' +
                 flagPaísImg +
@@ -101,7 +101,7 @@
             locRows[locRows.length - 1] += "</div></div>";
             if (j.regiao) {
                 locRows.push(
-                    '<div class="col"><div class="p-2 rounded bg-body-secondary h-100">' +
+                    '<div class="col"><div class="p-2 rounded bg-body-secondary">' +
                     '<div class="text-muted" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.5px;">Estado / Região</div>' +
                     '<div class="fw-bold">' +
                     esc(j.regiao) +
@@ -110,7 +110,7 @@
             }
             if (j.cidade) {
                 locRows.push(
-                    '<div class="col"><div class="p-2 rounded bg-body-secondary h-100">' +
+                    '<div class="col"><div class="p-2 rounded bg-body-secondary">' +
                     '<div class="text-muted" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.5px;">Cidade</div>' +
                     '<div class="fw-bold">' +
                     esc(j.cidade) +
@@ -119,7 +119,7 @@
             }
             if (j.timezone) {
                 locRows.push(
-                    '<div class="col"><div class="p-2 rounded bg-body-secondary h-100">' +
+                    '<div class="col"><div class="p-2 rounded bg-body-secondary">' +
                     '<div class="text-muted" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.5px;">Fuso Horário</div>' +
                     '<div class="fw-bold">🕐 ' +
                     esc(j.timezone) +
@@ -128,7 +128,7 @@
             }
             if (hasCoords) {
                 let coordCell =
-                    '<div class="col"><div class="p-2 rounded bg-body-secondary h-100">' +
+                    '<div class="col"><div class="p-2 rounded bg-body-secondary">' +
                     '<div class="text-muted" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.5px;">Coordenadas</div>' +
                     '<div class="fw-bold" style="font-size:.85rem;">' +
                     esc(lat) +
@@ -148,7 +148,7 @@
             const netRows = [];
             if (j.isp) {
                 netRows.push(
-                    '<div class="col"><div class="p-2 rounded bg-body-secondary h-100">' +
+                    '<div class="col"><div class="p-2 rounded bg-body-secondary">' +
                     '<div class="text-muted" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.5px;">ISP (Provedor)</div>' +
                     '<div class="fw-bold">' +
                     esc(j.isp) +
@@ -157,7 +157,7 @@
             }
             if (j.org && j.org !== j.isp) {
                 netRows.push(
-                    '<div class="col"><div class="p-2 rounded bg-body-secondary h-100">' +
+                    '<div class="col"><div class="p-2 rounded bg-body-secondary">' +
                     '<div class="text-muted" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.5px;">Organização</div>' +
                     '<div class="fw-bold">' +
                     esc(j.org) +
@@ -166,7 +166,7 @@
             }
             if (j.as_name) {
                 let asCell =
-                    '<div class="col"><div class="p-2 rounded bg-body-secondary h-100">' +
+                    '<div class="col"><div class="p-2 rounded bg-body-secondary">' +
                     '<div class="text-muted" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.5px;">Sistema Autônomo (AS)</div>' +
                     '<div class="fw-bold font-monospace" style="font-size:.85rem;">' +
                     esc(j.as_name) +
@@ -182,7 +182,7 @@
             }
             if (j.cidr) {
                 netRows.push(
-                    '<div class="col"><div class="p-2 rounded bg-body-secondary h-100">' +
+                    '<div class="col"><div class="p-2 rounded bg-body-secondary">' +
                     '<div class="text-muted" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.5px;">Bloco IP (CIDR)</div>' +
                     '<div class="fw-bold font-monospace" style="font-size:.85rem;">' +
                     esc(j.cidr) +
