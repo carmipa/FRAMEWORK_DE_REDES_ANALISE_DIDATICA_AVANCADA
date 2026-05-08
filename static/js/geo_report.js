@@ -192,7 +192,7 @@
             const netSection =
                 netRows.length > 0
                     ? '<h6 class="text-primary border-bottom pb-1 mb-2">🌐 Rede / ASN</h6>' +
-                      '<div class="row g-2 mb-3">' +
+                      '<div class="row g-2 mb-3" style="align-items:flex-start;">' +
                       netRows.join("") +
                       "</div>"
                     : "";
@@ -243,7 +243,7 @@
                 "</span></div>" +
                 '<div class="card-body">' +
                 '<h6 class="text-primary border-bottom pb-1 mb-2">📍 Localização</h6>' +
-                '<div class="row g-2 mb-3">' +
+                '<div class="row g-2 mb-3" style="align-items:flex-start;">' +
                 locRows.join("") +
                 "</div>" +
                 locNote +

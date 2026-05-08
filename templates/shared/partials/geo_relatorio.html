@@ -51,7 +51,7 @@
 
     <div class="card-body">
       <h6 class="text-primary border-bottom pb-1 mb-2">📍 Localização</h6>
-      <div class="row g-2 mb-3">
+      <div class="row g-2 mb-3" style="align-items:flex-start;">
         <div class="col-12 col-md-6">
           <div class="p-2 rounded" style="background:rgba(255,255,255,0.05);overflow:hidden;">
             <div class="text-muted" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.5px;">País</div>
@@ -111,7 +111,7 @@
 
       {% if geo.isp or geo.org or geo.as_name or geo.cidr %}
       <h6 class="text-primary border-bottom pb-1 mb-2">🌐 Rede / ASN</h6>
-      <div class="row g-2 mb-3">
+      <div class="row g-2 mb-3" style="align-items:flex-start;">
         {% if geo.isp %}
         <div class="col-12 col-md-6">
           <div class="p-2 rounded" style="background:rgba(255,255,255,0.05);overflow:hidden;">

@@ -38,9 +38,9 @@ body { background-color: #0d1117; color: #c9d1d9; font-family: 'Consolas', monos
             display: flow-root;
             width: 100%;
         }
-        /* Evita colunas Bootstrap a esticarem à altura da mais alta (barras cinzentas enormes sobre o histórico) */
+        /* Chrome: stretch padrão do flex + h-100 esticava cards; Edge costumava ser mais permissivo */
         .geo-report-root .row {
-            align-items: flex-start;
+            align-items: flex-start !important;
         }
         /* Sem z-index: empilhamento artificial fazia o histórico “flutuar” por cima do relatório (Tipo de Conexão / GRC). */
         #geo-historico-panel {
@@ -909,4 +909,17 @@ body { background-color: #0d1117; color: #c9d1d9; font-family: 'Consolas', monos
                 line-height: 1.2;
                 padding: 0.5rem 0.7rem;
             }
+        }
+
+        /* Chrome: reforço nas grelhas Localização / Rede do relatório Geo (painel index + informacoes) */
+        .geo-report-root .card-body .row.g-2.mb-3 {
+            align-items: flex-start !important;
+        }
+        .geo-report-root .card-body .row.g-2.mb-3 > .col-12.col-md-6 {
+            height: auto !important;
+            min-height: 0 !important;
+        }
+        .geo-report-root .card-body .row.g-2.mb-3 > .col-12.col-md-6 > .p-2.rounded {
+            height: auto !important;
+            overflow: hidden;
         }
