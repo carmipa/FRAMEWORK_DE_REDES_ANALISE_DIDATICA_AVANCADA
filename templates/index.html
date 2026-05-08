@@ -1373,7 +1373,10 @@
             catalogWrap?.classList.add("d-none");
         }
         const hideHistory = tabId === "geo" || catalogIds.includes(tabId);
-        historyBoxes.forEach((box) => box.classList.toggle("d-none", hideHistory));
+        historyBoxes.forEach((box) => {
+            if (box.id === "geo-historico-panel") return;
+            box.classList.toggle("d-none", hideHistory);
+        });
         if (btnLimparTelaGlobal) {
             btnLimparTelaGlobal.setAttribute("href", `/?tab=${encodeURIComponent(tabId)}`);
         }
