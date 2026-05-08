@@ -43,6 +43,47 @@
 </form>
 
 <div class="card-tech p-3 mt-3">
+    <h6 class="text-warning mb-2">🔁 Conversor visual Máscara ↔ Wildcard</h6>
+    <div class="row g-2 mb-3 align-items-end">
+        <div class="col-12 col-lg-5">
+            <label for="wild_mask_input" class="form-label small text-secondary mb-1">Máscara decimal</label>
+            <input
+                id="wild_mask_input"
+                type="text"
+                class="form-control bg-dark text-light border-secondary"
+                value="255.255.255.0"
+                placeholder="Ex.: 255.255.255.240"
+                data-bs-toggle="tooltip"
+                data-bs-placement="top"
+                title="Digite máscara para converter para wildcard."
+            >
+        </div>
+        <div class="col-12 col-lg-5">
+            <label for="wild_wildcard_input" class="form-label small text-secondary mb-1">Wildcard</label>
+            <input
+                id="wild_wildcard_input"
+                type="text"
+                class="form-control bg-dark text-light border-secondary"
+                value="0.0.0.255"
+                placeholder="Ex.: 0.0.0.15"
+                data-bs-toggle="tooltip"
+                data-bs-placement="top"
+                title="Digite wildcard para converter para máscara."
+            >
+        </div>
+        <div class="col-12 col-lg-2 d-grid">
+            <button
+                type="button"
+                id="wild_swap_btn"
+                class="btn btn-warning text-dark fw-bold btn-sm w-100"
+                data-bs-toggle="tooltip"
+                data-bs-placement="top"
+                title="Troca os campos para estudo rápido."
+            >🔄 Trocar</button>
+        </div>
+    </div>
+    <div id="wild_convert_meta" class="small text-secondary mb-3"></div>
+
     <h6 class="text-info mb-2">💡 Exemplos práticos (ACL / OSPF / EIGRP)</h6>
     <div class="small text-secondary mb-2">
         Use estes modelos para fixar o uso real da wildcard em comandos Cisco.
@@ -97,6 +138,59 @@
 
 <script>
 (() => {
+    const maskInput = document.getElementById("wild_mask_input");
+    const wildcardInput = document.getElementById("wild_wildcard_input");
+    const meta = document.getElementById("wild_convert_meta");
+    const swapBtn = document.getElementById("wild_swap_btn");
+    if (maskInput && wildcardInput && meta) {
+        const parseIPv4 = (value) => {
+            const parts = value.trim().split(".");
+            if (parts.length !== 4) return null;
+            const nums = parts.map((p) => Number(p));
+            if (nums.some((n) => !Number.isInteger(n) || n < 0 || n > 255)) return null;
+            return nums;
+        };
+        const toDotted = (nums) => nums.join(".");
+        const invert = (nums) => nums.map((n) => 255 - n);
+        const prefixFromMask = (nums) => nums.map((n) => n.toString(2).padStart(8, "0")).join("").split("").filter((b) => b === "1").length;
+
+        const renderFromMask = () => {
+            const m = parseIPv4(maskInput.value);
+            if (!m) {
+                meta.innerHTML = `<span class="text-danger">Máscara inválida para conversão.</span>`;
+                return;
+            }
+            const w = invert(m);
+            wildcardInput.value = toDotted(w);
+            const prefix = prefixFromMask(m);
+            meta.innerHTML = `/${prefix} | Máscara <strong class="text-light">${toDotted(m)}</strong> → Wildcard <strong class="text-warning">${toDotted(w)}</strong> (inverso bit a bit).`;
+        };
+
+        const renderFromWildcard = () => {
+            const w = parseIPv4(wildcardInput.value);
+            if (!w) {
+                meta.innerHTML = `<span class="text-danger">Wildcard inválida para conversão.</span>`;
+                return;
+            }
+            const m = invert(w);
+            maskInput.value = toDotted(m);
+            const prefix = prefixFromMask(m);
+            meta.innerHTML = `/${prefix} | Wildcard <strong class="text-warning">${toDotted(w)}</strong> → Máscara <strong class="text-light">${toDotted(m)}</strong> (inverso bit a bit).`;
+        };
+
+        maskInput.addEventListener("input", renderFromMask);
+        wildcardInput.addEventListener("input", renderFromWildcard);
+        if (swapBtn) {
+            swapBtn.addEventListener("click", () => {
+                const a = maskInput.value;
+                maskInput.value = wildcardInput.value;
+                wildcardInput.value = a;
+                renderFromMask();
+            });
+        }
+        renderFromMask();
+    }
+
     const buttons = document.querySelectorAll(".copy-cli-model");
     if (!buttons.length) return;
     buttons.forEach((btn) => {

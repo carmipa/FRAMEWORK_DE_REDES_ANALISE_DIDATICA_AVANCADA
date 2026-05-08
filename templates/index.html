@@ -27,6 +27,73 @@
             padding: 0.55rem 0.7rem;
             font-size: 0.82rem;
         }
+        .didactic-lab-block {
+            border: 1px solid #30363d;
+            border-left: 4px solid #1f6feb;
+            border-radius: 8px;
+            background: #0f1724;
+            margin-top: 0.8rem;
+        }
+        .didactic-lab-summary {
+            cursor: pointer;
+            list-style: none;
+            padding: 0.6rem 0.8rem;
+            font-weight: 700;
+            color: #79c0ff;
+            border-bottom: 1px solid rgba(48, 54, 61, 0.8);
+        }
+        .didactic-lab-summary::-webkit-details-marker { display: none; }
+        .didactic-lab-body {
+            padding: 0.75rem 0.85rem;
+        }
+        .didactic-chip-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+            margin-bottom: 0.55rem;
+        }
+        .didactic-chip {
+            border: 1px solid #30363d;
+            border-radius: 999px;
+            padding: 0.12rem 0.5rem;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #9ecbff;
+            background: rgba(31, 111, 235, 0.15);
+        }
+        .contextual-block .table-responsive {
+            max-width: 100%;
+            overflow-x: auto;
+        }
+        .contextual-block pre {
+            max-width: 100%;
+            overflow-x: auto;
+            white-space: pre;
+        }
+        @media (max-width: 768px) {
+            .contextual-block .card-tech {
+                padding: 0.85rem !important;
+            }
+            .contextual-block .table {
+                font-size: 0.78rem;
+            }
+            .contextual-block pre {
+                font-size: 0.74rem;
+                line-height: 1.3;
+                padding: 0.55rem !important;
+            }
+            .didactic-lab-summary {
+                font-size: 0.85rem;
+                padding: 0.5rem 0.65rem;
+            }
+            .didactic-chip {
+                font-size: 0.66rem;
+                padding: 0.1rem 0.42rem;
+            }
+            .didactic-lab-body {
+                padding: 0.62rem 0.68rem;
+            }
+        }
         .x-small { font-size: 0.7rem; }
     </style>
 {% endblock %}
@@ -201,13 +268,34 @@
                 </tbody>
             </table>
         </div>
-        <div class="alert alert-secondary border border-secondary small mt-3 mb-0">
+        <div class="small mt-3 mb-0 p-3 rounded border border-secondary text-secondary" style="background: #0f1724;">
             <strong class="text-info">Como o cálculo foi decidido:</strong><br>
             1) Wildcard informada <code>{{ wildcard_pre or res.wildcard }}</code> → máscara equivalente <code>{{ res.mask }}</code> (inverso bit a bit).<br>
             2) Máscara equivalente define o prefixo <strong>/{{ res.cidr }}</strong>.<br>
             3) Com IP + /{{ res.cidr }}, o motor calcula rede, broadcast e faixa de hosts.<br>
             4) Validação didática: em cada octeto, <strong>wildcard + máscara = 255</strong>.
         </div>
+        <details class="didactic-lab-block">
+            <summary class="didactic-lab-summary">🔁 Laboratório Visual (resultado wildcard)</summary>
+            <div class="didactic-lab-body">
+            <div class="didactic-chip-row">
+                <span class="didactic-chip">Conversão bidirecional</span>
+                <span class="didactic-chip">Validação instantânea</span>
+                <span class="didactic-chip">Foco em Cisco ACL/OSPF</span>
+            </div>
+            <div class="row g-2 mt-1">
+                <div class="col-lg-6">
+                    <div class="small text-secondary mb-1">Máscara equivalente (resultado)</div>
+                    <input id="wild_result_mask" type="text" class="form-control bg-dark text-light border-secondary" value="{{ res.mask }}">
+                </div>
+                <div class="col-lg-6">
+                    <div class="small text-secondary mb-1">Wildcard equivalente (resultado)</div>
+                    <input id="wild_result_wild" type="text" class="form-control bg-dark text-light border-secondary" value="{{ res.wildcard }}">
+                </div>
+            </div>
+            <div id="wild_result_meta" class="small text-secondary mt-2"></div>
+            </div>
+        </details>
     </div>
     {% if res.and_table %}
     <div class="card-tech p-4 shadow mb-3">
@@ -257,7 +345,6 @@
         <div class="small text-secondary mb-0">
             Regra chave do wildcard: em cada octeto, <strong>wildcard + máscara = 255</strong>. Essa validação confirma a equivalência com o CIDR calculado.
         </div>
-    </div>
     </div>
     {% endif %}
     {% if not res.somente_mascara %}
@@ -319,6 +406,25 @@
             <strong class="text-light">{{ res.uteis }}</strong> hosts úteis.<br>
             Regra didática: bits 1 da máscara representam REDE; bits 0 representam HOST.
         </div>
+        <details class="didactic-lab-block">
+            <summary class="didactic-lab-summary">🔢 Ver máscara em binário (resultado)</summary>
+            <div class="didactic-lab-body">
+            <div class="didactic-chip-row">
+                <span class="didactic-chip">Bits 1 = REDE</span>
+                <span class="didactic-chip">Bits 0 = HOST</span>
+                <span class="didactic-chip">Prefixo automático</span>
+            </div>
+            <div class="row g-2 mt-1">
+                <div class="col-lg-4">
+                    <input id="mask_result_binary_input" type="text" class="form-control bg-dark text-light border-secondary" value="{{ res.mask }}">
+                </div>
+                <div class="col-lg-8">
+                    <div id="mask_result_binary_meta" class="small text-secondary"></div>
+                </div>
+            </div>
+            <div id="mask_result_binary_rows" class="small mt-2"></div>
+            </div>
+        </details>
     </div>
     {% else %}
     {% if res.classes_abc_fixas %}
@@ -1784,5 +1890,82 @@
             copyBtn.setAttribute("title", "Não foi possível copiar automaticamente. Tente novamente.");
         }
     });
+
+    (() => {
+        const maskInput = document.getElementById("wild_result_mask");
+        const wildInput = document.getElementById("wild_result_wild");
+        const meta = document.getElementById("wild_result_meta");
+        if (!maskInput || !wildInput || !meta) return;
+        const parseIPv4 = (value) => {
+            const parts = value.trim().split(".");
+            if (parts.length !== 4) return null;
+            const nums = parts.map((p) => Number(p));
+            if (nums.some((n) => !Number.isInteger(n) || n < 0 || n > 255)) return null;
+            return nums;
+        };
+        const toDotted = (nums) => nums.join(".");
+        const invert = (nums) => nums.map((n) => 255 - n);
+        const prefixFromMask = (nums) => nums.map((n) => n.toString(2).padStart(8, "0")).join("").split("").filter((b) => b === "1").length;
+        const renderFromMask = () => {
+            const m = parseIPv4(maskInput.value);
+            if (!m) {
+                meta.innerHTML = `<span class="text-danger">Máscara inválida.</span>`;
+                return;
+            }
+            const w = invert(m);
+            wildInput.value = toDotted(w);
+            const prefix = prefixFromMask(m);
+            meta.innerHTML = `/${prefix} | Máscara <strong class="text-light">${toDotted(m)}</strong> ↔ Wildcard <strong class="text-warning">${toDotted(w)}</strong>`;
+        };
+        const renderFromWild = () => {
+            const w = parseIPv4(wildInput.value);
+            if (!w) {
+                meta.innerHTML = `<span class="text-danger">Wildcard inválida.</span>`;
+                return;
+            }
+            const m = invert(w);
+            maskInput.value = toDotted(m);
+            const prefix = prefixFromMask(m);
+            meta.innerHTML = `/${prefix} | Wildcard <strong class="text-warning">${toDotted(w)}</strong> ↔ Máscara <strong class="text-light">${toDotted(m)}</strong>`;
+        };
+        maskInput.addEventListener("input", renderFromMask);
+        wildInput.addEventListener("input", renderFromWild);
+        renderFromMask();
+    })();
+
+    (() => {
+        const input = document.getElementById("mask_result_binary_input");
+        const rows = document.getElementById("mask_result_binary_rows");
+        const meta = document.getElementById("mask_result_binary_meta");
+        if (!input || !rows || !meta) return;
+        const render = () => {
+            const raw = input.value.trim();
+            const parts = raw.split(".");
+            if (parts.length !== 4) {
+                rows.innerHTML = `<div class="text-danger">Máscara inválida. Use formato x.x.x.x.</div>`;
+                meta.textContent = "";
+                return;
+            }
+            const nums = parts.map((p) => Number(p));
+            if (nums.some((n) => !Number.isInteger(n) || n < 0 || n > 255)) {
+                rows.innerHTML = `<div class="text-danger">Cada octeto deve estar entre 0 e 255.</div>`;
+                meta.textContent = "";
+                return;
+            }
+            const bins = nums.map((n) => n.toString(2).padStart(8, "0"));
+            const joined = bins.join("");
+            const ones = joined.split("").filter((b) => b === "1").length;
+            const zeros = 32 - ones;
+            meta.innerHTML = `Prefixo estimado: <strong class="text-info">/${ones}</strong> | Rede: <strong class="text-light">${ones}</strong> bits | Host: <strong class="text-light">${zeros}</strong> bits`;
+            rows.innerHTML = bins.map((bin, idx) => {
+                const colored = bin.split("").map((b) => (
+                    b === "1" ? `<span class="text-success fw-bold">${b}</span>` : `<span class="text-warning">${b}</span>`
+                )).join("");
+                return `<div class="mb-1"><span class="text-secondary me-2">Octeto ${idx + 1}:</span><code>${nums[idx]}</code> = <code>${colored}</code></div>`;
+            }).join("");
+        };
+        input.addEventListener("input", render);
+        render();
+    })();
 </script>
 {% endblock %}

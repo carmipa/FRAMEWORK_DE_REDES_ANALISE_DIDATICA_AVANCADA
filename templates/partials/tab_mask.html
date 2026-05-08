@@ -53,6 +53,32 @@
     </div>
 </div>
 
+<div class="card-tech p-3 mb-3">
+    <h6 class="text-info mb-2">🔢 Visualizador binário da máscara</h6>
+    <div class="small text-secondary mb-2">
+        Digite uma máscara decimal para ver os bits de <strong>REDE (1)</strong> e <strong>HOST (0)</strong>.
+    </div>
+    <div class="row g-2 mb-2">
+        <div class="col-lg-4">
+            <label for="mask_binary_input" class="form-label small text-secondary mb-1">Máscara decimal</label>
+            <input
+                id="mask_binary_input"
+                type="text"
+                class="form-control bg-dark text-light border-secondary"
+                value="255.255.255.0"
+                placeholder="Ex.: 255.255.255.240"
+                data-bs-toggle="tooltip"
+                data-bs-placement="top"
+                title="Máscara para visualização bit a bit."
+            >
+        </div>
+        <div class="col-lg-8 d-flex align-items-end">
+            <div id="mask_binary_meta" class="small text-secondary"></div>
+        </div>
+    </div>
+    <div id="mask_binary_rows" class="small"></div>
+</div>
+
 <form method="POST" class="row g-3 calc-form" data-tab-form="mask">
     <input type="hidden" name="tab" value="mask">
     <div class="col-lg-6">
@@ -110,5 +136,45 @@
     };
     slider.addEventListener("input", update);
     update();
+})();
+
+(() => {
+    const input = document.getElementById("mask_binary_input");
+    const rows = document.getElementById("mask_binary_rows");
+    const meta = document.getElementById("mask_binary_meta");
+    if (!input || !rows || !meta) return;
+
+    const render = () => {
+        const raw = input.value.trim();
+        const parts = raw.split(".");
+        if (parts.length !== 4) {
+            rows.innerHTML = `<div class="text-danger">Máscara inválida. Use formato x.x.x.x.</div>`;
+            meta.textContent = "";
+            return;
+        }
+        const nums = parts.map((p) => Number(p));
+        if (nums.some((n) => !Number.isInteger(n) || n < 0 || n > 255)) {
+            rows.innerHTML = `<div class="text-danger">Cada octeto deve estar entre 0 e 255.</div>`;
+            meta.textContent = "";
+            return;
+        }
+        const bins = nums.map((n) => n.toString(2).padStart(8, "0"));
+        const joined = bins.join("");
+        const ones = joined.split("").filter((b) => b === "1").length;
+        const zeros = 32 - ones;
+        meta.innerHTML = `Prefixo estimado: <strong class="text-info">/${ones}</strong> | Bits de rede: <strong class="text-light">${ones}</strong> | Bits de host: <strong class="text-light">${zeros}</strong>`;
+
+        rows.innerHTML = bins.map((bin, idx) => {
+            const colored = bin.split("").map((b) => (
+                b === "1"
+                    ? `<span class="text-success fw-bold">${b}</span>`
+                    : `<span class="text-warning">${b}</span>`
+            )).join("");
+            return `<div class="mb-1"><span class="text-secondary me-2">Octeto ${idx + 1}:</span><code>${nums[idx]}</code> = <code>${colored}</code></div>`;
+        }).join("");
+    };
+
+    input.addEventListener("input", render);
+    render();
 })();
 </script>
