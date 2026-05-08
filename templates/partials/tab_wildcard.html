@@ -41,3 +41,77 @@
         <button type="submit" name="modo" value="wildcard" class="btn btn-warning fw-bold btn-sm w-100" data-bs-toggle="tooltip" data-bs-placement="top" title="Executa análise de wildcard com IP e máscara inversa.">🧩 Executar</button>
     </div>
 </form>
+
+<div class="card-tech p-3 mt-3">
+    <h6 class="text-info mb-2">💡 Exemplos práticos (ACL / OSPF / EIGRP)</h6>
+    <div class="small text-secondary mb-2">
+        Use estes modelos para fixar o uso real da wildcard em comandos Cisco.
+    </div>
+    <div class="row g-3">
+        <div class="col-12 col-lg-4">
+            <div class="border border-secondary rounded p-2 h-100">
+                <div class="small fw-bold text-warning mb-1">ACL (rede /24)</div>
+                <pre class="small bg-dark border border-secondary rounded p-2 mb-2 text-light">access-list 101 permit ip 192.168.1.0 0.0.0.255 any</pre>
+                <button
+                    type="button"
+                    class="btn btn-sm btn-info fw-bold text-dark w-100 copy-cli-model"
+                    data-copy-text="access-list 101 permit ip 192.168.1.0 0.0.0.255 any"
+                    data-bs-toggle="tooltip"
+                    data-bs-placement="top"
+                    title="Copiar exemplo de ACL para área de transferência."
+                >📋 Copiar ACL</button>
+            </div>
+        </div>
+        <div class="col-12 col-lg-4">
+            <div class="border border-secondary rounded p-2 h-100">
+                <div class="small fw-bold text-warning mb-1">OSPF (área 0)</div>
+                <pre class="small bg-dark border border-secondary rounded p-2 mb-2 text-light">router ospf 1
+ network 10.0.0.0 0.0.0.255 area 0</pre>
+                <button
+                    type="button"
+                    class="btn btn-sm btn-info fw-bold text-dark w-100 copy-cli-model"
+                    data-copy-text="router ospf 1&#10; network 10.0.0.0 0.0.0.255 area 0"
+                    data-bs-toggle="tooltip"
+                    data-bs-placement="top"
+                    title="Copiar exemplo de OSPF para área de transferência."
+                >📋 Copiar OSPF</button>
+            </div>
+        </div>
+        <div class="col-12 col-lg-4">
+            <div class="border border-secondary rounded p-2 h-100">
+                <div class="small fw-bold text-warning mb-1">EIGRP (AS 100)</div>
+                <pre class="small bg-dark border border-secondary rounded p-2 mb-2 text-light">router eigrp 100
+ network 172.16.0.0 0.0.255.255</pre>
+                <button
+                    type="button"
+                    class="btn btn-sm btn-info fw-bold text-dark w-100 copy-cli-model"
+                    data-copy-text="router eigrp 100&#10; network 172.16.0.0 0.0.255.255"
+                    data-bs-toggle="tooltip"
+                    data-bs-placement="top"
+                    title="Copiar exemplo de EIGRP para área de transferência."
+                >📋 Copiar EIGRP</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(() => {
+    const buttons = document.querySelectorAll(".copy-cli-model");
+    if (!buttons.length) return;
+    buttons.forEach((btn) => {
+        btn.addEventListener("click", async () => {
+            const original = btn.textContent;
+            const txt = (btn.getAttribute("data-copy-text") || "").replaceAll("&#10;", "\n");
+            try {
+                await navigator.clipboard.writeText(txt);
+                btn.textContent = "✅ Copiado";
+                setTimeout(() => { btn.textContent = original; }, 1200);
+            } catch (err) {
+                btn.textContent = "❌ Falhou";
+                setTimeout(() => { btn.textContent = original; }, 1200);
+            }
+        });
+    });
+})();
+</script>

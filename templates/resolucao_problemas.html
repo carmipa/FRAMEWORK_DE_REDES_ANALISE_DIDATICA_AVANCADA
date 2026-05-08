@@ -32,6 +32,17 @@
             max-width: 100%;
             height: auto;
         }
+        .topology-wrap .mermaid svg g.node.topology-node-selected rect,
+        .topology-wrap .mermaid svg g.node.topology-node-selected polygon,
+        .topology-wrap .mermaid svg g.node.topology-node-selected path {
+            stroke: #f2cc60 !important;
+            stroke-width: 3px !important;
+            filter: drop-shadow(0 0 6px rgba(242, 204, 96, 0.45));
+        }
+        .topology-wrap .mermaid svg g.node.topology-node-selected .label text,
+        .topology-wrap .mermaid svg g.node.topology-node-selected span {
+            font-weight: 700;
+        }
         .problem-title {
             display: inline-flex;
             align-items: center;
@@ -59,6 +70,24 @@
             flex-wrap: wrap;
             gap: 0.45rem;
             margin-top: 0.45rem;
+        }
+        .scenario-network-hero {
+            border: 1px solid #30363d;
+            border-left: 4px solid #1f6feb;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #0f1724 0%, #13233a 100%);
+            padding: 0.85rem;
+        }
+        .scenario-network-value {
+            font-size: clamp(1.4rem, 2.8vw, 2.2rem);
+            font-weight: 800;
+            color: #79c0ff;
+            line-height: 1.1;
+            letter-spacing: 0.02em;
+        }
+        .scenario-network-meta {
+            font-size: 0.82rem;
+            color: #8b949e;
         }
         .topology-card {
             border-left: 4px solid #1f6feb;
@@ -321,20 +350,62 @@
     {% endif %}
 
     {% if scenario %}
+    <div class="problem-box p-3 mb-3 scenario-network-hero">
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
+            <div>
+                <div class="small text-secondary text-uppercase fw-semibold" style="letter-spacing:0.06em;">
+                    Rede em cálculo · cenário VLSM
+                </div>
+                <div class="scenario-network-value">
+                    Classe {{ scenario.base_classe }} <span class="text-light">/{{ scenario.base_network_prefix }}</span>
+                </div>
+                <div class="scenario-network-meta">
+                    Ref. {{ scenario.base_faixa_octeto }} · {{ scenario.base_mascara_padrao }}
+                </div>
+            </div>
+            <div class="text-end">
+                <div class="small text-secondary">Rede base</div>
+                <div class="fw-bold text-warning">{{ scenario.base_network }}</div>
+                <div class="small text-secondary mt-1">1º octeto: <span class="text-light fw-bold">{{ scenario.base_primeiro_octeto }}</span></div>
+                <div class="small text-secondary">Máscara: <span class="text-light fw-bold">{{ scenario.base_network_mask }}</span></div>
+            </div>
+        </div>
+    </div>
+
     <div class="problem-box p-3 mb-3">
         <h5 class="text-warning mb-2 problem-title"><span>🧭</span><span>Resumo do planejamento</span></h5>
         <p class="mb-1 text-light">Rede base: <strong>{{ scenario.base_network }}</strong></p>
         <p class="mb-1 text-light">Total de hosts solicitados: <strong>{{ scenario.total_hosts_requested }}</strong></p>
+        <p class="mb-1 text-light">Total de hosts suportados (LANs): <strong>{{ scenario.total_hosts_supported }}</strong> | Eficiência geral: <strong>{{ scenario.overall_efficiency_pct }}%</strong></p>
         <p class="mb-0 text-light">Localidades: <strong>{{ scenario.total_locations }}</strong> | Topologia WAN: <strong>{{ scenario.topology_type|upper }}</strong> | Prefixo WAN: <strong>/{{ scenario.wan_prefix }}</strong></p>
         <div class="result-strip">
             <span class="section-chip chip-info">🧱 Base {{ scenario.base_network }}</span>
             <span class="section-chip chip-success">👥 Hosts {{ scenario.total_hosts_requested }}</span>
             <span class="section-chip chip-warning">🏢 Locais {{ scenario.total_locations }}</span>
+            <span class="section-chip chip-success">📈 Eficiência {{ scenario.overall_efficiency_pct }}%</span>
             {% if scenario.topology_type == "mesh" %}
             <span class="section-chip chip-danger">🕸️ Topologia MESH</span>
             {% else %}
             <span class="section-chip chip-info">🔄 Topologia RING</span>
             {% endif %}
+        </div>
+    </div>
+
+    <div class="problem-box p-3 mb-3">
+        <h5 class="text-info mb-3 problem-title"><span>🧠</span><span>Explicação do cálculo VLSM</span></h5>
+        <div class="row g-3">
+            {% for lan in scenario.lan_blocks %}
+            <div class="col-12 col-lg-6">
+                <div class="topology-card h-100">
+                    <div class="fw-bold text-light mb-2">{{ lan.location_name }} ({{ lan.hosts_required }} hosts)</div>
+                    <div class="small text-secondary">Hosts necessários + rede/broadcast: <span class="text-light fw-bold">{{ lan.hosts_needed_total }}</span></div>
+                    <div class="small text-secondary">Bits de host: <span class="text-light fw-bold">{{ lan.host_bits }}</span> (2^{{ lan.host_bits }} = {{ lan.hosts_supported + 2 }})</div>
+                    <div class="small text-secondary">Prefixo calculado: <span class="text-warning fw-bold">/{{ lan.calculated_prefix }}</span></div>
+                    <div class="small text-secondary">Rede alocada: <span class="text-info fw-bold">{{ lan.network }}/{{ lan.prefix }}</span></div>
+                    <div class="small text-secondary">Eficiência: <span class="text-success fw-bold">{{ lan.efficiency_pct }}%</span> ({{ lan.hosts_required }}/{{ lan.hosts_supported }})</div>
+                </div>
+            </div>
+            {% endfor %}
         </div>
     </div>
 
@@ -351,6 +422,7 @@
                         <th>🚪 Gateway</th>
                         <th>✅ Faixa de hosts</th>
                         <th>📊 Necessário/Suportado</th>
+                        <th>⚙️ Eficiência</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -363,6 +435,96 @@
                         <td>{{ lan.gateway }}</td>
                         <td>{{ lan.host_range_start }} - {{ lan.host_range_end }}</td>
                         <td>{{ lan.hosts_required }} / {{ lan.hosts_supported }}</td>
+                        <td>{{ lan.efficiency_pct }}%</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="small text-secondary mt-2">
+            Endereços da rede base: <strong>{{ scenario.base_total_addresses }}</strong> |
+            Consumidos (LAN+WAN): <strong>{{ scenario.total_consumed_addresses }}</strong> |
+            Livres: <strong>{{ scenario.free_addresses }}</strong> |
+            Uso: <strong>{{ scenario.used_address_pct }}%</strong> |
+            Livre: <strong>{{ scenario.free_address_pct }}%</strong>
+        </div>
+        <div class="small text-secondary mt-1">
+            Prefixo atual da base: <strong>/{{ scenario.base_network_prefix }}</strong> |
+            Prefixo mínimo sugerido pelo consumo atual: <strong>/{{ scenario.suggested_base_prefix }}</strong>
+        </div>
+    </div>
+
+    <div class="problem-box p-3 mb-3">
+        <h5 class="text-warning mb-2 problem-title"><span>🧭</span><span>Sugestão automática de topologia (Ring vs Mesh)</span></h5>
+        <p class="small text-secondary mb-2">{{ scenario.topology_insights.recommended_reason }}</p>
+        <p class="small mb-2">
+            Recomendação: <strong class="text-info">{{ scenario.topology_insights.recommended|upper }}</strong> |
+            Selecionada: <strong class="text-warning">{{ scenario.topology_type|upper }}</strong>
+        </p>
+        <p class="small text-secondary mb-3">{{ scenario.topology_insights.selected_note }}</p>
+        <div class="table-responsive">
+            <table class="table table-dark table-bordered table-sm mb-0">
+                <thead>
+                    <tr>
+                        <th>Métrica</th>
+                        <th>RING</th>
+                        <th>MESH</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Links WAN</td>
+                        <td>{{ scenario.topology_insights.ring_links }}</td>
+                        <td>{{ scenario.topology_insights.mesh_links }}</td>
+                    </tr>
+                    <tr>
+                        <td>Custo estimado (unid.)</td>
+                        <td>{{ scenario.topology_insights.ring_cost }}</td>
+                        <td>{{ scenario.topology_insights.mesh_cost }}</td>
+                    </tr>
+                    <tr>
+                        <td>Redundância</td>
+                        <td>Baixa/Média</td>
+                        <td>Alta</td>
+                    </tr>
+                    <tr>
+                        <td>Complexidade operacional</td>
+                        <td>Baixa</td>
+                        <td>Alta</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="problem-box p-3 mb-3">
+        <h5 class="text-info mb-3 problem-title"><span>📈</span><span>Projeção de crescimento (25%, 50%, 100%)</span></h5>
+        <div class="table-responsive">
+            <table class="table table-dark table-bordered table-sm mb-0">
+                <thead>
+                    <tr>
+                        <th>Localidade</th>
+                        <th>Atual</th>
+                        <th>+25%</th>
+                        <th>+50%</th>
+                        <th>+100%</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in scenario.growth_forecast %}
+                    <tr>
+                        <td>{{ item.location_name }}</td>
+                        <td>/{{ item.current_prefix }}</td>
+                        {% for g in item.scenarios %}
+                        <td>
+                            /{{ g.required_prefix }} · {{ g.future_hosts }} hosts
+                            {% if g.fits_current %}
+                            <span class="text-success">✓ cabe</span>
+                            {% else %}
+                            <span class="text-danger">✗ não cabe</span>
+                            {% endif %}
+                        </td>
+                        {% endfor %}
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -407,6 +569,12 @@
         <div class="topology-wrap mb-2">
             <pre class="mermaid mb-0">{{ scenario.topology_mermaid }}</pre>
         </div>
+        <div class="problem-box p-2 mt-2">
+            <div class="small text-info fw-bold mb-1">🔎 Detalhes do elemento selecionado</div>
+            <div id="topology-detail-box" class="small text-secondary">
+                Clique em um roteador ou nó WAN no diagrama para visualizar os detalhes aqui.
+            </div>
+        </div>
         <p class="small text-secondary mb-0">Use esse desenho como referência de montagem no Cisco Packet Tracer.</p>
     </div>
 
@@ -417,6 +585,13 @@
             <li class="mb-1">{{ step }}</li>
             {% endfor %}
         </ol>
+        <hr class="border-secondary">
+        <div class="small text-info fw-bold mb-1">Checklist final de validação</div>
+        <ul class="mb-0 small text-secondary">
+            {% for item in scenario.packet_tracer_checklist %}
+            <li>{{ item }}</li>
+            {% endfor %}
+        </ul>
     </div>
 
     <div class="row g-3 mb-3">
@@ -428,6 +603,17 @@
                     <span class="section-chip chip-warning">📋 Script pronto para copiar</span>
                 </div>
                 <pre class="small mb-0"><code>{{ commands }}</code></pre>
+                {% set cli_exp = scenario.router_cli_explanations.get(key, []) if scenario.router_cli_explanations else [] %}
+                {% if cli_exp %}
+                <div class="mt-2">
+                    <div class="small text-info fw-bold mb-1">Explicação rápida do bloco</div>
+                    <ul class="small text-secondary mb-0 ps-3">
+                        {% for item in cli_exp %}
+                        <li>{{ item }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
             </div>
         </div>
         {% endfor %}
@@ -487,7 +673,50 @@
 {% block extra_scripts %}
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
 <script>
-    mermaid.initialize({ startOnLoad: true, theme: "dark" });
+    const topologyDetails = {{ (scenario.topology_details if scenario else {}) | tojson }};
+    let selectedTopologyNodeId = null;
+
+    function applySelectedTopologyNode() {
+        const allNodes = document.querySelectorAll(".topology-wrap .mermaid svg g.node");
+        allNodes.forEach((node) => node.classList.remove("topology-node-selected"));
+        if (!selectedTopologyNodeId) return;
+        allNodes.forEach((node) => {
+            const nodeIdAttr = node.getAttribute("id") || "";
+            if (nodeIdAttr.includes(`-${selectedTopologyNodeId}-`) || nodeIdAttr.endsWith(selectedTopologyNodeId)) {
+                node.classList.add("topology-node-selected");
+            }
+        });
+    }
+
+    window.showTopologyDetail = function (nodeId) {
+        const box = document.getElementById("topology-detail-box");
+        if (!box) return;
+        selectedTopologyNodeId = nodeId;
+        applySelectedTopologyNode();
+        const detail = topologyDetails[nodeId];
+        if (!detail) {
+            box.innerHTML = `<span class="text-warning">Sem detalhes para o elemento ${nodeId}.</span>`;
+            return;
+        }
+        if (detail.type === "router") {
+            box.innerHTML = `
+                <div><strong class="text-light">${detail.title}</strong> · <span class="text-info">LAN ${detail.network}</span></div>
+                <div>Gateway: <strong>${detail.gateway}</strong> | Máscara: <strong>${detail.mask}</strong> | Wildcard: <strong>${detail.wildcard}</strong></div>
+                <div>Faixa de hosts: <strong>${detail.host_range}</strong></div>
+                <div>Capacidade: <strong>${detail.hosts_required}</strong> necessários / <strong>${detail.hosts_supported}</strong> suportados</div>
+            `;
+            return;
+        }
+        box.innerHTML = `
+            <div><strong class="text-light">${detail.title}</strong> · <span class="text-warning">WAN ${detail.network}</span></div>
+            <div>Máscara: <strong>${detail.mask}</strong> | Wildcard: <strong>${detail.wildcard}</strong></div>
+            <div>Lado A: <strong>${detail.endpoint_a}</strong></div>
+            <div>Lado B: <strong>${detail.endpoint_b}</strong></div>
+        `;
+    };
+
+    mermaid.initialize({ startOnLoad: true, theme: "dark", securityLevel: "loose" });
+    setTimeout(applySelectedTopologyNode, 250);
 
     const container = document.getElementById("locations-container");
     const addButton = document.getElementById("btn-add-location");

@@ -13,6 +13,20 @@ def router_export_filename(location_name):
     return f"R-{normalized}.txt"
 
 
+def _require_export_scenario(scenario, event_name):
+    if not scenario:
+        log_event("warning", event_name, status="empty_scenario")
+        raise EntradaInvalidaError("Cenário vazio para exportação.")
+    lan_blocks = scenario.get("lan_blocks") or []
+    if not lan_blocks:
+        log_event("warning", event_name, status="empty_locations")
+        raise EntradaInvalidaError(
+            "Não há localidades no cenário para exportação."
+        )
+    wan_links = scenario.get("wan_links") or []
+    return lan_blocks, wan_links
+
+
 def generate_router_lab_blocks(scenario):
     lan_blocks = scenario.get("lan_blocks") or []
     wan_links = scenario.get("wan_links") or []
@@ -119,17 +133,7 @@ def generate_router_lab_blocks(scenario):
 
 
 def generate_packet_tracer_script(scenario):
-    if not scenario:
-        log_event("warning", "problem_export_txt", status="empty_scenario")
-        raise EntradaInvalidaError("Cenário vazio para exportação.")
-
-    lan_blocks = scenario.get("lan_blocks") or []
-    wan_links = scenario.get("wan_links") or []
-    if not lan_blocks:
-        log_event("warning", "problem_export_txt", status="empty_locations")
-        raise EntradaInvalidaError(
-            "Não há localidades no cenário para exportação."
-        )
+    lan_blocks, wan_links = _require_export_scenario(scenario, "problem_export_txt")
 
     lines = [
         "!",
@@ -175,20 +179,9 @@ def generate_packet_tracer_script(scenario):
 
 def generate_entrega_relatorio_txt(scenario):
     """Relatório textual único com resumo, tabelas LAN/WAN, Mermaid e CLI."""
-    if not scenario:
-        log_event("warning", "problem_export_entrega", status="empty_scenario")
-        raise EntradaInvalidaError("Cenário vazio para exportação.")
-
-    lan_blocks = scenario.get("lan_blocks") or []
-    if not lan_blocks:
-        log_event(
-            "warning", "problem_export_entrega", status="empty_locations"
-        )
-        raise EntradaInvalidaError(
-            "Não há localidades no cenário para exportação."
-        )
-
-    wan_links = scenario.get("wan_links") or []
+    lan_blocks, wan_links = _require_export_scenario(
+        scenario, "problem_export_entrega"
+    )
     topology_type = (scenario.get("topology_type") or "-").upper()
     wan_prefix = scenario.get("wan_prefix")
     lines = [
@@ -201,6 +194,12 @@ def generate_entrega_relatorio_txt(scenario):
         "-" * 78,
         f"Rede base:           {scenario.get('base_network', '-')}",
         f"Hosts solicitados:   {scenario.get('total_hosts_requested', '-')}",
+        f"Hosts suportados:    {scenario.get('total_hosts_supported', '-')}",
+        f"Eficiencia geral:    {scenario.get('overall_efficiency_pct', '-')}%",
+        f"Uso da rede base:    {scenario.get('used_address_pct', '-')}% (livre: {scenario.get('free_address_pct', '-')}%)",
+        f"Endereco livre:      {scenario.get('free_addresses', '-')}",
+        f"Prefixo base atual:  /{scenario.get('base_network_prefix', '-')}",
+        f"Prefixo sugerido:    /{scenario.get('suggested_base_prefix', '-')}",
         f"Localidades:         {scenario.get('total_locations', '-')}",
         f"Topologia WAN:       {topology_type}",
         (
@@ -213,11 +212,11 @@ def generate_entrega_relatorio_txt(scenario):
         "-" * 78,
         (
             f"{'Local':<18} {'Rede':<22} {'Mascara':<18} "
-            f"{'Wildcard':<14} {'Gateway':<14}"
+            f"{'Wildcard':<14} {'Gateway':<14} {'Ef(%)':<8}"
         ),
         (
             f"{'-' * 18} {'-' * 22} {'-' * 18} "
-            f"{'-' * 14} {'-' * 14}"
+            f"{'-' * 14} {'-' * 14} {'-' * 8}"
         ),
     ]
 
@@ -225,12 +224,63 @@ def generate_entrega_relatorio_txt(scenario):
         rede = f"{lan['network']}/{lan['prefix']}"
         lines.append(
             f"{lan['location_name']:<18} {rede:<22} {lan['netmask']:<18} "
-            f"{lan['wildcard']:<14} {lan['gateway']:<14}"
+            f"{lan['wildcard']:<14} {lan['gateway']:<14} {str(lan.get('efficiency_pct', 0)):<8}"
         )
         faixa = f"{lan['host_range_start']} - {lan['host_range_end']}"
         neces = f"{lan['hosts_required']} / {lan['hosts_supported']}"
         lines.append(f"    Faixa de hosts: {faixa}")
         lines.append(f"    Necessario / Suportado: {neces}")
+        lines.append("")
+
+    lines.extend(
+        [
+            "",
+            "2.1) EXPLICACAO DIDATICA DO CALCULO VLSM",
+            "-" * 78,
+        ]
+    )
+    for lan in lan_blocks:
+        lines.append(
+            f"{lan['location_name']}: {lan['hosts_required']} hosts -> /{lan.get('calculated_prefix', lan['prefix'])}"
+        )
+        lines.append(
+            f"    Necessarios c/ rede+broadcast: {lan.get('hosts_needed_total', '-')}"
+        )
+        lines.append(f"    Bits de host: {lan.get('host_bits', '-')}")
+        lines.append(
+            f"    Alocacao: {lan['network']}/{lan['prefix']} ({lan['hosts_supported']} hosts suportados)"
+        )
+        lines.append(f"    Eficiencia: {lan.get('efficiency_pct', 0)}%")
+        lines.append("")
+
+    lines.extend(
+        [
+            "2.2) COMPARACAO DE TOPOLOGIA (RING vs MESH)",
+            "-" * 78,
+        ]
+    )
+    top = scenario.get("topology_insights") or {}
+    lines.extend(
+        [
+            f"Recomendacao: {str(top.get('recommended', '-')).upper()}",
+            f"Justificativa: {top.get('recommended_reason', '-')}",
+            f"Selecionada pelo usuario: {str(scenario.get('topology_type', '-')).upper()}",
+            f"Nota: {top.get('selected_note', '-')}",
+            "",
+            f"Ring -> links: {top.get('ring_links', '-')} | custo estimado: {top.get('ring_cost', '-')}",
+            f"Mesh -> links: {top.get('mesh_links', '-')} | custo estimado: {top.get('mesh_cost', '-')}",
+            "",
+            "2.3) PROJECAO DE CRESCIMENTO",
+            "-" * 78,
+        ]
+    )
+    for item in scenario.get("growth_forecast") or []:
+        lines.append(f"{item.get('location_name', '-')}: atual /{item.get('current_prefix', '-')}")
+        for g in item.get("scenarios") or []:
+            status = "OK" if g.get("fits_current") else "AJUSTAR"
+            lines.append(
+                f"    +{g.get('factor_label', '-')} -> {g.get('future_hosts', '-')} hosts, /{g.get('required_prefix', '-')} ({status})"
+            )
         lines.append("")
 
     lines.extend(
@@ -270,6 +320,11 @@ def generate_entrega_relatorio_txt(scenario):
     steps = scenario.get("packet_tracer_steps") or []
     for index, step in enumerate(steps, start=1):
         lines.append(f"{index}. {step}")
+    lines.append("")
+    lines.append("5.1) Checklist final de validacao")
+    lines.append("-" * 78)
+    for item in scenario.get("packet_tracer_checklist") or []:
+        lines.append(f"[ ] {item}")
     lines.append("")
 
     router_commands = scenario.get("router_commands") or {}

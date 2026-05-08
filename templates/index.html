@@ -151,6 +151,31 @@
 
     {% if res %}
     <div class="contextual-block" data-visible-tabs="cidr,mask,wildcard,autoip,dominio">
+    <div class="card-tech shadow mb-3 border border-secondary" style="border-left: 4px solid #1f6feb !important;">
+        <div class="p-3 d-flex flex-wrap justify-content-between align-items-start gap-2">
+            <div>
+                <div class="small text-secondary text-uppercase fw-semibold" style="letter-spacing:0.06em;">Rede em cálculo</div>
+                <div class="h4 mb-1 text-info fw-bold">
+                    {% if res.classes_abc_fixas %}
+                    Classe {{ res.classes_abc_fixas[0].letra }}
+                    {% else %}
+                    Classe {{ res.classe }}
+                    {% endif %}
+                    <span class="text-light">/{{ res.cidr }}</span>
+                </div>
+                {% if res.classes_abc_fixas %}
+                <div class="small text-secondary">Ref. {{ res.classes_abc_fixas[0].faixa_octeto }} · {{ res.classes_abc_fixas[0].mascara_padrao }}</div>
+                {% endif %}
+            </div>
+            <div class="text-end">
+                {% if not res.somente_mascara %}
+                <div class="small text-secondary">1º octeto: <span class="text-warning fw-bold">{{ res.primeiro_octeto }}</span></div>
+                {% endif %}
+                <div class="small text-secondary">Máscara: <span class="text-light fw-bold">{{ res.mask }}</span></div>
+                <div class="small text-secondary">Rede: <span class="text-light fw-bold">{{ res.rede if not res.somente_mascara else '—' }}</span></div>
+            </div>
+        </div>
+    </div>
 
     {% if active_tab_pre == 'wildcard' %}
     <div class="card-tech p-4 shadow mb-3">
@@ -175,6 +200,13 @@
                     <tr><th>📦 CAPACIDADE</th><td>{{ res.total }} IPs totais ({{ res.uteis }} úteis)</td></tr>
                 </tbody>
             </table>
+        </div>
+        <div class="alert alert-secondary border border-secondary small mt-3 mb-0">
+            <strong class="text-info">Como o cálculo foi decidido:</strong><br>
+            1) Wildcard informada <code>{{ wildcard_pre or res.wildcard }}</code> → máscara equivalente <code>{{ res.mask }}</code> (inverso bit a bit).<br>
+            2) Máscara equivalente define o prefixo <strong>/{{ res.cidr }}</strong>.<br>
+            3) Com IP + /{{ res.cidr }}, o motor calcula rede, broadcast e faixa de hosts.<br>
+            4) Validação didática: em cada octeto, <strong>wildcard + máscara = 255</strong>.
         </div>
     </div>
     {% if res.and_table %}
@@ -277,6 +309,16 @@
         <div class="classe-destaque-octeto mb-2">Máscara: <span class="text-warning fw-bold">{{ res.mask }}</span></div>
         <div class="classe-destaque-faixa">{{ res.classe_faixa }}</div>
         <div class="small text-secondary mt-3 pt-2 border-top border-secondary border-opacity-25">{{ res.classe_observacao }}</div>
+    </div>
+    <div class="card-tech p-3 shadow mb-3 border border-secondary" style="border-left: 4px solid #1f6feb !important;">
+        <h6 class="text-info mb-2">📘 Explicação do cálculo da máscara</h6>
+        <div class="small text-secondary">
+            Máscara analisada: <strong class="text-light">{{ res.mask }}</strong><br>
+            Prefixo resultante: <strong class="text-warning">/{{ res.cidr }}</strong><br>
+            Capacidade por sub-rede: <strong class="text-light">{{ res.total }}</strong> IPs totais,
+            <strong class="text-light">{{ res.uteis }}</strong> hosts úteis.<br>
+            Regra didática: bits 1 da máscara representam REDE; bits 0 representam HOST.
+        </div>
     </div>
     {% else %}
     {% if res.classes_abc_fixas %}

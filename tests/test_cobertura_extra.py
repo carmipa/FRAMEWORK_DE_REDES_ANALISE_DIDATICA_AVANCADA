@@ -8,6 +8,7 @@ import unittest
 from unittest.mock import patch
 
 from app import create_app
+from backend.web import app_routes
 from backend.analise.home_web_helpers import normalizar_hostname_entrada
 from backend.analise.portas.portas_service import (
     montar_portas_catalogo_exibicao,
@@ -197,6 +198,88 @@ class TestHelpersPuros(unittest.TestCase):
         nomes = {p.get("nome", "") for p in PROTOCOLOS_CATALOGO}
         esperados = {"BGP-4 / eBGP", "OSPFv2", "RIPv2", "EIGRP"}
         self.assertTrue(esperados.issubset(nomes))
+
+
+class TestAppRoutesHelpers(unittest.TestCase):
+    def test_resolve_analysis_mode_fallbacks(self):
+        self.assertEqual(
+            app_routes._resolve_analysis_mode("", "24", "", "", "", ""),
+            "cidr",
+        )
+        self.assertEqual(
+            app_routes._resolve_analysis_mode("", "", "255.255.255.0", "", "", ""),
+            "mask",
+        )
+        self.assertEqual(
+            app_routes._resolve_analysis_mode("", "", "", "0.0.0.255", "", ""),
+            "wildcard",
+        )
+        self.assertEqual(
+            app_routes._resolve_analysis_mode("", "", "", "", "2001:db8::1", ""),
+            "ipv6",
+        )
+        self.assertEqual(
+            app_routes._resolve_analysis_mode("", "", "", "", "", "10.0.0.1"),
+            "autoip",
+        )
+
+    def test_finalize_home_post_com_erro_gera_texto_didatico(self):
+        wizard, timeline, erro_didatico = app_routes._finalize_home_post(
+            res=None,
+            erro="erro de teste",
+            wizard_calculo=[],
+            timeline_bloco=None,
+            erro_didatico=None,
+        )
+        self.assertEqual(wizard, [])
+        self.assertIsNone(timeline)
+        self.assertIsInstance(erro_didatico, dict)
+        self.assertIn("causa", erro_didatico)
+        self.assertIn("como_corrigir", erro_didatico)
+
+    def test_run_ipv4_cidr_post_processing_detecta_cidr_invalido(self):
+        result = app_routes._run_ipv4_cidr_post_processing(
+            erro=None,
+            cidr_val=40,
+            ip_p="10.0.0.1",
+            forcar_somente_mascara=False,
+            cidr_origem="",
+            regua_count=5,
+            mode="cidr",
+            ip_entrada_original="10.0.0.1",
+            cidr_raw="40",
+            mask_dec_p="",
+            wildcard_p="",
+        )
+        self.assertIn("CIDR deve estar entre 0 e 32", str(result["erro"]))
+        self.assertIn("cidr", result["invalid_fields"])
+
+    @patch("backend.web.app_routes.processar_modo_comparador")
+    def test_apply_mode_processing_comparador(self, mock_cmp):
+        mock_cmp.return_value = {
+            "erro": None,
+            "comparador_ip": "10.0.0.10",
+            "comparador_cards": [{"cidr": 24}, {"cidr": 26}],
+            "invalid_fields": set(),
+        }
+        invalid_fields = set()
+        result = app_routes._apply_mode_processing(
+            modo="comparador",
+            erro=None,
+            ip_p="10.0.0.10",
+            ipv6_p="",
+            cidr_raw="",
+            mask_dec_p="",
+            wildcard_p="",
+            ip_entrada_original="10.0.0.10",
+            comparador_cidr_a_pre="24",
+            comparador_cidr_b_pre="26",
+            invalid_fields=invalid_fields,
+        )
+        self.assertTrue(result["comparador_only"])
+        self.assertEqual(result["comparador_ip"], "10.0.0.10")
+        self.assertEqual(len(result["comparador_cards"]), 2)
+        mock_cmp.assert_called_once()
 
 
 if __name__ == "__main__":

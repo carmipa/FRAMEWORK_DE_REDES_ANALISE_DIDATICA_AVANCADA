@@ -29,10 +29,17 @@ def normalize_cli_identifier(value, fallback="SITE"):
 
 def normalize_locations_input(locations_input):
     normalized = []
+    names_seen = set()
     for index, raw in enumerate(locations_input, start=1):
         name = (raw.get("name") or "").strip()
         if not name:
             raise EntradaInvalidaError(f"Nome da localidade #{index} deve ser informado.")
+        key_name = name.casefold()
+        if key_name in names_seen:
+            raise EntradaInvalidaError(
+                f"Existem localidades com nomes duplicados: '{name}'."
+            )
+        names_seen.add(key_name)
         hosts = parse_positive_int(raw.get("hosts"), f"Hosts de {name}")
         normalized.append(
             {

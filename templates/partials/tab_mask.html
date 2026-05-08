@@ -1,3 +1,58 @@
+<div class="small text-secondary mb-3 border-start border-info border-2 ps-3 py-2 rounded-1" style="background: rgba(31, 111, 235, 0.10);" role="note">
+    <strong class="text-info">📚 Conceito rápido:</strong>
+    a máscara define quais bits são <strong>REDE</strong> (1) e quais são <strong>HOST</strong> (0).
+    Ex.: <code class="text-info">255.255.255.240</code> = <code class="text-info">11111111.11111111.11111111.11110000</code> → <strong>/28</strong>.
+</div>
+
+<div class="table-responsive mb-3">
+    <table class="table table-dark table-bordered table-sm mb-0">
+        <thead>
+            <tr>
+                <th data-bs-toggle="tooltip" title="Prefixo CIDR da sub-rede.">CIDR</th>
+                <th data-bs-toggle="tooltip" title="Máscara decimal equivalente.">Máscara</th>
+                <th data-bs-toggle="tooltip" title="Wildcard inversa da máscara.">Wildcard</th>
+                <th data-bs-toggle="tooltip" title="Hosts úteis por sub-rede (IPv4 clássico).">Hosts úteis</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>/24</td><td>255.255.255.0</td><td>0.0.0.255</td><td>254</td></tr>
+            <tr><td>/25</td><td>255.255.255.128</td><td>0.0.0.127</td><td>126</td></tr>
+            <tr><td>/26</td><td>255.255.255.192</td><td>0.0.0.63</td><td>62</td></tr>
+            <tr><td>/27</td><td>255.255.255.224</td><td>0.0.0.31</td><td>30</td></tr>
+            <tr><td>/28</td><td>255.255.255.240</td><td>0.0.0.15</td><td>14</td></tr>
+            <tr><td>/29</td><td>255.255.255.248</td><td>0.0.0.7</td><td>6</td></tr>
+            <tr><td>/30</td><td>255.255.255.252</td><td>0.0.0.3</td><td>2</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="card-tech p-3 mb-3">
+    <h6 class="text-warning mb-2">🧮 Calculadora visual de hosts</h6>
+    <div class="row g-2 align-items-center">
+        <div class="col-lg-5">
+            <label for="mask_hosts_slider" class="form-label small text-secondary mb-1">Hosts necessários</label>
+            <input
+                id="mask_hosts_slider"
+                type="range"
+                class="form-range"
+                min="1"
+                max="4094"
+                step="1"
+                value="254"
+                data-bs-toggle="tooltip"
+                data-bs-placement="top"
+                title="Arraste para estimar prefixo/máscara/wildcard por necessidade de hosts."
+            >
+        </div>
+        <div class="col-lg-7">
+            <div class="small text-secondary">Hosts escolhidos: <strong id="mask_hosts_value" class="text-light">254</strong></div>
+            <div class="small text-secondary">Com rede+broadcast: <strong id="mask_needed_value" class="text-light">256</strong></div>
+            <div class="small text-secondary">Prefixo sugerido: <strong id="mask_prefix_value" class="text-info">/24</strong></div>
+            <div class="small text-secondary">Máscara: <strong id="mask_decimal_value" class="text-warning">255.255.255.0</strong> | Wildcard: <strong id="mask_wildcard_value" class="text-warning">0.0.0.255</strong></div>
+        </div>
+    </div>
+</div>
+
 <form method="POST" class="row g-3 calc-form" data-tab-form="mask">
     <input type="hidden" name="tab" value="mask">
     <div class="col-lg-6">
@@ -24,3 +79,36 @@
         <button type="submit" name="modo" value="mask" class="btn btn-primary fw-bold btn-sm w-100" data-bs-toggle="tooltip" data-bs-placement="top" title="Analisa só a máscara: /, bits, intervalos e tamanho de bloco.">📏 Executar</button>
     </div>
 </form>
+
+<script>
+(() => {
+    const slider = document.getElementById("mask_hosts_slider");
+    if (!slider) return;
+    const hostsEl = document.getElementById("mask_hosts_value");
+    const neededEl = document.getElementById("mask_needed_value");
+    const prefixEl = document.getElementById("mask_prefix_value");
+    const maskEl = document.getElementById("mask_decimal_value");
+    const wildEl = document.getElementById("mask_wildcard_value");
+
+    const toMask = (prefix) => {
+        const bits = (0xffffffff << (32 - prefix)) >>> 0;
+        return [24, 16, 8, 0].map((shift) => (bits >>> shift) & 255).join(".");
+    };
+    const toWildcard = (mask) => mask.split(".").map((n) => String(255 - Number(n))).join(".");
+
+    const update = () => {
+        const hosts = Number(slider.value);
+        const needed = hosts + 2;
+        const hostBits = Math.ceil(Math.log2(needed));
+        const prefix = 32 - hostBits;
+        const mask = toMask(prefix);
+        hostsEl.textContent = String(hosts);
+        neededEl.textContent = String(needed);
+        prefixEl.textContent = `/${prefix}`;
+        maskEl.textContent = mask;
+        wildEl.textContent = toWildcard(mask);
+    };
+    slider.addEventListener("input", update);
+    update();
+})();
+</script>

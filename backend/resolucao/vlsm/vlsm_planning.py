@@ -42,6 +42,8 @@ def build_lan_blocks(base_network, locations):
     )
     for location in ordered:
         hosts = location["hosts_required"]
+        needed = hosts + 2
+        host_bits = (needed - 1).bit_length()
         prefix = required_prefix_for_hosts(hosts)
         if prefix < base_network.prefixlen:
             log_event(
@@ -60,6 +62,15 @@ def build_lan_blocks(base_network, locations):
         used.append(subnet)
         first_host, last_host = hosts_range(subnet)
         location["hosts_supported"] = max(subnet.num_addresses - 2, 0)
+        location["hosts_needed_total"] = needed
+        location["host_bits"] = host_bits
+        location["calculated_prefix"] = prefix
+        if location["hosts_supported"] > 0:
+            location["efficiency_pct"] = round(
+                (location["hosts_required"] / location["hosts_supported"]) * 100, 2
+            )
+        else:
+            location["efficiency_pct"] = 0.0
         location["network"] = str(subnet.network_address)
         location["prefix"] = subnet.prefixlen
         location["netmask"] = str(subnet.netmask)
@@ -157,6 +168,7 @@ def build_wan_links(base_network, used_subnets, location_keys, topology_type, wa
 def mermaid_topology(locations, wan_links):
     lines = ["graph LR"]
     name_map = {}
+    details_map = {}
     for index, location in enumerate(locations, start=1):
         node_id = f"R_{index}"
         name_map[location["location_key"]] = node_id
@@ -164,11 +176,36 @@ def mermaid_topology(locations, wan_links):
             f'    {node_id}["{location["router_name"]}\\nLAN: '
             f'{location["network"]}/{location["prefix"]}"]'
         )
-    for link in wan_links:
+        lines.append(f'    click {node_id} showTopologyDetail "{location["router_name"]}"')
+        details_map[node_id] = {
+            "type": "router",
+            "title": location["router_name"],
+            "network": f'{location["network"]}/{location["prefix"]}',
+            "gateway": location["gateway"],
+            "host_range": f'{location["host_range_start"]} - {location["host_range_end"]}',
+            "mask": location["netmask"],
+            "wildcard": location["wildcard"],
+            "hosts_required": location["hosts_required"],
+            "hosts_supported": location["hosts_supported"],
+        }
+    for index, link in enumerate(wan_links, start=1):
         left = name_map[link["endpoints"][0]]
         right = name_map[link["endpoints"][1]]
-        lines.append(f'    {left} ---|"{link["network"]}/{link["prefix"]}"| {right}')
-    return "\n".join(lines)
+        wan_id = f"W_{index}"
+        lines.append(f'    {wan_id}{{"WAN {index}\\n{link["network"]}/{link["prefix"]}"}}')
+        lines.append(f"    {left} --- {wan_id}")
+        lines.append(f"    {wan_id} --- {right}")
+        lines.append(f'    click {wan_id} showTopologyDetail "{link["name"]}"')
+        details_map[wan_id] = {
+            "type": "wan",
+            "title": link["name"],
+            "network": f'{link["network"]}/{link["prefix"]}',
+            "mask": link["netmask"],
+            "wildcard": link["wildcard"],
+            "endpoint_a": f'{link["endpoints"][0]} - {link["ips"][link["endpoints"][0]]}',
+            "endpoint_b": f'{link["endpoints"][1]} - {link["ips"][link["endpoints"][1]]}',
+        }
+    return "\n".join(lines), details_map
 
 
 def cleanup_lan_blocks(locations):

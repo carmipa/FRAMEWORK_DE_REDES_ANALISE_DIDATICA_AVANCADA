@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+
+{% block title %}Documentação | CyberNet Framework{% endblock %}
+
+{% block extra_head %}
+<style>
+    .doc-hero {
+        background: linear-gradient(135deg, #0f1724 0%, #1b2a41 100%);
+        border: 1px solid #30363d;
+        border-radius: 12px;
+        padding: 1rem 1.1rem;
+    }
+    .doc-layout {
+        display: grid;
+        grid-template-columns: 280px minmax(0, 1fr);
+        gap: 1rem;
+    }
+    .doc-sidebar {
+        background: #161b22;
+        border: 1px solid #30363d;
+        border-radius: 10px;
+        padding: 0.75rem;
+        max-height: 70vh;
+        overflow: auto;
+        position: sticky;
+        top: 1rem;
+    }
+    .doc-sidebar a {
+        display: block;
+        color: #c9d1d9;
+        text-decoration: none;
+        padding: 0.35rem 0.5rem;
+        border-radius: 6px;
+        margin-bottom: 0.1rem;
+        font-size: 0.92rem;
+        border: 1px solid transparent;
+        transition: all 0.15s ease;
+    }
+    .doc-sidebar a:hover {
+        background: rgba(88, 166, 255, 0.16);
+        border-color: #388bfd;
+        color: #ffffff;
+    }
+    .doc-sidebar a.active {
+        background: rgba(240, 185, 11, 0.2);
+        border-color: #f0b90b;
+        color: #f9e2a4;
+        font-weight: 700;
+    }
+    .doc-content-wrap {
+        border: 1px solid #30363d;
+        border-radius: 10px;
+        padding: 1rem;
+        background: #0d1117;
+        max-height: 70vh;
+        overflow: auto;
+    }
+    .markdown-doc {
+        line-height: 1.65;
+        color: #c9d1d9;
+    }
+    .markdown-doc h1, .markdown-doc h2, .markdown-doc h3, .markdown-doc h4 {
+        color: #58a6ff;
+        margin-top: 1.2rem;
+        margin-bottom: 0.55rem;
+        scroll-margin-top: 1rem;
+    }
+    .markdown-doc p {
+        margin-bottom: 0.8rem;
+    }
+    .markdown-doc p:has(img[src*="img.shields.io"]) {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.45rem;
+        margin-bottom: 0.9rem;
+    }
+    .markdown-doc p:has(img[src*="img.shields.io"]) a,
+    .markdown-doc p:has(img[src*="img.shields.io"]) img {
+        display: inline-flex;
+        vertical-align: middle;
+    }
+    .markdown-doc p:has(img[src*="img.shields.io"]) img {
+        height: 20px;
+        width: auto;
+    }
+    .markdown-doc ul, .markdown-doc ol {
+        margin-bottom: 0.9rem;
+        padding-left: 1.4rem;
+    }
+    .markdown-doc code {
+        background: rgba(110, 118, 129, 0.2);
+        border: 1px solid #30363d;
+        border-radius: 5px;
+        padding: 0.08rem 0.35rem;
+        color: #f2cc60;
+    }
+    .markdown-doc .mermaid {
+        background: #ffffff;
+        border: 1px solid #30363d;
+        border-radius: 8px;
+        padding: 0.75rem;
+        margin-bottom: 1rem;
+        overflow-x: auto;
+    }
+    .doc-pre {
+        white-space: pre-wrap;
+        word-break: break-word;
+        margin-bottom: 0;
+        background: #0b1220;
+        border: 1px solid #30363d;
+        border-radius: 8px;
+        padding: 0.75rem;
+        color: #d2e1ff;
+    }
+    @media (max-width: 991.98px) {
+        .doc-layout {
+            grid-template-columns: 1fr;
+        }
+        .doc-sidebar {
+            position: static;
+            max-height: 260px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    {% include "shared/partials/main_menu.html" %}
+    {% include "shared/partials/project_header.html" %}
+
+    <div class="doc-hero mb-3">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div>
+                <h4 class="text-warning mb-1">📚 Central de Documentação do Projeto</h4>
+                <div class="text-light opacity-75 small">Visão arquitetural, stack tecnológica e guias em formato de leitura web.</div>
+            </div>
+            <div class="d-flex flex-wrap gap-2 align-items-center">
+                <span class="shield-badge"><span class="icon">📄</span>{{ nome_documento }}</span>
+                <a
+                    href="/documentacao"
+                    class="btn btn-warning fw-bold text-dark"
+                    data-bs-toggle="tooltip"
+                    data-bs-placement="top"
+                    title="Recarrega a documentação principal."
+                >
+                    🔄 Atualizar
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {% if erro %}
+        <div class="alert alert-danger mb-0">{{ erro }}</div>
+    {% else %}
+        <div class="doc-layout">
+            <aside class="doc-sidebar">
+                <div class="small text-secondary fw-semibold mb-2">SUMÁRIO RÁPIDO</div>
+                {% if secoes %}
+                    {% for secao in secoes %}
+                        <a
+                            href="#{{ secao.id }}"
+                            style="padding-left: {{ ((secao.nivel | int) - 1) * 12 + 6 }}px;"
+                            data-bs-toggle="tooltip"
+                            data-bs-placement="right"
+                            title="Ir para: {{ secao.titulo }}"
+                        >
+                            {{ secao.titulo }}
+                        </a>
+                    {% endfor %}
+                {% else %}
+                    <div class="small text-secondary">Sem títulos mapeados no documento.</div>
+                {% endif %}
+            </aside>
+            <section class="doc-content-wrap">
+                <article class="markdown-doc">
+                    {{ conteudo_html | safe }}
+                </article>
+            </section>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<script>
+    mermaid.initialize({
+        startOnLoad: true,
+        securityLevel: "strict",
+        theme: "default"
+    });
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach((el) => new bootstrap.Tooltip(el));
+
+    const sectionLinks = Array.from(document.querySelectorAll('.doc-sidebar a[href^="#"]'));
+    const sections = sectionLinks
+        .map((link) => document.querySelector(link.getAttribute('href')))
+        .filter(Boolean);
+
+    if (sectionLinks.length && sections.length) {
+        const syncActiveLink = () => {
+            const threshold = window.scrollY + 140;
+            let activeId = sections[0].id;
+            sections.forEach((sec) => {
+                if (sec.offsetTop <= threshold) activeId = sec.id;
+            });
+            sectionLinks.forEach((link) => {
+                const isActive = link.getAttribute('href') === `#${activeId}`;
+                link.classList.toggle('active', isActive);
+            });
+        };
+
+        sectionLinks.forEach((link) => {
+            link.addEventListener('click', () => {
+                sectionLinks.forEach((l) => l.classList.remove('active'));
+                link.classList.add('active');
+            });
+        });
+
+        window.addEventListener('scroll', syncActiveLink, { passive: true });
+        syncActiveLink();
+    }
+</script>
+{% endblock %}
