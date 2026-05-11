@@ -26,6 +26,10 @@ def generate_packet_tracer_zip_buffer(scenario):
     consolidated_script = generate_packet_tracer_script(scenario)
     router_blocks = generate_router_lab_blocks(scenario)
     topology_mermaid = scenario.get("topology_mermaid", "")
+    try:
+        as_num = int(scenario.get("eigrp_as") or 71)
+    except (TypeError, ValueError):
+        as_num = 71
     readme = (
         "INSTRUCOES DE USO DO LABORATORIO\n"
         "===============================\n"
@@ -34,8 +38,9 @@ def generate_packet_tracer_zip_buffer(scenario):
         "LAB_TOPOLOGY.mermaid.\n"
         "3. Para cada roteador, abra o CLI e cole o conteúdo do arquivo "
         "em configs_individuais/.\n"
-        "4. Aguarde a convergência do RIP (aprox. 30s).\n"
-        "5. Valide com: show ip interface brief e show ip route rip.\n"
+        f"4. Aguarde a convergência do EIGRP (AS {as_num}; tipicamente alguns segundos).\n"
+        "5. Valide com: show ip interface brief, show ip eigrp neighbors "
+        "e show ip route eigrp.\n"
     )
 
     memory_file = BytesIO()

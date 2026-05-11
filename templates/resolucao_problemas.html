@@ -192,7 +192,29 @@
     <p class="small text-secondary mb-2">
         Página dedicada para cenários de prova/laboratório: cálculo VLSM, planejamento WAN /30,
         comandos Cisco e desenho da topologia para Packet Tracer.
+        O formulário abre <strong class="text-light">em branco</strong>.
+        <a href="/resolucao-problemas?demo=1" class="link-info text-decoration-none">Carregar exemplo didático</a>
+        (rede e localidades pré-preenchidas para teste).
     </p>
+    <details class="small text-secondary mb-3 problem-box p-2 border border-secondary rounded">
+        <summary class="text-light fw-semibold cursor-pointer user-select-none">EIGRP e «prefixos»: o que o professor pode mudar?</summary>
+        <div class="mt-2 mb-0">
+            <p class="mb-2">
+                <strong class="text-info">AS EIGRP</strong> (ex.: 71) é só o <em>número do processo</em> no roteador
+                (<code>router eigrp 71</code>). Em prova, o professor pode pedir outro AS (100, 65001, etc.) —
+                você altera só esse campo; não muda o tamanho das sub-redes IP.
+            </p>
+            <p class="mb-2">
+                <strong class="text-warning">Prefixo WAN</strong> (ex.: /30) define quantos endereços tem cada <em>link</em>
+                entre roteadores. É independente do EIGRP: o professor pode pedir /29, /30 ou outro, desde que caiba na rede base.
+            </p>
+            <p class="mb-0">
+                <strong class="text-success">CIDR da rede base</strong> (ex.: /16 em 172.19.0.0/16) é o bloco IP do enunciado.
+                O EIGRP depois usa <code>network &lt;rede&gt; &lt;wildcard&gt;</code> para «ligar» cada interface ao processo —
+                não confunda com o número do AS.
+            </p>
+        </div>
+    </details>
     <div class="mb-3">
         <span class="shield-badge"><span class="icon">🧠</span>VLSM Dinâmico</span>
         <span class="shield-badge"><span class="icon">🌐</span>WAN /30</span>
@@ -211,10 +233,10 @@
                         class="form-control {{ 'is-invalid' if 'base_network' in invalid_fields else '' }}"
                         name="base_network_ip"
                         value="{{ form_data.base_network_ip }}"
-                        placeholder="Ex.: 172.21.0.0"
+                        placeholder="Ex.: 172.19.0.0 ou 172.19.0.0/16"
                         data-bs-toggle="tooltip"
                         data-bs-placement="top"
-                        title="Endereço IPv4 da rede principal (sem a barra CIDR)."
+                        title="Rede principal. Você pode digitar só o IP ou já no formato CIDR (172.19.0.0/16); neste caso o campo CIDR ao lado pode ficar vazio."
                         required
                     >
                 </div>
@@ -227,10 +249,10 @@
                         min="0"
                         max="32"
                         value="{{ form_data.base_network_cidr }}"
-                        placeholder="16 (opcional)"
+                        placeholder="vazio = automático"
                         data-bs-toggle="tooltip"
                         data-bs-placement="top"
-                        title="Prefixo da rede principal (super-rede). Se vazio, o sistema infere automaticamente pelo IP base."
+                        title="Opcional. Se vazio e você não usou / no campo acima, o sistema infere pelo 1º octeto (ex.: 172.x → /16 classful)."
                     >
                 </div>
                 <div class="col-lg-2 col-md-6">
@@ -245,8 +267,7 @@
                         placeholder="30"
                         data-bs-toggle="tooltip"
                         data-bs-placement="top"
-                        title="Prefixo aplicado aos links WAN. Use 30 para o cenário clássico ponto a ponto."
-                        required
+                        title="Prefixo dos links WAN (/30 é o usual ponto a ponto). Se vazio, assume 30."
                     >
                 </div>
                 <div class="col-lg-2 col-md-6">
@@ -273,16 +294,39 @@
                         title="Processa o cenário e monta LANs, WANs, CLI e topologia."
                     >Calcular cenário</button>
                 </div>
-                <div class="col-lg-2 col-md-6 offset-lg-10">
-                    <div class="d-grid mt-1">
-                        <a
-                            href="/resolucao-problemas"
-                            class="btn btn-danger w-100"
-                            data-bs-toggle="tooltip"
-                            data-bs-placement="top"
-                            title="Limpa o formulario e remove os resultados exibidos."
-                        >🧹 Limpar tela</a>
-                    </div>
+                <div class="col-lg-2 col-md-6 d-grid align-items-end">
+                    <button
+                        type="button"
+                        class="btn btn-outline-danger w-100"
+                        id="btn-limpar-resolucao"
+                        data-bs-toggle="tooltip"
+                        data-bs-placement="top"
+                        title="Apaga resultados e reinicia o formulário em branco (uma linha de localidade vazia)."
+                    >🧹 Limpar tela</button>
+                </div>
+            </div>
+            <div class="row g-3 align-items-end mt-1">
+                <div class="col-lg-2 col-md-6">
+                    <label class="form-label text-secondary">AS EIGRP</label>
+                    <input
+                        type="number"
+                        class="form-control {{ 'is-invalid' if 'eigrp_as' in invalid_fields else '' }}"
+                        name="eigrp_as"
+                        min="1"
+                        max="65535"
+                        value="{{ form_data.eigrp_as }}"
+                        placeholder="71"
+                        data-bs-toggle="tooltip"
+                        data-bs-placement="top"
+                        title="Número do sistema autônomo EIGRP usado nos comandos router eigrp &lt;AS&gt; (ex.: prova com AS 71)."
+                    >
+                </div>
+                <div class="col-lg-10 col-md-6">
+                    <p class="small text-secondary mb-0 pt-lg-3">
+                        Se o campo AS ficar vazio ao calcular, usa-se <strong class="text-light">71</strong> por omissão.
+                        Os comandos seguem o modelo Cisco: <code>router eigrp &lt;AS&gt;</code> e
+                        <code>network &lt;rede&gt; &lt;wildcard&gt;</code> por sub-rede (LAN/WAN).
+                    </p>
                 </div>
             </div>
             <hr class="border-secondary">
@@ -377,7 +421,7 @@
         <p class="mb-1 text-light">Rede base: <strong>{{ scenario.base_network }}</strong></p>
         <p class="mb-1 text-light">Total de hosts solicitados: <strong>{{ scenario.total_hosts_requested }}</strong></p>
         <p class="mb-1 text-light">Total de hosts suportados (LANs): <strong>{{ scenario.total_hosts_supported }}</strong> | Eficiência geral: <strong>{{ scenario.overall_efficiency_pct }}%</strong></p>
-        <p class="mb-0 text-light">Localidades: <strong>{{ scenario.total_locations }}</strong> | Topologia WAN: <strong>{{ scenario.topology_type|upper }}</strong> | Prefixo WAN: <strong>/{{ scenario.wan_prefix }}</strong></p>
+        <p class="mb-0 text-light">Localidades: <strong>{{ scenario.total_locations }}</strong> | Topologia WAN: <strong>{{ scenario.topology_type|upper }}</strong> | Prefixo WAN: <strong>/{{ scenario.wan_prefix }}</strong> | AS EIGRP: <strong>{{ scenario.eigrp_as }}</strong></p>
         <div class="result-strip">
             <span class="section-chip chip-info">🧱 Base {{ scenario.base_network }}</span>
             <span class="section-chip chip-success">👥 Hosts {{ scenario.total_hosts_requested }}</span>
@@ -630,6 +674,7 @@
             <input type="hidden" name="base_network_cidr" value="{{ form_data.base_network_cidr }}">
             <input type="hidden" name="topology_type" value="{{ form_data.topology_type }}">
             <input type="hidden" name="wan_prefix" value="{{ form_data.wan_prefix }}">
+            <input type="hidden" name="eigrp_as" value="{{ form_data.eigrp_as }}">
             {% for loc in locations %}
             <input type="hidden" name="loc_name" value="{{ loc.name }}">
             <input type="hidden" name="loc_hosts" value="{{ loc.hosts }}">
@@ -769,5 +814,9 @@
     updateRemoveButtonsState();
     const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
     [...tooltipTriggerList].forEach((tooltipTriggerEl) => new bootstrap.Tooltip(tooltipTriggerEl));
+
+    document.getElementById("btn-limpar-resolucao")?.addEventListener("click", () => {
+        window.location.assign("/resolucao-problemas");
+    });
 </script>
 {% endblock %}

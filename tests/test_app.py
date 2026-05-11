@@ -200,6 +200,18 @@ class AppTestCase(unittest.TestCase):
         self.assertIn("Resolução de Problemas de Redes", html)
         self.assertIn("Cenário de entrada", html)
 
+    def test_resolucao_get_formulario_em_branco_sem_demo(self):
+        res = self.client.get("/resolucao-problemas")
+        html = res.get_data(as_text=True)
+        self.assertEqual(res.status_code, 200)
+        self.assertNotIn('value="172.21.0.0"', html)
+
+    def test_resolucao_get_demo_preenche_exemplo(self):
+        res = self.client.get("/resolucao-problemas?demo=1")
+        html = res.get_data(as_text=True)
+        self.assertEqual(res.status_code, 200)
+        self.assertIn('value="172.21.0.0"', html)
+
     def test_pagina_resolucao_problemas_post(self):
         res = self.client.post(
             "/resolucao-problemas",
@@ -269,7 +281,8 @@ class AppTestCase(unittest.TestCase):
         self.assertIn("logging synchronous", body)
         self.assertIn("description LAN_MATRIZ", body)
         self.assertIn("description LINK_PARA_FILIAL_I", body)
-        self.assertIn("show ip route rip", body)
+        self.assertIn("router eigrp 71", body)
+        self.assertIn("show ip route eigrp", body)
 
     def test_exportar_lab_packet_tracer_zip(self):
         res = self.client.post(

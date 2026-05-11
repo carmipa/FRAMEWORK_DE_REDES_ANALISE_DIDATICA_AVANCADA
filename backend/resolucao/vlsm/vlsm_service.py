@@ -30,7 +30,9 @@ def _classificacao_ipv4(primeiro_octeto: int) -> tuple[str, str, str]:
     return "E", "240-255", "Reservada/Experimental"
 
 
-def _build_cli_explanations(lan_blocks: list[dict], wan_links: list[dict]) -> dict[str, list[str]]:
+def _build_cli_explanations(
+    lan_blocks: list[dict], wan_links: list[dict], eigrp_as: int = 71
+) -> dict[str, list[str]]:
     links_por_local: dict[str, int] = {}
     for link in wan_links:
         for endpoint in link.get("endpoints", []):
@@ -45,8 +47,11 @@ def _build_cli_explanations(lan_blocks: list[dict], wan_links: list[dict]) -> di
             f"interface GigabitEthernet0/0 + ip address {lan['gateway']} {lan['netmask']}: define gateway da LAN.",
             "no shutdown: ativa a interface para sair de estado administrativamente down.",
             f"ip dhcp pool LAN_{lan['cli_id']} + network {lan['network']} {lan['netmask']}: distribui IPs da sub-rede.",
-            "router rip + version 2 + no auto-summary: habilita RIPv2 sem sumarização automática.",
-            f"network {lan['network']}: anuncia a LAN no domínio de roteamento.",
+            (
+                f"router eigrp {eigrp_as} + network <rede> <wildcard>: habilita EIGRP "
+                f"(AS {eigrp_as}) e associa interfaces por wildcard."
+            ),
+            f"network {lan['network']} {lan['wildcard']}: anuncia a LAN no processo EIGRP.",
             f"Este roteador possui {count_links} link(s) WAN serial no cenário atual.",
         ]
     return explicacoes
@@ -114,7 +119,11 @@ def _suggested_base_prefix(total_consumed_addresses: int, current_prefix: int) -
 
 
 def solve_network_problem(
-    base_network_input, locations_input, topology_type="ring", wan_prefix=30
+    base_network_input,
+    locations_input,
+    topology_type="ring",
+    wan_prefix=30,
+    eigrp_as=71,
 ):
     log_event(
         "info",
@@ -144,6 +153,15 @@ def solve_network_problem(
     locations = normalize_locations_input(locations_input)
     topology_type = (topology_type or "ring").strip().lower()
 
+    try:
+        eigrp_as_i = int(eigrp_as)
+    except (TypeError, ValueError) as exc:
+        raise EntradaInvalidaError(
+            "AS EIGRP invalido. Informe um inteiro entre 1 e 65535."
+        ) from exc
+    if not (1 <= eigrp_as_i <= 65535):
+        raise EntradaInvalidaError("AS EIGRP deve estar entre 1 e 65535.")
+
     lan_blocks, used_subnets = build_lan_blocks(base_network, locations)
     location_keys = [location["location_key"] for location in lan_blocks]
     wan_links = build_wan_links(
@@ -172,7 +190,11 @@ def solve_network_problem(
     growth_forecast = _growth_forecast(cleaned_lans)
     suggested_prefix = _suggested_base_prefix(total_consumed_addresses, base_network.prefixlen)
     router_commands = generate_router_lab_blocks(
-        {"lan_blocks": lan_blocks, "wan_links": wan_links}
+        {
+            "lan_blocks": lan_blocks,
+            "wan_links": wan_links,
+            "eigrp_as": eigrp_as_i,
+        }
     )
 
     result = {
@@ -196,23 +218,32 @@ def solve_network_problem(
         "total_locations": len(cleaned_lans),
         "topology_type": topology_type,
         "wan_prefix": int(wan_prefix),
+        "eigrp_as": eigrp_as_i,
         "lan_blocks": cleaned_lans,
         "wan_links": wan_links,
         "topology_insights": topology_insights,
         "growth_forecast": growth_forecast,
         "router_commands": router_commands,
-        "router_cli_explanations": _build_cli_explanations(cleaned_lans, wan_links),
+        "router_cli_explanations": _build_cli_explanations(
+            cleaned_lans, wan_links, eigrp_as_i
+        ),
         "packet_tracer_steps": [
             f"Adicionar {len(cleaned_lans)} roteadores e {len(cleaned_lans)} switches (uma LAN por localidade).",
             f"Conectar os roteadores conforme topologia WAN '{topology_type}' com links seriais /{int(wan_prefix)}.",
             "Aplicar os comandos CLI gerados em cada roteador, validando interfaces up/up.",
             "Configurar PCs em DHCP e validar gateway automático por localidade.",
-            "Executar ping entre LANs distintas e checar a tabela RIP com show ip route.",
+            (
+                f"Executar ping entre LANs distintas e validar adjacências EIGRP "
+                f"(AS {eigrp_as_i}) com show ip eigrp neighbors."
+            ),
         ],
         "packet_tracer_checklist": [
             "Todas as interfaces estão up/up (show ip interface brief).",
-            "RIPv2 está ativo e sem auto-summary.",
-            "Todas as redes LAN/WAN aparecem em show ip route.",
+            (
+                f"EIGRP AS {eigrp_as_i} ativo, sem auto-summary, com statements "
+                "network para LAN e WAN."
+            ),
+            "Todas as redes LAN/WAN aparecem em show ip route eigrp (ou show ip route).",
             "Ping entre LANs distintas funciona.",
             "DHCP entrega IP/gateway correto para os hosts.",
         ],

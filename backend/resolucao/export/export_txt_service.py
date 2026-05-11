@@ -30,6 +30,13 @@ def _require_export_scenario(scenario, event_name):
 def generate_router_lab_blocks(scenario):
     lan_blocks = scenario.get("lan_blocks") or []
     wan_links = scenario.get("wan_links") or []
+    eigrp_as = scenario.get("eigrp_as")
+    try:
+        eigrp_as_i = int(eigrp_as) if eigrp_as is not None else 71
+    except (TypeError, ValueError):
+        eigrp_as_i = 71
+    if not (1 <= eigrp_as_i <= 65535):
+        eigrp_as_i = 71
     locations_by_key = {item["location_key"]: item for item in lan_blocks}
     blocks = {}
 
@@ -67,7 +74,7 @@ def generate_router_lab_blocks(scenario):
         ]
 
         serial_idx = 0
-        rip_networks = {location["network"]}
+        eigrp_pairs = [(location["network"], location["wildcard"])]
         for link in wan_links:
             if location_key not in link.get("ips", {}):
                 continue
@@ -93,7 +100,7 @@ def generate_router_lab_blocks(scenario):
                 ]
             )
             serial_idx += 1
-            rip_networks.add(link["network"])
+            eigrp_pairs.append((link["network"], link["wildcard"]))
 
         block_lines.extend(
             [
@@ -104,17 +111,23 @@ def generate_router_lab_blocks(scenario):
                 f" default-router {location['gateway']}",
                 " dns-server 8.8.8.8",
                 "!",
-                "! Roteamento RIPv2",
-                "router rip",
-                " version 2",
+                "! Roteamento EIGRP",
+                f"router eigrp {eigrp_as_i}",
                 " no auto-summary",
             ]
         )
-        def _oct_key(value):
-            return tuple(int(part) for part in value.split("."))
 
-        for net in sorted(rip_networks, key=_oct_key):
-            block_lines.append(f" network {net}")
+        def _pair_sort_key(pair):
+            net, _wild = pair
+            return tuple(int(part) for part in net.split("."))
+
+        seen_pairs = set()
+        for net, wild in sorted(eigrp_pairs, key=_pair_sort_key):
+            key = (net, wild)
+            if key in seen_pairs:
+                continue
+            seen_pairs.add(key)
+            block_lines.append(f" network {net} {wild}")
 
         block_lines.extend(
             [
@@ -124,7 +137,8 @@ def generate_router_lab_blocks(scenario):
                 "!",
                 "! Comandos de verificação (executar após aplicar o bloco):",
                 "! show ip interface brief",
-                "! show ip route rip",
+                "! show ip eigrp neighbors",
+                "! show ip route eigrp",
                 "! show running-config | section interface",
             ]
         )

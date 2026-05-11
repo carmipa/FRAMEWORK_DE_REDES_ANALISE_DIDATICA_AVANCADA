@@ -44,6 +44,19 @@ def _default_form_data() -> dict[str, str]:
         "base_network_cidr": "16",
         "topology_type": "ring",
         "wan_prefix": "30",
+        "eigrp_as": "71",
+    }
+
+
+def _blank_form_data() -> dict[str, str]:
+    """Formulário sem valores de exemplo (folha em branco para prova/laboratório)."""
+    return {
+        "base_network": "",
+        "base_network_ip": "",
+        "base_network_cidr": "",
+        "topology_type": "ring",
+        "wan_prefix": "",
+        "eigrp_as": "",
     }
 
 
@@ -52,6 +65,13 @@ def _build_form_data() -> dict[str, str]:
     base_network_ip = request.form.get("base_network_ip", "").strip()
     base_network_cidr = request.form.get("base_network_cidr", "").strip()
     wan_prefix = request.form.get("wan_prefix", "30").strip() or "30"
+    eigrp_as = request.form.get("eigrp_as", "71").strip() or "71"
+
+    if "/" in base_network_ip:
+        ip_part, cidr_part = base_network_ip.split("/", 1)
+        base_network_ip = ip_part.strip()
+        if not base_network_cidr:
+            base_network_cidr = cidr_part.strip()
 
     if base_network_ip and not base_network_cidr:
         try:
@@ -74,6 +94,7 @@ def _build_form_data() -> dict[str, str]:
         "topology_type": request.form.get("topology_type", "ring").strip().lower()
         or "ring",
         "wan_prefix": wan_prefix,
+        "eigrp_as": eigrp_as,
     }
 
     if form_data["base_network"] and (
@@ -135,6 +156,12 @@ def _mark_invalid_fields(form_data: dict[str, str], locations: list[dict[str, st
             invalid_fields.add("wan_prefix")
     except (TypeError, ValueError):
         invalid_fields.add("wan_prefix")
+    try:
+        as_i = int((form_data.get("eigrp_as") or "71").strip())
+        if not (1 <= as_i <= 65535):
+            invalid_fields.add("eigrp_as")
+    except (TypeError, ValueError):
+        invalid_fields.add("eigrp_as")
     return invalid_fields
 
 
@@ -142,11 +169,16 @@ def _mark_invalid_fields(form_data: dict[str, str], locations: list[dict[str, st
 def resolucao_problemas():
     erro = None
     invalid_fields = set()
-    form_data = _default_form_data()
-    locations = [dict(item) for item in DEFAULT_LOCATIONS]
     scenario = None
 
-    if request.method == "POST":
+    if request.method == "GET":
+        if request.args.get("demo") == "1":
+            form_data = _default_form_data()
+            locations = [dict(item) for item in DEFAULT_LOCATIONS]
+        else:
+            form_data = _blank_form_data()
+            locations = [{"name": "", "hosts": ""}]
+    elif request.method == "POST":
         action_type = request.form.get("action_type", "calculate").strip().lower()
         form_data = _build_form_data()
         locations, duplicate_error, duplicate_invalid_fields = _collect_locations_from_form()
@@ -180,6 +212,7 @@ def resolucao_problemas():
                 locations,
                 topology_type=form_data["topology_type"],
                 wan_prefix=form_data["wan_prefix"],
+                eigrp_as=form_data["eigrp_as"],
             )
             if action_type in EXPORT_ACTIONS:
                 cfg = EXPORT_ACTIONS[action_type]
@@ -218,6 +251,16 @@ def resolucao_problemas():
                 exc_info=True,
             )
             erro = "Erro interno ao processar a resolução de problemas. Tente novamente."
+
+        return render_template(
+            "resolucao/resolucao_problemas.html",
+            active_main_menu="resolucao",
+            erro=erro,
+            invalid_fields=invalid_fields,
+            form_data=form_data,
+            locations=locations,
+            scenario=scenario,
+        )
 
     return render_template(
         "resolucao/resolucao_problemas.html",
