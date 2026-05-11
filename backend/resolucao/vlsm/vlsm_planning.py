@@ -2,6 +2,11 @@ from backend.core.exceptions import EntradaInvalidaError
 from backend.core.logging import log_event
 
 
+def _mermaid_escape(text: str) -> str:
+    """Evita quebras de sintaxe em rótulos Mermaid (subgrafos e nós)."""
+    return (text or "").replace('"', "'").replace("\n", " ").strip()
+
+
 def required_prefix_for_hosts(host_count):
     needed = host_count + 2
     host_bits = (needed - 1).bit_length()
@@ -190,12 +195,27 @@ def mermaid_topology(locations, wan_links):
     details_map = {}
     for index, location in enumerate(locations, start=1):
         node_id = f"R_{index}"
+        sw_id = f"SW_{index}"
+        pc_a = f"PC_{index}A"
+        pc_b = f"PC_{index}B"
         name_map[location["location_key"]] = node_id
+        loc_label = _mermaid_escape(location["location_name"]) or f"Local {index}"
+        lines.append(f'    subgraph LAN_{index}["{loc_label}"]')
         lines.append(
-            f'    {node_id}["{location["router_name"]}\\nLAN: '
+            f'        {node_id}["{location["router_name"]}\\nLAN: '
             f'{location["network"]}/{location["prefix"]}"]'
         )
-        lines.append(f'    click {node_id} showTopologyDetail "{location["router_name"]}"')
+        lines.append(f'        {sw_id}["Switch\\nLAN local"]')
+        lines.append(f'        {pc_a}["PC teste 1\\nDHCP"]')
+        lines.append(f'        {pc_b}["PC teste 2\\nDHCP"]')
+        lines.append(f"        {node_id} --- {sw_id}")
+        lines.append(f"        {sw_id} --- {pc_a}")
+        lines.append(f"        {sw_id} --- {pc_b}")
+        lines.append("    end")
+        lines.append(f'    click {node_id} showTopologyDetail "{node_id}"')
+        lines.append(f'    click {sw_id} showTopologyDetail "{sw_id}"')
+        lines.append(f'    click {pc_a} showTopologyDetail "{pc_a}"')
+        lines.append(f'    click {pc_b} showTopologyDetail "{pc_b}"')
         details_map[node_id] = {
             "type": "router",
             "title": location["router_name"],
@@ -207,6 +227,24 @@ def mermaid_topology(locations, wan_links):
             "hosts_required": location["hosts_required"],
             "hosts_supported": location["hosts_supported"],
         }
+        details_map[sw_id] = {
+            "type": "switch",
+            "title": f"Switch · {location['location_name']}",
+            "network": f'{location["network"]}/{location["prefix"]}',
+            "gateway": location["gateway"],
+        }
+        details_map[pc_a] = {
+            "type": "host",
+            "title": f"PC teste 1 · {location['location_name']}",
+            "gateway": location["gateway"],
+            "network": f'{location["network"]}/{location["prefix"]}',
+        }
+        details_map[pc_b] = {
+            "type": "host",
+            "title": f"PC teste 2 · {location['location_name']}",
+            "gateway": location["gateway"],
+            "network": f'{location["network"]}/{location["prefix"]}',
+        }
     for index, link in enumerate(wan_links, start=1):
         left = name_map[link["endpoints"][0]]
         right = name_map[link["endpoints"][1]]
@@ -214,7 +252,7 @@ def mermaid_topology(locations, wan_links):
         lines.append(f'    {wan_id}{{"WAN {index}\\n{link["network"]}/{link["prefix"]}"}}')
         lines.append(f"    {left} --- {wan_id}")
         lines.append(f"    {wan_id} --- {right}")
-        lines.append(f'    click {wan_id} showTopologyDetail "{link["name"]}"')
+        lines.append(f'    click {wan_id} showTopologyDetail "{wan_id}"')
         details_map[wan_id] = {
             "type": "wan",
             "title": link["name"],

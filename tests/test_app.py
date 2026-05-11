@@ -306,6 +306,9 @@ class AppTestCase(unittest.TestCase):
         self.assertIn("configs_individuais/R-MATRIZ.txt", names)
         readme = archive.read("README_LAB.txt").decode("utf-8")
         self.assertIn("INSTRUCOES DE USO DO LABORATORIO", readme)
+        consolidated = archive.read("config_packet_tracer_consolidado.txt").decode("utf-8")
+        self.assertIn("router eigrp 71", consolidated)
+        self.assertIn("SCRIPT DE PROVISIONAMENTO", consolidated)
 
     def test_informacoes_pagina_apenas_geo(self):
         res = self.client.get("/informacoes")

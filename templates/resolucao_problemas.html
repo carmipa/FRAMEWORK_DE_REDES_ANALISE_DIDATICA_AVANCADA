@@ -108,6 +108,15 @@
         .export-actions .btn {
             min-height: 40px;
         }
+        /* Rótulo de estado (não é botão): leitura clara junto aos três export */
+        .export-actions .export-status-chip {
+            color: #7ee787;
+            border-color: #238636;
+            background: rgba(46, 160, 67, 0.32);
+            padding: 0.45rem 0.75rem;
+            min-height: 40px;
+            align-items: center;
+        }
         @media (max-width: 992px) {
             .problem-shell {
                 max-width: 100%;
@@ -225,6 +234,7 @@
     <div class="problem-box p-3 mb-3">
         <h5 class="text-light mb-3 problem-title"><span>📥</span><span>Cenário de entrada</span></h5>
         <form method="POST" action="/resolucao-problemas">
+            {# Linha 1: soma 12 colunas em lg (evita quebra inválida do grid Bootstrap). #}
             <div class="row g-3 align-items-end">
                 <div class="col-lg-4 col-md-6">
                     <label class="form-label text-secondary">IP da rede base (IPv4)</label>
@@ -270,7 +280,7 @@
                         title="Prefixo dos links WAN (/30 é o usual ponto a ponto). Se vazio, assume 30."
                     >
                 </div>
-                <div class="col-lg-2 col-md-6">
+                <div class="col-lg-4 col-md-6">
                     <label class="form-label text-secondary">Topologia WAN</label>
                     <select
                         name="topology_type"
@@ -283,7 +293,10 @@
                         <option value="mesh" {{ 'selected' if form_data.topology_type == 'mesh' else '' }}>Malha completa (N*(N-1)/2)</option>
                     </select>
                 </div>
-                <div class="col-lg-2 col-md-6 d-grid align-items-end">
+            </div>
+            <div class="row g-3 align-items-end mt-1">
+                <div class="col-lg-8 d-none d-lg-block" aria-hidden="true"></div>
+                <div class="col-lg-2 col-md-6 d-grid">
                     <button
                         type="submit"
                         name="action_type"
@@ -294,7 +307,7 @@
                         title="Processa o cenário e monta LANs, WANs, CLI e topologia."
                     >Calcular cenário</button>
                 </div>
-                <div class="col-lg-2 col-md-6 d-grid align-items-end">
+                <div class="col-lg-2 col-md-6 d-grid">
                     <button
                         type="button"
                         class="btn btn-danger w-100"
@@ -619,7 +632,10 @@
                 Clique em um roteador ou nó WAN no diagrama para visualizar os detalhes aqui.
             </div>
         </div>
-        <p class="small text-secondary mb-0">Use esse desenho como referência de montagem no Cisco Packet Tracer.</p>
+        <p class="small text-secondary mb-0">
+            O diagrama inclui, por localidade, um <strong class="text-light">switch</strong> e <strong class="text-light">dois PCs</strong> de teste (DHCP), como na montagem típica para ping entre filiais.
+            Use como referência no Cisco Packet Tracer.
+        </p>
     </div>
 
     <div class="problem-box p-3 mb-3">
@@ -706,7 +722,7 @@
                 data-bs-placement="top"
                 title="Baixa um .txt com resumo, LANs, WANs, topologia Mermaid, passos e todos os scripts CLI."
             >📄 Exportar entrega (.txt)</button>
-            <span class="section-chip chip-success">Pronto para colar no CLI dos roteadores</span>
+            <span class="section-chip chip-success export-status-chip" role="status">Pronto para colar no CLI dos roteadores</span>
         </form>
     </div>
     {% endif %}
@@ -749,6 +765,22 @@
                 <div>Gateway: <strong>${detail.gateway}</strong> | Máscara: <strong>${detail.mask}</strong> | Wildcard: <strong>${detail.wildcard}</strong></div>
                 <div>Faixa de hosts: <strong>${detail.host_range}</strong></div>
                 <div>Capacidade: <strong>${detail.hosts_required}</strong> necessários / <strong>${detail.hosts_supported}</strong> suportados</div>
+            `;
+            return;
+        }
+        if (detail.type === "switch") {
+            box.innerHTML = `
+                <div><strong class="text-light">${detail.title}</strong> · <span class="text-info">LAN ${detail.network || ""}</span></div>
+                <div>Gateway da LAN: <strong>${detail.gateway || "—"}</strong></div>
+                <div class="small text-secondary mb-0">Dois PCs ligados ao switch para testes de ping entre localidades (Packet Tracer).</div>
+            `;
+            return;
+        }
+        if (detail.type === "host") {
+            box.innerHTML = `
+                <div><strong class="text-light">${detail.title}</strong></div>
+                <div>LAN: <span class="text-info">${detail.network || ""}</span> · Gateway: <strong>${detail.gateway || "—"}</strong></div>
+                <div class="small text-secondary mb-0">Obter IP por DHCP no roteador; usar ping para outras filiais.</div>
             `;
             return;
         }

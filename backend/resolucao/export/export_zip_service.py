@@ -39,7 +39,8 @@ def generate_packet_tracer_zip_buffer(scenario):
         "3. Para cada roteador, abra o CLI e cole o conteúdo do arquivo "
         "em configs_individuais/.\n"
         f"4. Aguarde a convergência do EIGRP (AS {as_num}; tipicamente alguns segundos).\n"
-        "5. Valide com: show ip interface brief, show ip eigrp neighbors "
+        "5. Em cada LAN, use pelo menos 2 PCs no switch para testar ping entre todas as localidades.\n"
+        "6. Valide com: show ip interface brief, show ip eigrp neighbors "
         "e show ip route eigrp.\n"
     )
 

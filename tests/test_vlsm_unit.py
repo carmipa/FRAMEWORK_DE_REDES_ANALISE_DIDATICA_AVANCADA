@@ -88,6 +88,23 @@ class TestSolveNetworkProblemUnit(unittest.TestCase):
         self.assertEqual(len(s["wan_links"]), 6)
         self.assertEqual(s["topology_type"], "mesh")
 
+    def test_diagrama_mermaid_inclui_switch_e_dois_pcs_por_localidade(self):
+        locs = [
+            {"name": "Matriz", "hosts": "50"},
+            {"name": "Filial", "hosts": "40"},
+        ]
+        s = solve_network_problem("192.168.0.0/24", locs, topology_type="ring")
+        m = s["topology_mermaid"]
+        self.assertIn("subgraph LAN_1", m)
+        self.assertIn("Switch", m)
+        self.assertIn("PC teste 1", m)
+        self.assertIn("PC teste 2", m)
+        self.assertIn("SW_1 --- PC_1A", m)
+        td = s["topology_details"]
+        self.assertIn("PC_1A", td)
+        self.assertEqual(td["PC_1A"]["type"], "host")
+        self.assertEqual(td["SW_1"]["type"], "switch")
+
 
 if __name__ == "__main__":
     unittest.main()

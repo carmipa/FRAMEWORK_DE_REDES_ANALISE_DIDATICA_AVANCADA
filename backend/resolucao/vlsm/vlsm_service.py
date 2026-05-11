@@ -231,10 +231,15 @@ def solve_network_problem(
             f"Adicionar {len(cleaned_lans)} roteadores e {len(cleaned_lans)} switches (uma LAN por localidade).",
             f"Conectar os roteadores conforme topologia WAN '{topology_type}' com links seriais /{int(wan_prefix)}.",
             "Aplicar os comandos CLI gerados em cada roteador, validando interfaces up/up.",
-            "Configurar PCs em DHCP e validar gateway automático por localidade.",
             (
-                f"Executar ping entre LANs distintas e validar adjacências EIGRP "
-                f"(AS {eigrp_as_i}) com show ip eigrp neighbors."
+                "Em cada LAN, ligar pelo menos 2 PCs ao switch da localidade (prática usual na prova): "
+                "com isso você testa ping entre todas as filiais com mais de uma origem e mais de um "
+                "destino, como o enunciado costuma exigir («todos os equipamentos alcançáveis entre si»)."
+            ),
+            "Configurar DHCP nos roteadores e validar IP/gateway automático em cada PC.",
+            (
+                f"A partir de vários PCs, executar ping entre LANs distintas (ex.: Matriz→Filial e "
+                f"Filial→CPD) e validar adjacências EIGRP (AS {eigrp_as_i}) com show ip eigrp neighbors."
             ),
         ],
         "packet_tracer_checklist": [
@@ -244,7 +249,8 @@ def solve_network_problem(
                 "network para LAN e WAN."
             ),
             "Todas as redes LAN/WAN aparecem em show ip route eigrp (ou show ip route).",
-            "Ping entre LANs distintas funciona.",
+            "Em cada localidade há pelo menos 2 PCs na LAN para repetir testes de ping com credibilidade.",
+            "Ping entre PCs de localidades diferentes funciona em várias combinações (origem↔destino).",
             "DHCP entrega IP/gateway correto para os hosts.",
         ],
     }

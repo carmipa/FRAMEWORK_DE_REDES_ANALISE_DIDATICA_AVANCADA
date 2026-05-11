@@ -132,6 +132,8 @@ class TestRotasEExportacoes(unittest.TestCase):
         body = res.get_data(as_text=True)
         self.assertIn("DOCUMENTACAO DO CENARIO DE REDE", body)
         self.assertIn("2) LANs (VLSM)", body)
+        self.assertIn("router eigrp", body.lower())
+        self.assertIn("6) Comandos Cisco CLI por roteador", body)
 
     def test_history_catalog_portas_ok(self):
         res = self.client.post(
