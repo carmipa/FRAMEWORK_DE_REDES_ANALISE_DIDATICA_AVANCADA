@@ -264,7 +264,7 @@ Uso em Produção    ✗      ✗      ✅     ✅     ✅
 | Convergência explicada | | ❌ | | Mencionado mas não aprofundado |
 | IPv6 mencionado | | ❌ | | Não abordado |
 | Load balancing explicado | | ❌ | | Mencionado superficialmente |
-| Troubleshooting incluído | | ❌ | | Não coberto |
+| Troubleshooting incluído | ✅ | | | Parcial — aba Protocolos, após a grelha: falhas típicas, mitigação e comandos por protocolo de roteamento |
 
 ---
 

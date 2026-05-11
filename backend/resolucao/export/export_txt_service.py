@@ -105,6 +105,21 @@ def build_pt_router_tables(scenario):
                 }
             )
             serial_idx += 1
+        rows.append(
+            {
+                "interface": f"pool LAN_{location['cli_id']}",
+                "ip": location["gateway"],
+                "mask": location["netmask"],
+                "cidr": f"/{location['prefix']}",
+                "role": "DHCP",
+                "description": (
+                    f"Serviço DHCP neste roteador: rede do pool {location['network']} "
+                    f"{location['netmask']}; default-router = IP de Gi0/0 (linha acima). "
+                    "Packet Tracer: Gi0/0 tem de estar com esse IP e up/up antes dos PCs "
+                    "obterem endereço por DHCP."
+                ),
+            }
+        )
         tables.append(
             {
                 "router_name": location["router_name"],
@@ -215,6 +230,11 @@ def generate_router_lab_blocks(scenario):
 
         block_lines.extend(
             [
+                (
+                    f"! DHCP no roteador (Packet Tracer): Gi0/0 com "
+                    f"{location['gateway']} {location['netmask']} + no shutdown "
+                    f"antes dos PCs obterem lease (rede LAN {location['network']}/{location['prefix']})."
+                ),
                 "! Configuração de serviço DHCP",
                 f"ip dhcp excluded-address {gateway_ip} {reserved_end}",
                 f"ip dhcp pool LAN_{location['cli_id']}",
@@ -351,6 +371,21 @@ def generate_packet_tracer_montagem_guide(scenario):
         f"  AS EIGRP:        {scenario.get('eigrp_as', '-')}",
         f"  Localidades:     {scenario.get('total_locations', len(lan_blocks))}",
         "",
+        "GATEWAYS LAN (Gi0/0) — Packet Tracer / DHCP",
+        "-" * 78,
+        (
+            "  Configure estes IPs em GigabitEthernet0/0 antes de testar DHCP nos PCs; "
+            "sao os default-router dos pools."
+        ),
+        *[
+            (
+                f"  {loc.get('location_name', '?')}: {loc.get('gateway', '-')} "
+                f"{loc.get('netmask', '-')}  (rede {loc.get('network', '-')}/"
+                f"{loc.get('prefix', '-')})"
+            )
+            for loc in lan_blocks
+        ],
+        "",
         "EQUIPAMENTO NA AREA DE TRABALHO DO PACKET TRACER",
         "-" * 78,
         f"  • {len(lan_blocks)} roteador(es) Cisco {PACKET_TRACER_ROUTER_MODEL}",
@@ -411,8 +446,9 @@ def generate_packet_tracer_montagem_guide(scenario):
                 "'ROTEADOR: ...'."
             ),
             (
-                "  • Em cada PC: IP dinamico (DHCP). O gateway e o IP da "
-                "interface GigabitEthernet0/0 desse roteador (ver tabela acima)."
+                "  • Em cada PC: IP dinamico (DHCP). No Packet Tracer, o DHCP no roteador "
+                "so funciona depois de GigabitEthernet0/0 ter o IP do gateway e estar up; "
+                "o gateway nos PCs e esse mesmo IP (ver tabela acima)."
             ),
             (
                 "  • Valide: show ip interface brief | show ip eigrp neighbors | "
@@ -589,7 +625,8 @@ def generate_entrega_relatorio_txt(scenario):
             )
         lines.append("")
     lines.append(
-        "Hosts (PCs): DHCP no roteador; gateway = IP da linha LAN (coluna IP em GigabitEthernet0/0)."
+        "Hosts (PCs): DHCP no roteador; na tabela acima a linha DHCP resume default-router (= IP Gi0/0) "
+        "e rede do pool por roteador."
     )
     lines.append("")
 

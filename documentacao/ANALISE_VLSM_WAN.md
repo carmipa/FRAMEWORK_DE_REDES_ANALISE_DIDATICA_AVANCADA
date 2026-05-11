@@ -41,7 +41,7 @@ Funcionalidade **bem implementada** com cálculo VLSM correto e exports úteis. 
 ✅ TXT consolidado (colar direto no Packet Tracer)
 ✅ ZIP com configs por roteador
 ✅ Relatório de entrega (para submeter como atividade)
-✅ CLI Cisco gerado automaticamente (RIPv2, DHCP)
+✅ CLI Cisco gerado automaticamente (EIGRP, DHCP, blocos de laboratório PT)
 ✅ Diagrama Mermaid
 ```
 
@@ -334,10 +334,12 @@ Mostra:
 
 ---
 
-### **11. SEM ROTEIRO DE IMPLEMENTAÇÃO** ❌
-**Severidade:** 🟡 ALTA
+### **11. ROTEIRO DE IMPLEMENTAÇÃO NO PACKET TRACER** 🟡
+**Severidade:** 🟡 ALTA (parcialmente coberta no produto)
 
-**Falta:**
+**No repositório atual:** o export **ZIP** inclui `GUIA_MONTAGEM_PACKET_TRACER.txt` e `README_LAB.txt`; a página de resolução traz passos e tabelas por roteador. Ainda faz sentido reforçar em vídeo/GIF para quem nunca abriu o CLI.
+
+**Checklist genérico (alinhado ao laboratório EIGRP):**
 ```
 Passo-a-Passo para Packet Tracer:
 
@@ -349,11 +351,11 @@ Passo-a-Passo para Packet Tracer:
    ├─ Interfaces LAN
    ├─ Interfaces WAN
    ├─ Pools DHCP
-   └─ RIPv2
+   └─ EIGRP (AS conforme cenário)
 6. Validar
    ├─ show ip route (todas as redes aparecem?)
    ├─ ping entre LANs (consegue alcançar?)
-   ├─ show ip rip database
+   ├─ show ip eigrp neighbors
 ```
 
 ---
@@ -366,7 +368,7 @@ Checklist de validação após aplicar configs:
 
 ```
 ✓ Todas interfaces estão up/up?
-✓ Todos roteadores estão trocando RIPv2?
+✓ Todos roteadores têm vizinhos EIGRP (`show ip eigrp neighbors`)?
 ✓ Todas as redes estão na tabela de roteamento?
 ✓ Ping funciona entre todos os pares de LANs?
 ✓ DHCP funciona (PCs conseguem IP automático)?
@@ -458,7 +460,7 @@ Video ou GIF mostrando:
 ```
 Validar no upload do Packet Tracer:
   - Está em RING? Sim/Não
-  - Rotas aprendem via RIPv2? Sim/Não
+  - Rotas aprendem via EIGRP? Sim/Não
   - Ping funciona? Sim/Não
   → Feedback automático se tiver erro
 ```

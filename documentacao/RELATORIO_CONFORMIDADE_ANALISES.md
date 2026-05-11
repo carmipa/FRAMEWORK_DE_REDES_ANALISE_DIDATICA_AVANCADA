@@ -305,20 +305,20 @@ for index in range(total_rows):
 
 | # | Recomendação | Status |
 |---|--------------|--------|
-| 1 | CLI RIPv2 gerado | ✅ Sim (em `generate_router_lab_blocks()`) |
+| 1 | CLI EIGRP gerado | ✅ Sim (em `generate_router_lab_blocks()`) |
 
 ### ⚠️ IMPLEMENTADAS PARCIALMENTE (2/7)
 
 | # | Recomendação | O Que Tem | O Que Falta |
 |---|--------------|----------|-----------|
 | 2 | Documentação de protocolos | Referência no pptx | Sem guia integrado na web |
-| 3 | Exemplos de configuração | RIPv2 em CLI | Faltam OSPF, BGP, exemplos complexos |
+| 3 | Exemplos de configuração | EIGRP + DHCP em CLI | Faltam OSPF, BGP, exemplos complexos |
 
 ### ❌ NÃO IMPLEMENTADAS (4/7)
 
 | # | Recomendação | Impacto |
 |---|--------------|--------|
-| 4 | Comparação visual (RIPv2 vs OSPF) | 🔴 CRÍTICO |
+| 4 | Comparação visual (ex.: RIP vs OSPF) | 🔴 CRÍTICO |
 | 5 | Simulador de protocolo | 🟡 ALTO |
 | 6 | Tabela de métrica/AD | 🟡 ALTO |
 | 7 | Quiz de protocolo | 🟡 ALTO |

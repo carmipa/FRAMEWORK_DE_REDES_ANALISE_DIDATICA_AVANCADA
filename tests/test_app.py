@@ -317,9 +317,12 @@ class AppTestCase(unittest.TestCase):
         self.assertIn("INSTRUCOES DE USO DO LABORATORIO", readme)
         guia = archive.read("GUIA_MONTAGEM_PACKET_TRACER.txt").decode("utf-8")
         self.assertIn("GUIA DE MONTAGEM", guia)
+        self.assertIn("GATEWAYS LAN", guia)
+        self.assertIn("Matriz:", guia)
         consolidated = archive.read("config_packet_tracer_consolidado.txt").decode("utf-8")
         self.assertIn("router eigrp 71", consolidated)
         self.assertIn("SCRIPT DE PROVISIONAMENTO", consolidated)
+        self.assertIn("! DHCP no roteador (Packet Tracer): Gi0/0 com", consolidated)
 
     def test_informacoes_pagina_apenas_geo(self):
         res = self.client.get("/informacoes")
@@ -425,6 +428,15 @@ class AppTestCase(unittest.TestCase):
         self.assertIsInstance(hist, dict)
         items = hist.get("items", [])
         self.assertTrue(any((it.get("modo") == "geo" and it.get("ip_entrada") == "1.1.1.1") for it in items))
+
+    def test_pagina_documentacao_alinhada_ao_readme(self):
+        """README.md na raiz alimenta /documentacao — deve refletir o laboratório atual."""
+        res = self.client.get("/documentacao")
+        self.assertEqual(res.status_code, 200)
+        html = res.get_data(as_text=True)
+        self.assertIn("Central de Documentação", html)
+        self.assertIn("EIGRP", html)
+        self.assertIn("GUIA_MONTAGEM", html)
 
 
 if __name__ == "__main__":

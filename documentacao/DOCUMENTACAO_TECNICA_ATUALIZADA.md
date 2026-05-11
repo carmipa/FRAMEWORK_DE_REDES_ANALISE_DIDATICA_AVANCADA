@@ -70,7 +70,7 @@ Modos suportados no fluxo principal:
 - `ipv6`: interpretação didática básica;
 - `comparador`: comparação lado a lado de dois CIDRs sobre o mesmo IP;
 - `geo`: bloco geo integrado no front;
-- `portas` e `protocolos`: catálogos técnicos para consulta.
+- `portas` e `protocolos`: catálogos técnicos para consulta; na aba **Protocolos**, após a tabela DataGrid (e paginação), secção **Troubleshooting rápido** com comandos de diagnóstico por protocolo de roteamento.
 
 Também inclui:
 
@@ -87,10 +87,11 @@ Entrega um planejador completo de cenário de rede:
 - múltiplas localidades e demanda de hosts;
 - escolha de topologia WAN (`ring`/`mesh`);
 - prefixo WAN configurável (tipicamente `/30`);
+- **AS EIGRP** configurável (omissão didática comum: `71`);
 - alocação VLSM LAN + links WAN;
-- geração de comandos CLI Cisco por roteador;
-- geração de topologia Mermaid;
-- exportações para laboratório e documentação.
+- geração de comandos CLI Cisco por roteador (EIGRP, DHCP, laboratório com `enable password`, `line vty` e `clock rate` na primeira serial quando aplicável);
+- geração de topologia Mermaid e tabelas por roteador para Packet Tracer;
+- exportações para laboratório (`.txt`, `.zip` com `GUIA_MONTAGEM_PACKET_TRACER.txt`) e relatório único de entrega.
 
 ## 4.3 Exportações e histórico
 

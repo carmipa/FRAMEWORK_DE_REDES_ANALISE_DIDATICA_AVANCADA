@@ -30,9 +30,9 @@ RECOMENDAÇÃO:    Implementar 4 críticas + 6 altas para 95%+ de completude
 
 ✓ Exports Múltiplos
   • TXT consolidado (colar no Packet Tracer)
-  • ZIP com configs por roteador
+  • ZIP com GUIA_MONTAGEM_PACKET_TRACER.txt, configs por roteador, Mermaid, README
   • Relatório de entrega (submit acadêmico)
-  • CLI Cisco gerado (RIPv2, DHCP)
+  • CLI Cisco gerado (EIGRP, DHCP, laboratório PT)
   • Diagrama Mermaid
 
 ✓ Logging e Rastreamento

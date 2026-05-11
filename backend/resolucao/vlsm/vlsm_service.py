@@ -198,6 +198,11 @@ def solve_network_problem(
     router_commands = generate_router_lab_blocks(scenario_stub)
     pt_router_tables = build_pt_router_tables(scenario_stub)
 
+    dhcp_lan_gateways_ref = " | ".join(
+        f"{loc['location_name']}: {loc['gateway']} ({loc['netmask']})"
+        for loc in cleaned_lans
+    )
+
     result = {
         "base_network": str(base_network.with_prefixlen),
         "base_network_ip": base_ip,
@@ -234,11 +239,18 @@ def solve_network_problem(
             f"Conectar os roteadores conforme topologia WAN '{topology_type}' com links seriais /{int(wan_prefix)}.",
             "Aplicar os comandos CLI gerados em cada roteador, validando interfaces up/up.",
             (
+                "No Cisco Packet Tracer, o DHCP integrado no roteador só passa a atender os PCs "
+                "quando a interface LAN (GigabitEthernet0/0) já tiver o IP do gateway e estiver up/up. "
+                "Aplique o script na ordem gerada (LAN antes do bloco ip dhcp pool) ou confira isso "
+                "se «Obter endereço automaticamente» nos PCs falhar. "
+                f"Neste cenário, Gi0/0 (gateway LAN) por localidade: {dhcp_lan_gateways_ref}."
+            ),
+            (
                 "Em cada LAN, ligar pelo menos 2 PCs ao switch da localidade (prática usual na prova): "
                 "com isso você testa ping entre todas as filiais com mais de uma origem e mais de um "
                 "destino, como o enunciado costuma exigir («todos os equipamentos alcançáveis entre si»)."
             ),
-            "Configurar DHCP nos roteadores e validar IP/gateway automático em cada PC.",
+            "Validar pools DHCP nos roteadores (já no script CLI) e IP/gateway automático em cada PC.",
             (
                 f"A partir de vários PCs, executar ping entre LANs distintas (ex.: Matriz→Filial e "
                 f"Filial→CPD) e validar adjacências EIGRP (AS {eigrp_as_i}) com show ip eigrp neighbors."
@@ -254,6 +266,10 @@ def solve_network_problem(
             "Em cada localidade há pelo menos 2 PCs na LAN para repetir testes de ping com credibilidade.",
             "Ping entre PCs de localidades diferentes funciona em várias combinações (origem↔destino).",
             "DHCP entrega IP/gateway correto para os hosts.",
+            (
+                "Packet Tracer: Gi0/0 com IP de gateway e up/up antes de testar DHCP nos PCs "
+                f"(sem IP na LAN o roteador não atende DHCP). Gateways: {dhcp_lan_gateways_ref}."
+            ),
         ],
     }
     topology_mermaid, topology_details = mermaid_topology(lan_blocks, wan_links)

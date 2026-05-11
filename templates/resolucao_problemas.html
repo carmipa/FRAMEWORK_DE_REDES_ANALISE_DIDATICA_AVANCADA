@@ -199,8 +199,8 @@
     </div>
 
     <p class="small text-secondary mb-2">
-        Página dedicada para cenários de prova/laboratório: cálculo VLSM, planejamento WAN /30,
-        comandos Cisco e desenho da topologia para Packet Tracer.
+        Página dedicada para cenários de prova/laboratório: cálculo VLSM, planejamento WAN (prefixo configurável, típico <code class="text-secondary">/30</code>),
+        roteamento <strong class="text-light">EIGRP</strong>, comandos Cisco e desenho da topologia para Packet Tracer.
         O formulário abre <strong class="text-light">em branco</strong>.
         <a href="/resolucao-problemas?demo=1" class="link-info text-decoration-none">Carregar exemplo didático</a>
         (rede e localidades pré-preenchidas para teste).
@@ -627,6 +627,11 @@
             Para cada <strong class="text-light">roteador</strong>, configure as interfaces com os valores abaixo (iguais ao script CLI).
             Os <strong class="text-light">PCs</strong> obtêm endereço por <strong class="text-light">DHCP</strong>; o gateway de cada LAN é o IP da linha <code class="text-info">GigabitEthernet0/0</code>.
         </p>
+        <p class="small text-warning border-start border-warning border-2 ps-2 mb-3">
+            <strong>Packet Tracer:</strong> o DHCP no <strong class="text-light">roteador</strong> só passa a funcionar na LAN quando essa interface (<code class="text-info">GigabitEthernet0/0</code>) já tem o IP do gateway e está <em>up/up</em>.
+            Sem IP na LAN, o roteador não atende pedidos DHCP dos PCs — aplique o script na ordem gerada ou configure a LAN antes de «Obter endereço automaticamente».
+            Os valores do <strong class="text-light">default-router</strong> e da rede do pool estão na <strong class="text-light">última linha</strong> de cada tabela abaixo (papel <span class="text-info">DHCP</span>).
+        </p>
         {% for pt in scenario.pt_router_tables %}
         <div class="mb-4">
             <div class="fw-bold text-warning mb-2">{{ pt.router_name }} · {{ pt.location_name }}</div>
@@ -649,7 +654,7 @@
                             <td>{{ row.ip }}</td>
                             <td>{{ row.mask }}</td>
                             <td>{{ row.cidr }}</td>
-                            <td>{% if row.role == 'LAN' %}<span class="text-success">LAN</span>{% else %}<span class="text-warning">WAN</span>{% endif %}</td>
+                            <td>{% if row.role == 'LAN' %}<span class="text-success">LAN</span>{% elif row.role == 'DHCP' %}<span class="text-info">DHCP</span>{% else %}<span class="text-warning">WAN</span>{% endif %}</td>
                             <td class="small">{{ row.description }}</td>
                         </tr>
                         {% endfor %}

@@ -47,6 +47,10 @@ class TestSolveNetworkProblemUnit(unittest.TestCase):
         self.assertIn("line vty 0 4", cli_matriz)
         self.assertIn("password fiap", cli_matriz)
         self.assertIn("clock rate 64000", cli_matriz)
+        self.assertIn("! DHCP no roteador (Packet Tracer): Gi0/0 com", cli_matriz)
+        steps_join = " ".join(s["packet_tracer_steps"])
+        self.assertIn("Gi0/0 (gateway LAN) por localidade:", steps_join)
+        self.assertIn("Matriz:", steps_join)
 
     def test_eigrp_as_string_e_customizado(self):
         """AS informado como string numérica e diferente do padrão 71."""
@@ -123,6 +127,9 @@ class TestSolveNetworkProblemUnit(unittest.TestCase):
         self.assertEqual(rows[0]["interface"], "GigabitEthernet0/0")
         self.assertEqual(rows[0]["role"], "LAN")
         self.assertTrue(any(r["role"] == "WAN" for r in rows))
+        self.assertEqual(rows[-1]["role"], "DHCP")
+        self.assertIn("pool LAN_", rows[-1]["interface"])
+        self.assertEqual(rows[-1]["ip"], rows[0]["ip"])
 
 
 if __name__ == "__main__":
