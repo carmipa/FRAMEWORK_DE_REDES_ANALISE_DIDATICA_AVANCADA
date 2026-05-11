@@ -205,6 +205,12 @@
         <a href="/resolucao-problemas?demo=1" class="link-info text-decoration-none">Carregar exemplo didático</a>
         (rede e localidades pré-preenchidas para teste).
     </p>
+    <p class="small mb-3 py-2 px-3 rounded border border-secondary bg-dark">
+        <strong class="text-warning">Packet Tracer — equipamento padrão:</strong>
+        roteadores <strong class="text-light">Cisco 2911</strong> e switches
+        <strong class="text-light">Cisco 2960</strong>.
+        Os scripts CLI e os exports assumem interfaces típicas desses modelos.
+    </p>
     <details class="small text-secondary mb-3 problem-box p-2 border border-secondary rounded">
         <summary class="text-light fw-semibold cursor-pointer user-select-none">EIGRP e «prefixos»: o que o professor pode mudar?</summary>
         <div class="mt-2 mb-0">
@@ -720,8 +726,12 @@
 
     <div class="problem-box p-3 mb-3">
         <h5 class="text-success mb-2 problem-title"><span>📦</span><span>Área de Exportação do Laboratório</span></h5>
-        <p class="small text-secondary mb-3">
+        <p class="small text-secondary mb-2">
             Gere o arquivo consolidado com comandos para o Packet Tracer, ou um relatório único com tudo que aparece na página para entregar na disciplina.
+        </p>
+        <p class="small text-info mb-3 mb-0">
+            Os três botões reenviam os mesmos dados do cenário (rede base, CIDR, WAN, <strong class="text-light">AS EIGRP</strong> e todas as localidades)
+            e o servidor <strong class="text-light">recalcula</strong> o cenário antes de gerar o ficheiro — o export fica alinhado ao que acabou de calcular.
         </p>
         <form method="POST" action="/resolucao-problemas" class="d-flex flex-wrap align-items-center gap-2 export-actions">
             <input type="hidden" name="base_network" value="{{ form_data.base_network }}">

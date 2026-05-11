@@ -135,6 +135,27 @@ class TestRotasEExportacoes(unittest.TestCase):
         self.assertIn("router eigrp", body.lower())
         self.assertIn("6) Comandos Cisco CLI por roteador", body)
         self.assertIn("3.1) Interfaces por roteador (Packet Tracer)", body)
+        self.assertIn("2911", body)
+        self.assertIn("2960", body)
+        self.assertIn("AS EIGRP:", body)
+
+    def test_export_entrega_propaga_eigrp_do_formulario(self):
+        res = self.client.post(
+            "/resolucao-problemas",
+            data={
+                "action_type": "export_entrega",
+                "base_network": "172.21.0.0/16",
+                "topology_type": "ring",
+                "wan_prefix": "30",
+                "eigrp_as": "100",
+                "loc_name": ["Matriz", "Filial I"],
+                "loc_hosts": ["200", "150"],
+            },
+        )
+        self.assertEqual(res.status_code, 200)
+        body = res.get_data(as_text=True)
+        self.assertIn("AS EIGRP:            100", body)
+        self.assertIn("router eigrp 100", body.lower())
 
     def test_history_catalog_portas_ok(self):
         res = self.client.post(

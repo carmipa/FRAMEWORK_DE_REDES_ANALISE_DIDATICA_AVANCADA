@@ -8,6 +8,7 @@ from backend.core.logging import log_event
 from backend.resolucao.export.export_txt_service import (
     generate_packet_tracer_script,
     generate_router_lab_blocks,
+    packet_tracer_hardware_note_plain_block,
     router_export_filename,
 )
 
@@ -31,7 +32,8 @@ def generate_packet_tracer_zip_buffer(scenario):
     except (TypeError, ValueError):
         as_num = 71
     readme = (
-        "INSTRUCOES DE USO DO LABORATORIO\n"
+        packet_tracer_hardware_note_plain_block()
+        + "INSTRUCOES DE USO DO LABORATORIO\n"
         "===============================\n"
         "1. Abra o Cisco Packet Tracer.\n"
         "2. Monte a topologia física conforme o arquivo "

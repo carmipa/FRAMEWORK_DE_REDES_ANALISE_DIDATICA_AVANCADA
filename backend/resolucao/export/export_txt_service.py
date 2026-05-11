@@ -7,6 +7,32 @@ from backend.core.exceptions import EntradaInvalidaError
 from backend.core.logging import log_event
 from backend.resolucao.vlsm.vlsm_normalization import normalize_cli_identifier
 
+# Padrão didático do laboratório (Cisco Packet Tracer)
+PACKET_TRACER_ROUTER_MODEL = "2911"
+PACKET_TRACER_SWITCH_MODEL = "2960"
+
+
+def packet_tracer_hardware_note_cli_lines():
+    """Linhas comentadas para o topo dos scripts .txt de CLI."""
+    return [
+        "! OBSERVACAO — Equipamento no Cisco Packet Tracer (padrao deste laboratorio):",
+        f"! Roteadores: Cisco {PACKET_TRACER_ROUTER_MODEL}",
+        f"! Switches: Cisco {PACKET_TRACER_SWITCH_MODEL}",
+        "! Ajuste apenas se o enunciado da disciplina indicar outro modelo.",
+    ]
+
+
+def packet_tracer_hardware_note_plain_block():
+    """Bloco de texto para relatório de entrega e README do ZIP."""
+    return (
+        "OBSERVACAO — Equipamento no Cisco Packet Tracer\n"
+        f"  Padrao deste laboratorio: roteadores Cisco {PACKET_TRACER_ROUTER_MODEL} "
+        f"e switches Cisco {PACKET_TRACER_SWITCH_MODEL}.\n"
+        "  Os comandos CLI assumem interfaces típicas desses modelos "
+        "(ex.: GigabitEthernet0/0, Serial0/3/n no roteador).\n"
+        "\n"
+    )
+
 
 def router_export_filename(location_name):
     normalized = normalize_cli_identifier(location_name, "ROTEADOR")
@@ -111,6 +137,8 @@ def generate_router_lab_blocks(scenario):
             reserved_end = max_host_for_reserve
 
         block_lines = [
+            *packet_tracer_hardware_note_cli_lines(),
+            "!",
             "enable",
             "configure terminal",
             f"hostname {location['router_name']}",
@@ -214,8 +242,12 @@ def generate_packet_tracer_script(scenario):
             "ANALISE DIDATICA AVANCADA"
         ),
         "!",
+        *packet_tracer_hardware_note_cli_lines(),
+        "!",
         f"! Rede base: {scenario.get('base_network', '-')}",
         f"! Topologia WAN: {(scenario.get('topology_type') or '-').upper()}",
+        f"! Prefixo WAN: /{scenario.get('wan_prefix', '-')}",
+        f"! AS EIGRP: {scenario.get('eigrp_as', '-')}",
         f"! Total de localidades: {scenario.get('total_locations', 0)}",
         "!",
         "! MODO DE USO:",
@@ -262,6 +294,7 @@ def generate_entrega_relatorio_txt(scenario):
         "=" * 78,
         f"Gerado em: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
         "",
+        packet_tracer_hardware_note_plain_block(),
         "1) RESUMO DO PLANEJAMENTO",
         "-" * 78,
         f"Rede base:           {scenario.get('base_network', '-')}",
@@ -279,6 +312,7 @@ def generate_entrega_relatorio_txt(scenario):
             if wan_prefix is not None
             else "Prefixo WAN:         -"
         ),
+        f"AS EIGRP:            {scenario.get('eigrp_as', '-')}",
         "",
         "2) LANs (VLSM)",
         "-" * 78,

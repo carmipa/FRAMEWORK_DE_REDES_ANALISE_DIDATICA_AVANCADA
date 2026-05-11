@@ -283,6 +283,10 @@ class AppTestCase(unittest.TestCase):
         self.assertIn("description LINK_PARA_FILIAL_I", body)
         self.assertIn("router eigrp 71", body)
         self.assertIn("show ip route eigrp", body)
+        self.assertIn("2911", body)
+        self.assertIn("2960", body)
+        self.assertIn("! AS EIGRP: 71", body)
+        self.assertIn("! Prefixo WAN: /30", body)
 
     def test_exportar_lab_packet_tracer_zip(self):
         res = self.client.post(
