@@ -25,38 +25,6 @@
             </tbody>
         </table>
     </div>
-    <div class="card-tech p-3 mb-3 border border-warning border-opacity-25">
-        <h6 class="text-warning mb-2">🛠️ Troubleshooting rápido (roteamento)</h6>
-        <p class="small text-secondary mb-3">
-            Comandos de validação imediata para laboratório Cisco. Use após aplicar configuração e antes de exportar evidências.
-        </p>
-        <div class="row g-2">
-            {% for item in protocolos_catalogo if item.categoria | default('') == 'roteamento' %}
-            <div class="col-12 col-xl-6">
-                <div class="border border-secondary border-opacity-25 rounded p-2 h-100">
-                    <div class="small text-info fw-bold mb-1">{{ item.nome }}</div>
-                    <div class="small text-light mb-1"><strong>Falha típica:</strong> {{ item.problemas_comuns | default('—') }}</div>
-                    <div class="small text-light mb-1"><strong>Mitigação:</strong> {{ item.mitigacoes | default('—') }}</div>
-                    <pre class="small bg-dark border border-secondary rounded p-2 mb-0 text-light">{{ item.diagnostico_comandos | default('show ip route') }}</pre>
-                    <div class="mt-2 d-flex justify-content-end">
-                        <button
-                            type="button"
-                            class="btn btn-sm btn-info text-dark fw-bold"
-                            data-copy-snippet
-                            data-copy-label="{{ item.nome }}"
-                            data-copy-text="{{ item.diagnostico_comandos | default('show ip route') }}"
-                            data-bs-toggle="tooltip"
-                            data-bs-placement="top"
-                            title="Copia os comandos de troubleshooting deste protocolo para área de transferência."
-                        >
-                            📋 Copiar comandos
-                        </button>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
     <div class="comm-summary mb-3" data-summary-target="protocolos"></div>
     <div class="d-flex flex-wrap gap-2 mb-2">
         <span class="shield-badge"><span class="icon">🔎</span>Busca por protocolo/camada</span>
@@ -289,6 +257,39 @@
             <button type="button" class="btn btn-sm btn-outline-light" data-grid-prev="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Volta para a página anterior dos resultados filtrados.">⬅️</button>
             <span class="small text-secondary" data-grid-page-label="protocolos"></span>
             <button type="button" class="btn btn-sm btn-outline-light" data-grid-next="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Avança para a próxima página dos resultados filtrados.">➡️</button>
+        </div>
+    </div>
+
+    <div class="card-tech p-3 mb-0 mt-4 border border-warning border-opacity-25">
+        <h6 class="text-warning mb-2">🛠️ Troubleshooting rápido (roteamento)</h6>
+        <p class="small text-secondary mb-3">
+            Comandos de validação imediata para laboratório Cisco. Use após aplicar configuração e antes de exportar evidências.
+        </p>
+        <div class="row g-2">
+            {% for item in protocolos_catalogo if item.categoria | default('') == 'roteamento' %}
+            <div class="col-12 col-xl-6">
+                <div class="border border-secondary border-opacity-25 rounded p-2 h-100">
+                    <div class="small text-info fw-bold mb-1">{{ item.nome }}</div>
+                    <div class="small text-light mb-1"><strong>Falha típica:</strong> {{ item.problemas_comuns | default('—') }}</div>
+                    <div class="small text-light mb-1"><strong>Mitigação:</strong> {{ item.mitigacoes | default('—') }}</div>
+                    <pre class="small bg-dark border border-secondary rounded p-2 mb-0 text-light">{{ item.diagnostico_comandos | default('show ip route') }}</pre>
+                    <div class="mt-2 d-flex justify-content-end">
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-info text-dark fw-bold"
+                            data-copy-snippet
+                            data-copy-label="{{ item.nome }}"
+                            data-copy-text="{{ item.diagnostico_comandos | default('show ip route') }}"
+                            data-bs-toggle="tooltip"
+                            data-bs-placement="top"
+                            title="Copia os comandos de troubleshooting deste protocolo para área de transferência."
+                        >
+                            📋 Copiar comandos
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
         </div>
     </div>
 </div>
