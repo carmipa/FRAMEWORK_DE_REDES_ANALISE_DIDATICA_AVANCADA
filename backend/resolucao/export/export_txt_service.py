@@ -281,6 +281,135 @@ def generate_packet_tracer_script(scenario):
     return content
 
 
+def generate_packet_tracer_montagem_guide(scenario):
+    """
+    Documento mestre para o laboratorio no Packet Tracer: o que ha no ZIP,
+    limitacao (sem import automatico), sequencia e tabelas de IP por interface.
+    """
+    lan_blocks, wan_links = _require_export_scenario(
+        scenario, "problem_export_montagem_guide"
+    )
+    locations_by_key = {item["location_key"]: item for item in lan_blocks}
+    lines = [
+        "=" * 78,
+        "GUIA DE MONTAGEM NO CISCO PACKET TRACER",
+        "=" * 78,
+        "",
+        packet_tracer_hardware_note_plain_block(),
+        (
+            "IMPORTANTE — Como este pacote configura a rede:\n"
+            "  O Cisco Packet Tracer NAO le um unico ficheiro que aplique tudo "
+            "sozinho. Os ficheiros .txt deste pacote sao comandos IOS para "
+            "colar no CLI de cada roteador (bloco a bloco). Depois disso, "
+            "EIGRP e DHCP passam a funcionar conforme o cenario calculado."
+        ),
+        "",
+        "O QUE HA NESTE PACOTE (ficheiros)",
+        "-" * 78,
+        "  1) GUIA_MONTAGEM_PACKET_TRACER.txt (este guia) — leia primeiro.",
+        "  2) README_LAB.txt — instrucoes curtas.",
+        "  3) LAB_TOPOLOGY.mermaid — diagrama logico (topologia WAN + LAN).",
+        (
+            "  4) config_packet_tracer_consolidado.txt — todos os scripts CLI "
+            "num unico ficheiro (separe por roteador ao copiar)."
+        ),
+        (
+            "  5) configs_individuais/R-*.txt — um ficheiro por roteador "
+            "(mais simples de colar)."
+        ),
+        "",
+        "RESUMO DO CENARIO CALCULADO",
+        "-" * 78,
+        f"  Rede base:       {scenario.get('base_network', '-')}",
+        f"  Topologia WAN:   {(scenario.get('topology_type') or '-').upper()}",
+        f"  Prefixo WAN:     /{scenario.get('wan_prefix', '-')}",
+        f"  AS EIGRP:        {scenario.get('eigrp_as', '-')}",
+        f"  Localidades:     {scenario.get('total_locations', len(lan_blocks))}",
+        "",
+        "EQUIPAMENTO NA AREA DE TRABALHO DO PACKET TRACER",
+        "-" * 78,
+        f"  • {len(lan_blocks)} roteador(es) Cisco {PACKET_TRACER_ROUTER_MODEL}",
+        f"  • {len(lan_blocks)} switch(es) Cisco {PACKET_TRACER_SWITCH_MODEL}",
+        "  • Pelo menos 2 PCs por LAN (ligados ao switch) para testar ping.",
+        "  • Cabos seriais entre roteadores conforme a topologia escolhida.",
+        "",
+        "PASSOS DA SEQUENCIA (idem pagina web)",
+        "-" * 78,
+    ]
+    for index, step in enumerate(scenario.get("packet_tracer_steps") or [], start=1):
+        lines.append(f"  {index}. {step}")
+    lines.extend(
+        [
+            "",
+            "LINKS WAN (referencia)",
+            "-" * 78,
+        ]
+    )
+    if not wan_links:
+        lines.append("  (nenhum link WAN neste cenario)")
+    else:
+        for link in wan_links:
+            ep0, ep1 = link["endpoints"]
+            n0 = (locations_by_key.get(ep0) or {}).get("location_name") or ep0
+            n1 = (locations_by_key.get(ep1) or {}).get("location_name") or ep1
+            ips = link.get("ips") or {}
+            lines.append(
+                f"  {link['name']}: {link['network']}/{link['prefix']} | "
+                f"{ips.get(ep0, '-')} <-> {ips.get(ep1, '-')}"
+                f" ({n0} <-> {n1})"
+            )
+    lines.extend(
+        [
+            "",
+            "INTERFACES E IPs POR ROTEADOR (para configurar no PT)",
+            "-" * 78,
+            "  Estes valores coincidem com as tabelas da pagina e com os scripts CLI.",
+            "",
+        ]
+    )
+    for block in build_pt_router_tables(scenario):
+        lines.append(f"{block['router_name']} — {block['location_name']}")
+        for row in block["rows"]:
+            lines.append(
+                f"  {row['interface']:<22} {row['ip']:<16} {row['mask']:<16} "
+                f"{row['cidr']:<8} {row['role']:<6} {row['description']}"
+            )
+        lines.append("")
+    lines.extend(
+        [
+            "APLICAR A CONFIGURACAO CLI",
+            "-" * 78,
+            (
+                "  • Abra cada roteador -> Desktop -> CLI (ou Console)."
+                " Cole o conteudo do ficheiro desse roteador em configs_individuais/, "
+                "ou recorte do consolidado o bloco entre os separadores "
+                "'ROTEADOR: ...'."
+            ),
+            (
+                "  • Em cada PC: IP dinamico (DHCP). O gateway e o IP da "
+                "interface GigabitEthernet0/0 desse roteador (ver tabela acima)."
+            ),
+            (
+                "  • Valide: show ip interface brief | show ip eigrp neighbors | "
+                "ping entre PCs de filiais diferentes."
+            ),
+            "",
+            "=" * 78,
+            "FIM DO GUIA",
+            "=" * 78,
+            "",
+        ]
+    )
+    content = "\n".join(lines).strip() + "\n"
+    log_event(
+        "info",
+        "problem_export_montagem_guide",
+        status="ok",
+        routers_count=len(lan_blocks),
+    )
+    return content
+
+
 def generate_entrega_relatorio_txt(scenario):
     """Relatório textual único com resumo, tabelas LAN/WAN, Mermaid e CLI."""
     lan_blocks, wan_links = _require_export_scenario(

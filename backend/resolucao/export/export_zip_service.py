@@ -6,6 +6,7 @@ import zipfile
 from backend.core.exceptions import EntradaInvalidaError
 from backend.core.logging import log_event
 from backend.resolucao.export.export_txt_service import (
+    generate_packet_tracer_montagem_guide,
     generate_packet_tracer_script,
     generate_router_lab_blocks,
     packet_tracer_hardware_note_plain_block,
@@ -25,6 +26,7 @@ def generate_packet_tracer_zip_buffer(scenario):
         )
 
     consolidated_script = generate_packet_tracer_script(scenario)
+    montagem_guide = generate_packet_tracer_montagem_guide(scenario)
     router_blocks = generate_router_lab_blocks(scenario)
     topology_mermaid = scenario.get("topology_mermaid", "")
     try:
@@ -33,10 +35,14 @@ def generate_packet_tracer_zip_buffer(scenario):
         as_num = 71
     readme = (
         packet_tracer_hardware_note_plain_block()
+        + (
+            "PRIMEIRO: abra GUIA_MONTAGEM_PACKET_TRACER.txt — explica todo o pacote "
+            "e como aplicar no Packet Tracer (o PT nao importa configuracao automatica).\n\n"
+        )
         + "INSTRUCOES DE USO DO LABORATORIO\n"
         "===============================\n"
         "1. Abra o Cisco Packet Tracer.\n"
-        "2. Monte a topologia física conforme o arquivo "
+        "2. Leia GUIA_MONTAGEM_PACKET_TRACER.txt e monte a topologia física conforme "
         "LAB_TOPOLOGY.mermaid.\n"
         "3. Para cada roteador, abra o CLI e cole o conteúdo do arquivo "
         "em configs_individuais/.\n"
@@ -48,6 +54,10 @@ def generate_packet_tracer_zip_buffer(scenario):
 
     memory_file = BytesIO()
     with zipfile.ZipFile(memory_file, "w", zipfile.ZIP_DEFLATED) as zf:
+        zf.writestr(
+            "GUIA_MONTAGEM_PACKET_TRACER.txt",
+            montagem_guide,
+        )
         zf.writestr("config_packet_tracer_consolidado.txt", consolidated_script)
         for location_name, block in router_blocks.items():
             filename = router_export_filename(location_name)
@@ -61,6 +71,6 @@ def generate_packet_tracer_zip_buffer(scenario):
         "problem_export_zip",
         status="ok",
         routers_count=len(lan_blocks),
-        files_written=len(router_blocks) + 3,
+        files_written=len(router_blocks) + 4,
     )
     return memory_file
