@@ -3,6 +3,7 @@
 import unittest
 
 from backend.core.exceptions import EntradaInvalidaError
+from backend.resolucao.export.export_txt_service import eigrp_network_pairs_for_router
 from backend.resolucao.vlsm.vlsm_service import solve_network_problem
 
 
@@ -130,6 +131,53 @@ class TestSolveNetworkProblemUnit(unittest.TestCase):
         self.assertEqual(rows[-1]["role"], "DHCP")
         self.assertIn("pool LAN_", rows[-1]["interface"])
         self.assertEqual(rows[-1]["ip"], rows[0]["ip"])
+
+    def test_eigrp_network_cobre_lan_e_todas_wan_ring(self):
+        """Cada roteador: 1× LAN + N× WAN (links incidentes); nenhum `network` em falta."""
+        locs = [
+            {"name": "A", "hosts": "200"},
+            {"name": "B", "hosts": "180"},
+            {"name": "C", "hosts": "160"},
+        ]
+        s = solve_network_problem(
+            "10.2.0.0/16", locs, topology_type="ring", wan_prefix=30
+        )
+        self.assertEqual(len(s["wan_links"]), 3)
+        by_key = {b["location_key"]: b for b in s["lan_blocks"]}
+        for block in s["lan_blocks"]:
+            k = block["location_key"]
+            wan_n = sum(1 for L in s["wan_links"] if k in L["ips"])
+            pairs = eigrp_network_pairs_for_router(k, block, s["wan_links"])
+            self.assertEqual(len(pairs), 1 + wan_n)
+            cli = s["router_commands"][block["location_name"]]
+            for net, wild in pairs:
+                self.assertIn(f"network {net} {wild}", cli)
+        for link in s["wan_links"]:
+            for ep in link["endpoints"]:
+                b = by_key[ep]
+                cli = s["router_commands"][b["location_name"]]
+                self.assertIn(f"network {link['network']} {link['wildcard']}", cli)
+
+    def test_eigrp_network_cobre_lan_e_todas_wan_mesh(self):
+        locs = [
+            {"name": "M1", "hosts": "80"},
+            {"name": "M2", "hosts": "80"},
+            {"name": "M3", "hosts": "80"},
+            {"name": "M4", "hosts": "80"},
+        ]
+        s = solve_network_problem(
+            "192.168.0.0/22", locs, topology_type="mesh", wan_prefix=30
+        )
+        self.assertEqual(len(s["wan_links"]), 6)
+        by_key = {b["location_key"]: b for b in s["lan_blocks"]}
+        for block in s["lan_blocks"]:
+            k = block["location_key"]
+            wan_n = sum(1 for L in s["wan_links"] if k in L["ips"])
+            pairs = eigrp_network_pairs_for_router(k, block, s["wan_links"])
+            self.assertEqual(len(pairs), 1 + wan_n)
+            cli = s["router_commands"][block["location_name"]]
+            for net, wild in pairs:
+                self.assertIn(f"network {net} {wild}", cli)
 
 
 if __name__ == "__main__":

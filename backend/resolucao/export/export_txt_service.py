@@ -43,6 +43,36 @@ def router_export_filename(location_name):
     return f"R-{normalized}.txt"
 
 
+def eigrp_network_pairs_for_router(location_key, location, wan_links):
+    """
+    Pares (rede IPv4, wildcard) para comandos `network ...` no EIGRP:
+    LAN do roteador + cada sub-rede WAN em que ele tem interface.
+
+    Ordenação estável por endereço de rede; duplicados (mesmo par) são removidos.
+    """
+    raw: list[tuple[str, str]] = [
+        (location["network"], location["wildcard"]),
+    ]
+    for link in wan_links or []:
+        if location_key not in (link.get("ips") or {}):
+            continue
+        raw.append((link["network"], link["wildcard"]))
+
+    def _sort_key(pair):
+        net, _wild = pair
+        return tuple(int(part) for part in net.split("."))
+
+    out: list[tuple[str, str]] = []
+    seen: set[tuple[str, str]] = set()
+    for net, wild in sorted(raw, key=_sort_key):
+        key = (net, wild)
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(key)
+    return out
+
+
 def _require_export_scenario(scenario, event_name):
     if not scenario:
         log_event("warning", event_name, status="empty_scenario")
@@ -191,7 +221,6 @@ def generate_router_lab_blocks(scenario):
         ]
 
         serial_idx = 0
-        eigrp_pairs = [(location["network"], location["wildcard"])]
         for link in wan_links:
             if location_key not in link.get("ips", {}):
                 continue
@@ -226,7 +255,10 @@ def generate_router_lab_blocks(scenario):
             serial_lines.append("!")
             block_lines.extend(serial_lines)
             serial_idx += 1
-            eigrp_pairs.append((link["network"], link["wildcard"]))
+
+        eigrp_pairs = eigrp_network_pairs_for_router(
+            location_key, location, wan_links
+        )
 
         block_lines.extend(
             [
@@ -248,16 +280,7 @@ def generate_router_lab_blocks(scenario):
             ]
         )
 
-        def _pair_sort_key(pair):
-            net, _wild = pair
-            return tuple(int(part) for part in net.split("."))
-
-        seen_pairs = set()
-        for net, wild in sorted(eigrp_pairs, key=_pair_sort_key):
-            key = (net, wild)
-            if key in seen_pairs:
-                continue
-            seen_pairs.add(key)
+        for net, wild in eigrp_pairs:
             block_lines.append(f" network {net} {wild}")
 
         block_lines.extend(
