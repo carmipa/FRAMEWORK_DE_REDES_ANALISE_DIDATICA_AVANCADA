@@ -43,6 +43,10 @@ class TestSolveNetworkProblemUnit(unittest.TestCase):
         self.assertNotIn("router rip", cli_matriz)
         self.assertIn("network", cli_matriz)
         self.assertIn("show ip route eigrp", cli_matriz)
+        self.assertIn("enable password cisco", cli_matriz)
+        self.assertIn("line vty 0 4", cli_matriz)
+        self.assertIn("password fiap", cli_matriz)
+        self.assertIn("clock rate 64000", cli_matriz)
 
     def test_eigrp_as_string_e_customizado(self):
         """AS informado como string numérica e diferente do padrão 71."""

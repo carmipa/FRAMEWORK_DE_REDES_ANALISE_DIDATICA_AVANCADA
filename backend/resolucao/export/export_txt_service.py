@@ -10,6 +10,10 @@ from backend.resolucao.vlsm.vlsm_normalization import normalize_cli_identifier
 # Padrão didático do laboratório (Cisco Packet Tracer)
 PACKET_TRACER_ROUTER_MODEL = "2911"
 PACKET_TRACER_SWITCH_MODEL = "2960"
+# Senhas só para laboratório (roteiros de aula; nunca em produção)
+LAB_ENABLE_PASSWORD = "cisco"
+LAB_VTY_PASSWORD = "fiap"
+LAB_SERIAL_CLOCK_BPS = 64000
 
 
 def packet_tracer_hardware_note_cli_lines():
@@ -145,11 +149,23 @@ def generate_router_lab_blocks(scenario):
             "no ip domain-lookup",
             "!",
             (
+                "! Senhas de laboratorio (ex.: quadro de aula); "
+                "ajuste se o enunciado pedir outras — nunca em producao"
+            ),
+            f"enable password {LAB_ENABLE_PASSWORD}",
+            "!",
+            (
                 "! Ajuste de console para evitar interrupções de log "
                 "durante colagem"
             ),
             "line con 0",
             " logging synchronous",
+            "exit",
+            "!",
+            "! Acesso remoto Telnet (VTY) — laboratorio",
+            "line vty 0 4",
+            f" password {LAB_VTY_PASSWORD}",
+            " login",
             "exit",
             "!",
             "interface GigabitEthernet0/0",
@@ -173,18 +189,27 @@ def generate_router_lab_blocks(scenario):
                 neighbor.get("location_name") if neighbor else neighbor_key,
                 "DESTINO",
             )
-            block_lines.extend(
-                [
-                    f"interface Serial0/3/{serial_idx}",
-                    f" description LINK_PARA_{neighbor_cli}",
-                    (
-                        f" ip address {link['ips'][location_key]} "
-                        f"{link['netmask']}"
-                    ),
-                    " no shutdown",
-                    "!",
-                ]
-            )
+            serial_lines = [
+                f"interface Serial0/3/{serial_idx}",
+                f" description LINK_PARA_{neighbor_cli}",
+                (
+                    f" ip address {link['ips'][location_key]} "
+                    f"{link['netmask']}"
+                ),
+                " no shutdown",
+            ]
+            if serial_idx == 0:
+                serial_lines.extend(
+                    [
+                        (
+                            "! clock rate na primeira WAN: convencao de aula; "
+                            "no PT use a porta marcada como DCE (senao mova ao vizinho)"
+                        ),
+                        f" clock rate {LAB_SERIAL_CLOCK_BPS}",
+                    ]
+                )
+            serial_lines.append("!")
+            block_lines.extend(serial_lines)
             serial_idx += 1
             eigrp_pairs.append((link["network"], link["wildcard"]))
 

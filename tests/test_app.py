@@ -287,6 +287,9 @@ class AppTestCase(unittest.TestCase):
         self.assertIn("2960", body)
         self.assertIn("! AS EIGRP: 71", body)
         self.assertIn("! Prefixo WAN: /30", body)
+        self.assertIn("enable password cisco", body)
+        self.assertIn("line vty 0 4", body)
+        self.assertIn("clock rate 64000", body)
 
     def test_exportar_lab_packet_tracer_zip(self):
         res = self.client.post(
