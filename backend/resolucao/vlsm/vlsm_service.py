@@ -4,6 +4,7 @@ import math
 from backend.core.exceptions import EntradaInvalidaError
 from backend.core.logging import log_event
 from backend.resolucao.export.export_txt_service import (
+    build_pt_router_tables,
     generate_entrega_relatorio_txt,
     generate_packet_tracer_script,
     generate_router_lab_blocks,
@@ -189,13 +190,13 @@ def solve_network_problem(
     topology_insights = _topology_insights(len(cleaned_lans), topology_type)
     growth_forecast = _growth_forecast(cleaned_lans)
     suggested_prefix = _suggested_base_prefix(total_consumed_addresses, base_network.prefixlen)
-    router_commands = generate_router_lab_blocks(
-        {
-            "lan_blocks": lan_blocks,
-            "wan_links": wan_links,
-            "eigrp_as": eigrp_as_i,
-        }
-    )
+    scenario_stub = {
+        "lan_blocks": lan_blocks,
+        "wan_links": wan_links,
+        "eigrp_as": eigrp_as_i,
+    }
+    router_commands = generate_router_lab_blocks(scenario_stub)
+    pt_router_tables = build_pt_router_tables(scenario_stub)
 
     result = {
         "base_network": str(base_network.with_prefixlen),
@@ -224,6 +225,7 @@ def solve_network_problem(
         "topology_insights": topology_insights,
         "growth_forecast": growth_forecast,
         "router_commands": router_commands,
+        "pt_router_tables": pt_router_tables,
         "router_cli_explanations": _build_cli_explanations(
             cleaned_lans, wan_links, eigrp_as_i
         ),

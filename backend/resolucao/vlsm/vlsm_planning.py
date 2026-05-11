@@ -1,3 +1,5 @@
+import ipaddress
+
 from backend.core.exceptions import EntradaInvalidaError
 from backend.core.logging import log_event
 
@@ -5,6 +7,20 @@ from backend.core.logging import log_event
 def _mermaid_escape(text: str) -> str:
     """Evita quebras de sintaxe em rótulos Mermaid (subgrafos e nós)."""
     return (text or "").replace('"', "'").replace("\n", " ").strip()
+
+
+def _suggested_pc_ips_for_diagram(location: dict) -> tuple[str, str]:
+    """
+    Dois IPs da LAN distintos do gateway — típicos para PCs em DHCP/estático no PT.
+    """
+    net = ipaddress.ip_network(
+        f'{location["network"]}/{location["prefix"]}', strict=False
+    )
+    gw = ipaddress.ip_address(location["gateway"])
+    others = [h for h in net.hosts() if h != gw]
+    ip_a = str(others[0]) if others else str(gw)
+    ip_b = str(others[1]) if len(others) > 1 else ip_a
+    return ip_a, ip_b
 
 
 def required_prefix_for_hosts(host_count):
@@ -200,14 +216,18 @@ def mermaid_topology(locations, wan_links):
         pc_b = f"PC_{index}B"
         name_map[location["location_key"]] = node_id
         loc_label = _mermaid_escape(location["location_name"]) or f"Local {index}"
+        gw = location["gateway"]
+        pc_ip_a, pc_ip_b = _suggested_pc_ips_for_diagram(location)
         lines.append(f'    subgraph LAN_{index}["{loc_label}"]')
         lines.append(
-            f'        {node_id}["{location["router_name"]}\\nLAN: '
+            f'        {node_id}["{location["router_name"]}\\nGi0/0: {gw}\\n'
             f'{location["network"]}/{location["prefix"]}"]'
         )
-        lines.append(f'        {sw_id}["Switch\\nLAN local"]')
-        lines.append(f'        {pc_a}["PC teste 1\\nDHCP"]')
-        lines.append(f'        {pc_b}["PC teste 2\\nDHCP"]')
+        lines.append(
+            f'        {sw_id}["Switch\\n{location["network"]}/{location["prefix"]}\\n(camada 2)"]'
+        )
+        lines.append(f'        {pc_a}["PC teste 1\\n{pc_ip_a}\\nDHCP"]')
+        lines.append(f'        {pc_b}["PC teste 2\\n{pc_ip_b}\\nDHCP"]')
         lines.append(f"        {node_id} --- {sw_id}")
         lines.append(f"        {sw_id} --- {pc_a}")
         lines.append(f"        {sw_id} --- {pc_b}")
@@ -232,24 +252,33 @@ def mermaid_topology(locations, wan_links):
             "title": f"Switch · {location['location_name']}",
             "network": f'{location["network"]}/{location["prefix"]}',
             "gateway": location["gateway"],
+            "note_l2": "Equipamento de camada 2 no diagrama (sem IP de gestão no cenário clássico).",
         }
         details_map[pc_a] = {
             "type": "host",
             "title": f"PC teste 1 · {location['location_name']}",
             "gateway": location["gateway"],
             "network": f'{location["network"]}/{location["prefix"]}',
+            "suggested_ip": pc_ip_a,
         }
         details_map[pc_b] = {
             "type": "host",
             "title": f"PC teste 2 · {location['location_name']}",
             "gateway": location["gateway"],
             "network": f'{location["network"]}/{location["prefix"]}',
+            "suggested_ip": pc_ip_b,
         }
     for index, link in enumerate(wan_links, start=1):
         left = name_map[link["endpoints"][0]]
         right = name_map[link["endpoints"][1]]
         wan_id = f"W_{index}"
-        lines.append(f'    {wan_id}{{"WAN {index}\\n{link["network"]}/{link["prefix"]}"}}')
+        ep0, ep1 = link["endpoints"]
+        ip_w_a = link["ips"][ep0]
+        ip_w_b = link["ips"][ep1]
+        lines.append(
+            f'    {wan_id}{{"WAN {index}\\n{link["network"]}/{link["prefix"]}\\n'
+            f'{ip_w_a} · {ip_w_b}"}}'
+        )
         lines.append(f"    {left} --- {wan_id}")
         lines.append(f"    {wan_id} --- {right}")
         lines.append(f'    click {wan_id} showTopologyDetail "{wan_id}"')

@@ -27,6 +27,64 @@ def _require_export_scenario(scenario, event_name):
     return lan_blocks, wan_links
 
 
+def build_pt_router_tables(scenario):
+    """
+    Tabela de interfaces por roteador (IP + máscara) para montagem no Packet Tracer.
+    Espelha a mesma ordem de interfaces do script CLI (Gi0/0 + Serial0/3/n).
+    Retorna lista ordenada: um item por localidade com hostname e linhas da tabela.
+    """
+    lan_blocks = scenario.get("lan_blocks") or []
+    wan_links = scenario.get("wan_links") or []
+    locations_by_key = {item["location_key"]: item for item in lan_blocks}
+    tables: list[dict[str, object]] = []
+
+    for location in lan_blocks:
+        location_key = location["location_key"]
+        location_name = location["location_name"]
+        rows: list[dict[str, str]] = []
+        rows.append(
+            {
+                "interface": "GigabitEthernet0/0",
+                "ip": location["gateway"],
+                "mask": location["netmask"],
+                "cidr": f"/{location['prefix']}",
+                "role": "LAN",
+                "description": f"Gateway da LAN {location_name}",
+            }
+        )
+        serial_idx = 0
+        for link in wan_links:
+            if location_key not in link.get("ips", {}):
+                continue
+            endpoint_a, endpoint_b = link["endpoints"]
+            neighbor_key = (
+                endpoint_b if endpoint_a == location_key else endpoint_a
+            )
+            neighbor = locations_by_key.get(neighbor_key)
+            neighbor_name = (
+                neighbor["location_name"] if neighbor else neighbor_key
+            )
+            rows.append(
+                {
+                    "interface": f"Serial0/3/{serial_idx}",
+                    "ip": link["ips"][location_key],
+                    "mask": link["netmask"],
+                    "cidr": f"/{link['prefix']}",
+                    "role": "WAN",
+                    "description": f"{link['name']} → vizinho {neighbor_name}",
+                }
+            )
+            serial_idx += 1
+        tables.append(
+            {
+                "router_name": location["router_name"],
+                "location_name": location_name,
+                "rows": rows,
+            }
+        )
+    return tables
+
+
 def generate_router_lab_blocks(scenario):
     lan_blocks = scenario.get("lan_blocks") or []
     wan_links = scenario.get("wan_links") or []
@@ -317,6 +375,35 @@ def generate_entrega_relatorio_txt(scenario):
             lines.append(f"    {a} -> {ips.get(a, '-')}")
             lines.append(f"    {b} -> {ips.get(b, '-')}")
             lines.append("")
+
+    lines.extend(
+        [
+            "",
+            "3.1) Interfaces por roteador (Packet Tracer)",
+            "-" * 78,
+            (
+                "Valores para configurar em cada roteador: LAN em GigabitEthernet0/0; "
+                "WAN em Serial0/3/n na mesma ordem do script CLI."
+            ),
+            "",
+        ]
+    )
+    for block in build_pt_router_tables(scenario):
+        lines.append(f"{block['router_name']} — {block['location_name']}")
+        lines.append(
+            f"{'Interface':<22} {'IP':<16} {'Mascara':<16} {'CIDR':<8} {'Papel':<6} Descricao"
+        )
+        lines.append("-" * 78)
+        for row in block["rows"]:
+            lines.append(
+                f"{row['interface']:<22} {row['ip']:<16} {row['mask']:<16} "
+                f"{row['cidr']:<8} {row['role']:<6} {row['description']}"
+            )
+        lines.append("")
+    lines.append(
+        "Hosts (PCs): DHCP no roteador; gateway = IP da linha LAN (coluna IP em GigabitEthernet0/0)."
+    )
+    lines.append("")
 
     lines.extend(
         [

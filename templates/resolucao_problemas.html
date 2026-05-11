@@ -616,6 +616,45 @@
     </div>
 
     <div class="problem-box p-3 mb-3">
+        <h5 class="text-success mb-2 problem-title"><span>📋</span><span>Tabelas por roteador — Packet Tracer (IP e máscara)</span></h5>
+        <p class="small text-secondary mb-3">
+            Para cada <strong class="text-light">roteador</strong>, configure as interfaces com os valores abaixo (iguais ao script CLI).
+            Os <strong class="text-light">PCs</strong> obtêm endereço por <strong class="text-light">DHCP</strong>; o gateway de cada LAN é o IP da linha <code class="text-info">GigabitEthernet0/0</code>.
+        </p>
+        {% for pt in scenario.pt_router_tables %}
+        <div class="mb-4">
+            <div class="fw-bold text-warning mb-2">{{ pt.router_name }} · {{ pt.location_name }}</div>
+            <div class="table-responsive">
+                <table class="table table-dark table-bordered table-sm mb-0">
+                    <thead>
+                        <tr>
+                            <th>Interface</th>
+                            <th>Endereço IP</th>
+                            <th>Máscara</th>
+                            <th>CIDR</th>
+                            <th>Papel</th>
+                            <th>Descrição</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in pt.rows %}
+                        <tr>
+                            <td><code class="text-info">{{ row.interface }}</code></td>
+                            <td>{{ row.ip }}</td>
+                            <td>{{ row.mask }}</td>
+                            <td>{{ row.cidr }}</td>
+                            <td>{% if row.role == 'LAN' %}<span class="text-success">LAN</span>{% else %}<span class="text-warning">WAN</span>{% endif %}</td>
+                            <td class="small">{{ row.description }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="problem-box p-3 mb-3">
         <h5 class="text-warning mb-2 problem-title"><span>🗺️</span><span>Desenho da arquitetura (WAN + LAN)</span></h5>
         <div class="topology-card mb-2">
             <div class="mb-2">
@@ -772,7 +811,7 @@
             box.innerHTML = `
                 <div><strong class="text-light">${detail.title}</strong> · <span class="text-info">LAN ${detail.network || ""}</span></div>
                 <div>Gateway da LAN: <strong>${detail.gateway || "—"}</strong></div>
-                <div class="small text-secondary mb-0">Dois PCs ligados ao switch para testes de ping entre localidades (Packet Tracer).</div>
+                <div class="small text-secondary mb-0">${detail.note_l2 || "Dois PCs ligados ao switch para testes de ping entre localidades (Packet Tracer)."}</div>
             `;
             return;
         }
@@ -780,6 +819,7 @@
             box.innerHTML = `
                 <div><strong class="text-light">${detail.title}</strong></div>
                 <div>LAN: <span class="text-info">${detail.network || ""}</span> · Gateway: <strong>${detail.gateway || "—"}</strong></div>
+                ${detail.suggested_ip ? `<div>IP no diagrama (referência DHCP/estático): <strong class="text-warning">${detail.suggested_ip}</strong></div>` : ""}
                 <div class="small text-secondary mb-0">Obter IP por DHCP no roteador; usar ping para outras filiais.</div>
             `;
             return;

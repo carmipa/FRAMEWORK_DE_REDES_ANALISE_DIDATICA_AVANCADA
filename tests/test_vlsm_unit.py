@@ -105,6 +105,21 @@ class TestSolveNetworkProblemUnit(unittest.TestCase):
         self.assertEqual(td["PC_1A"]["type"], "host")
         self.assertEqual(td["SW_1"]["type"], "switch")
 
+    def test_tabelas_packet_tracer_por_roteador(self):
+        locs = [
+            {"name": "Matriz", "hosts": "100"},
+            {"name": "Filial", "hosts": "80"},
+        ]
+        s = solve_network_problem("172.16.0.0/22", locs, topology_type="ring")
+        pt = s["pt_router_tables"]
+        self.assertEqual(len(pt), 2)
+        m = next(b for b in pt if b["location_name"] == "Matriz")
+        self.assertEqual(m["router_name"][:2], "R-")
+        rows = m["rows"]
+        self.assertEqual(rows[0]["interface"], "GigabitEthernet0/0")
+        self.assertEqual(rows[0]["role"], "LAN")
+        self.assertTrue(any(r["role"] == "WAN" for r in rows))
+
 
 if __name__ == "__main__":
     unittest.main()
